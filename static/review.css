@@ -1,7 +1,11 @@
 /* =========================
    REVIEW LAYER
-   Correction drawer, learned-mode switch, expert filter, picker, log.
+   Correction drawer, learned-mode switch, follow picker, log.
    Uses the LYRIQ tokens already on :root, adds none of its own.
+
+   Every menu here is drawn by the page. A native <select> hands its option
+   list to Windows, which ignores the page's colours and renders pale strips
+   on a dark theme, so nothing in this file styles one.
 ========================= */
 
 /* =========================
@@ -49,21 +53,17 @@
 
 /* the indicator lamp, drawn rather than borrowed from the browser */
 
-/* the tick well, drawn rather than borrowed from the browser */
-
 .review-switch input{
 
     appearance:none;
 
     -webkit-appearance:none;
 
-    width:17px;
+    width:15px;
 
-    height:17px;
+    height:15px;
 
     margin:0;
-
-    padding:0;
 
     flex:none;
 
@@ -71,38 +71,26 @@
 
     border-radius:5px;
 
-    background-color:#0b0e14;
-
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cdefs%3E%3Cfilter id='g' x='-50%25' y='-50%25' width='200%25' height='200%25'%3E%3CfeGaussianBlur stdDeviation='1.1'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M3.8 8.4l2.7 2.7L12.2 5.3' fill='none' stroke='%23d8ad55' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round' filter='url(%23g)'/%3E%3Cpath d='M3.8 8.4l2.7 2.7L12.2 5.3' fill='none' stroke='%23f6d994' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-
-    background-repeat:no-repeat;
-
-    background-position:center;
-
-    background-size:0 0;
+    background:#0b0e14;
 
     box-shadow:inset 0 1px 3px rgba(0,0,0,.7);
 
     cursor:pointer;
 
-    transition:
-        background-size .22s cubic-bezier(.3,1.5,.6,1),
-        border-color .2s,
-        box-shadow .2s;
+    transition:.22s;
 }
 
 .review-switch input:checked{
 
-    background-size:100% 100%;
+    border-color:rgba(216,173,85,.6);
 
-    border-color:rgba(216,173,85,.5);
+    background:
+        radial-gradient(circle at 50% 42%,#f0cb7d,var(--gold) 62%);
 
     box-shadow:
-        inset 0 1px 3px rgba(0,0,0,.7),
-        inset 0 0 8px rgba(216,173,85,.18),
-        0 0 12px rgba(216,173,85,.22);
+        0 0 12px rgba(216,173,85,.5),
+        inset 0 1px 0 rgba(255,255,255,.35);
 }
-
 
 .review-switch input:focus-visible{
 
@@ -133,31 +121,38 @@
     text-transform:uppercase;
 }
 
-/* --- follow picker --- */
-
-/* the native option list needs its own stacking context and a dark surface,
-   or it renders behind the controls around it */
+/* =========================
+   FOLLOW PICKER
+   Same shell as the switch beside it: a labelled well with a divider,
+   and a dark menu that drops below it listing every expert on file.
+========================= */
 
 .expert-filter{
 
     position:relative;
 
     z-index:20;
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:2px;
+
+    padding:0 6px 0 14px;
+
+    border:1px solid var(--line);
+
+    border-radius:11px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.2));
+
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.4);
+
+    transition:.2s;
 }
 
-.expert-filter select option{
-
-    background:var(--surface3);
-
-    color:var(--soft);
-}
-
-.actions{
-
-    position:relative;
-
-    z-index:10;
-}
 .expert-filter:hover{
     border-color:#596273;
 }
@@ -166,9 +161,7 @@
     display:none;
 }
 
-.expert-filter label{
-
-    margin:0;
+.filter-label{
 
     padding-right:11px;
 
@@ -187,9 +180,13 @@
     white-space:nowrap;
 }
 
-.expert-filter select{
+.filter-trigger{
 
-    width:auto;
+    display:flex;
+
+    align-items:center;
+
+    gap:9px;
 
     min-width:158px;
 
@@ -197,26 +194,102 @@
 
     border:0;
 
-    border-radius:0;
-
-    padding:12px 8px;
+    padding:12px 10px;
 
     color:var(--soft);
 
     font-size:12px;
 
-    cursor:pointer;
+    text-align:left;
+
+    transition:.2s;
 }
 
-.expert-filter select:hover{
+.filter-trigger:hover{
     color:var(--text);
 }
 
-.expert-filter select:focus{
+.filter-trigger[aria-expanded="true"]{
+    color:var(--gold);
+}
 
-    box-shadow:none;
+.filter-trigger[aria-expanded="true"] .picker-caret{
+
+    transform:rotate(180deg);
 
     color:var(--gold);
+}
+
+.filter-trigger:focus-visible{
+
+    outline:1px solid var(--gold);
+
+    outline-offset:2px;
+}
+
+.filter-value{
+
+    flex:1;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+}
+
+.filter-menu{
+
+    position:absolute;
+
+    left:0;
+
+    top:calc(100% + 7px);
+
+    min-width:100%;
+
+    width:max-content;
+
+    max-width:340px;
+
+    max-height:320px;
+
+    overflow-y:auto;
+
+    z-index:30;
+
+    padding:6px;
+
+    background:var(--surface3);
+
+    border:1px solid var(--line);
+
+    border-radius:13px;
+
+    box-shadow:
+        0 26px 64px rgba(0,0,0,.6),
+        inset 0 1px 0 rgba(255,255,255,.04);
+
+    animation:picker-in .16s ease;
+}
+
+.filter-menu[hidden]{
+    display:none;
+}
+
+.filter-menu::-webkit-scrollbar{
+    width:8px;
+}
+
+.filter-menu::-webkit-scrollbar-track{
+    background:transparent;
+}
+
+.filter-menu::-webkit-scrollbar-thumb{
+
+    background:var(--line);
+
+    border-radius:99px;
 }
 
 /* --- review log button --- */
@@ -627,7 +700,7 @@
 }
 
 /* =========================
-   PICKER
+   EDITOR PICKER
 ========================= */
 
 .picker{
@@ -991,6 +1064,8 @@
     padding-top:6px;
 }
 
+/* shared by every menu in this file */
+
 .picker-option{
 
     display:flex;
@@ -1092,13 +1167,32 @@
     font-variant-numeric:tabular-nums;
 }
 
-.rank-row select{
+.rank-picker{
+
+    position:relative;
 
     flex:1;
+}
 
-    padding:10px 12px;
+.rank-trigger{
 
-    font-size:12px;
+    width:100%;
+
+    min-width:0;
+
+    padding:11px 13px;
+
+    border:1px solid var(--line);
+
+    border-radius:11px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.022),transparent),
+        #0b0e14;
+}
+
+.rank-trigger:hover{
+    border-color:#596273;
 }
 
 .rank-save{
@@ -1341,7 +1435,8 @@
         box-shadow:0 0 10px rgba(95,221,154,.75);
     }
 
-    .picker-menu{
+    .picker-menu,
+    .filter-menu{
         animation:none;
     }
 
@@ -1364,125 +1459,8 @@
         justify-content:space-between;
     }
 
-    .expert-filter select{
+    .filter-trigger{
         min-width:0;
     }
-
-    /* --- follow picker and ranking menus --- */
-
-.expert-filter{
-
-    position:relative;
-
-    z-index:20;
-}
-
-.filter-label{
-
-    padding-right:11px;
-
-    border-right:1px solid var(--line);
-
-    color:var(--muted);
-
-    font-size:9.5px;
-
-    font-weight:600;
-
-    letter-spacing:.16em;
-
-    text-transform:uppercase;
-
-    white-space:nowrap;
-}
-
-.filter-trigger{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:9px;
-
-    min-width:150px;
-
-    background:transparent;
-
-    border:0;
-
-    padding:12px 10px;
-
-    color:var(--soft);
-
-    font-size:12px;
-
-    text-align:left;
-}
-
-.filter-trigger:hover{
-    color:var(--text);
-}
-
-.filter-value{
-
-    flex:1;
-
-    white-space:nowrap;
-}
-
-.filter-menu{
-
-    position:absolute;
-
-    left:0;
-
-    top:calc(100% + 7px);
-
-    min-width:100%;
-
-    width:max-content;
-
-    max-width:320px;
-
-    z-index:30;
-
-    padding:6px;
-
-    background:var(--surface3);
-
-    border:1px solid var(--line);
-
-    border-radius:13px;
-
-    box-shadow:0 26px 64px rgba(0,0,0,.6);
-}
-
-.filter-menu[hidden]{
-    display:none;
-}
-
-.rank-picker{
-
-    position:relative;
-
-    flex:1;
-}
-
-.rank-trigger{
-
-    width:100%;
-
-    border:1px solid var(--line);
-
-    border-radius:11px;
-
-    background:
-        linear-gradient(180deg,rgba(255,255,255,.022),transparent),
-        #0b0e14;
-}
-
-.rank-trigger:hover{
-    border-color:#596273;
-}
 
 }
