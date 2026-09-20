@@ -148,7 +148,7 @@
        a time through a closing menu would be miserable.
     ========================= */
 
-    function buildFollowPicker(onChoose) {
+        function buildFollowPicker(onChoose) {
         var node = el("div", "expert-filter");
         node.appendChild(el("span", "filter-label", "Follow"));
 
@@ -164,24 +164,29 @@
         var menu = el("div", "filter-menu");
         menu.hidden = true;
 
+        // top: the roster
+        var head = el("div", "filter-head", "Experts on file");
         var search = document.createElement("input");
         search.type = "text";
         search.className = "filter-search";
         search.placeholder = "Search experts";
         search.hidden = true;
-
         var list = el("div", "filter-list");
 
-        var foot = el("div", "filter-foot");
-        var count = el("span", "filter-count");
-        var clear = el("button", "filter-clear", "Every expert");
+        // bottom: who is actually being followed
+        var chosenBox = el("div", "filter-chosen");
+        var chosenTitle = el("div", "filter-chosen-head");
+        var chips = el("div", "filter-chips");
+        var clear = el("button", "filter-clear", "Follow everyone");
         clear.type = "button";
-        foot.appendChild(count);
-        foot.appendChild(clear);
+        chosenBox.appendChild(chosenTitle);
+        chosenBox.appendChild(chips);
+        chosenBox.appendChild(clear);
 
+        menu.appendChild(head);
         menu.appendChild(search);
         menu.appendChild(list);
-        menu.appendChild(foot);
+        menu.appendChild(chosenBox);
 
         var chosen = [];          // empty means every expert
 
@@ -215,14 +220,9 @@
             if (menu.hidden) { open(); } else { close(); }
         });
 
-        function describeExpert(name) {
+        function countOf(name) {
             var expert = state.experts.filter(function (e) { return e.name === name; })[0];
-            if (!expert) return name;
-            var standing = state.ranking.indexOf(name);
-            return name
-                + (standing === -1 ? "" : " · #" + (standing + 1))
-                + " · " + expert.teaching
-                + (expert.teaching === 1 ? " edit" : " edits");
+            return expert ? expert.teaching : 0;
         }
 
         function summary() {
@@ -236,24 +236,24 @@
             return chosen.length + " of " + state.experts.length + " experts";
         }
 
-        function save() {
-            onChoose(chosen.slice());
-        }
-
         function toggle(name) {
             var at = chosen.indexOf(name);
             if (at === -1) { chosen.push(name); } else { chosen.splice(at, 1); }
             draw();
-            save();
+            onChoose(chosen.slice());
         }
 
         function row(expert) {
             var button = el("button", "picker-option filter-option");
             button.type = "button";
 
-            var box = el("span", "tick-box");
-            button.appendChild(box);
-            button.appendChild(el("span", "filter-name", describeExpert(expert.name)));
+            button.appendChild(el("span", "tick-box"));
+            button.appendChild(el("span", "filter-name", expert.name));
+
+            var meta = expert.teaching + (expert.teaching === 1 ? " edit" : " edits");
+            var standing = state.ranking.indexOf(expert.name);
+            if (standing !== -1) meta = "#" + (standing + 1) + " · " + meta;
+            button.appendChild(el("span", "filter-meta", meta));
 
             var on = chosen.indexOf(expert.name) !== -1;
             button.classList.toggle("ticked", on);
@@ -271,9 +271,7 @@
                 .filter(function (expert) {
                     return !needle || expert.name.toLowerCase().indexOf(needle) !== -1;
                 })
-                .forEach(function (expert) {
-                    list.appendChild(row(expert));
-                });
+                .forEach(function (expert) { list.appendChild(row(expert)); });
 
             if (!list.children.length) {
                 list.appendChild(el("p", "filter-empty",
@@ -283,10 +281,27 @@
             }
 
             search.hidden = state.experts.length < SEARCH_FROM;
+            head.textContent = "Experts on file · " + state.experts.length;
 
-            count.textContent = chosen.length
-                ? chosen.length + " selected"
-                : "Following everyone";
+            // the bottom section: who the model will actually hear from
+            chips.innerHTML = "";
+            if (chosen.length) {
+                chosenTitle.textContent = "Following · " + chosen.length;
+                chosen.forEach(function (name) {
+                    var chip = el("button", "filter-chip");
+                    chip.type = "button";
+                    chip.title = "Stop following " + name;
+                    chip.appendChild(el("span", null, name));
+                    chip.appendChild(el("span", "chip-x", "✕"));
+                    chip.addEventListener("click", function () { toggle(name); });
+                    chips.appendChild(chip);
+                });
+            } else {
+                chosenTitle.textContent = "Following everyone";
+                chips.appendChild(el("p", "filter-empty",
+                    "Every correction on file guides the model. Tick names above "
+                    + "to hear from those experts only."));
+            }
             clear.hidden = !chosen.length;
 
             valueText.textContent = summary();
@@ -298,7 +313,7 @@
         clear.addEventListener("click", function () {
             chosen = [];
             draw();
-            save();
+            onChoose([]);
         });
 
         node.appendChild(trigger);
@@ -308,8 +323,6 @@
             node: node,
             refresh: draw,
             set: function (names) {
-                // Keep only names that still exist, so a retired expert does
-                // not linger in the filter and silence the model.
                 var known = state.experts.map(function (e) { return e.name; });
                 chosen = (names || []).filter(function (name) {
                     return known.indexOf(name) !== -1;
