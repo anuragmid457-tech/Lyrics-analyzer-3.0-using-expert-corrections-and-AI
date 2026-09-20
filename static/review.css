@@ -4,51 +4,145 @@
    Uses the LYRIQ tokens already on :root, adds none of its own.
 ========================= */
 
-/* --- controls in the actions row --- */
+/* =========================
+   CONTROLS IN THE ACTIONS ROW
+   Instrument-panel language: inset wells, hairline borders, a gold lamp
+   for the live state and a teal pilot dot on the log.
+========================= */
 
+.review-switch{
 
-.review-switch:hover{
-    border-color:#596273;
-}
+    display:inline-flex;
 
-.review-switch input{
+    align-items:center;
 
-    width:auto;
+    gap:11px;
 
     margin:0;
 
-    accent-color:var(--gold);
+    padding:11px 16px;
+
+    border:1px solid var(--line);
+
+    border-radius:11px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.2));
+
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.4);
+
+    color:var(--soft);
+
+    font-size:12px;
 
     cursor:pointer;
+
+    transition:.2s;
+}
+
+.review-switch:hover{
+
+    border-color:#596273;
+
+    color:var(--text);
+}
+
+/* the indicator lamp, drawn rather than borrowed from the browser */
+
+.review-switch input{
+
+    appearance:none;
+
+    -webkit-appearance:none;
+
+    width:15px;
+
+    height:15px;
+
+    margin:0;
+
+    flex:none;
+
+    border:1px solid var(--line);
+
+    border-radius:5px;
+
+    background:#0b0e14;
+
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.7);
+
+    cursor:pointer;
+
+    transition:.22s;
+}
+
+.review-switch input:checked{
+
+    border-color:rgba(216,173,85,.6);
+
+    background:
+        radial-gradient(circle at 50% 42%,#f0cb7d,var(--gold) 62%);
+
+    box-shadow:
+        0 0 12px rgba(216,173,85,.5),
+        inset 0 1px 0 rgba(255,255,255,.35);
+}
+
+.review-switch input:focus-visible{
+
+    outline:1px solid var(--gold);
+
+    outline-offset:3px;
 }
 
 .review-switch.on{
 
+    border-color:rgba(216,173,85,.38);
+
     color:var(--gold);
 
-    border-color:rgba(216,173,85,.4);
+    box-shadow:
+        inset 0 1px 2px rgba(0,0,0,.4),
+        0 0 20px rgba(216,173,85,.07);
 }
 
 .review-switch small{
 
     color:var(--muted);
 
-    font-size:11px;
+    font-size:10px;
+
+    letter-spacing:.08em;
+
+    text-transform:uppercase;
 }
+
+/* --- follow picker --- */
 
 .expert-filter{
 
-    display:flex;
+    display:inline-flex;
 
     align-items:center;
 
-    gap:9px;
+    gap:2px;
 
-    padding:0 4px 0 13px;
+    padding:0 6px 0 14px;
 
     border:1px solid var(--line);
 
-    border-radius:10px;
+    border-radius:11px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.2));
+
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.4);
+
+    transition:.2s;
+}
+
+.expert-filter:hover{
+    border-color:#596273;
 }
 
 .expert-filter[hidden]{
@@ -59,11 +153,17 @@
 
     margin:0;
 
+    padding-right:11px;
+
+    border-right:1px solid var(--line);
+
     color:var(--muted);
 
-    font-size:10px;
+    font-size:9.5px;
 
-    letter-spacing:.14em;
+    font-weight:600;
+
+    letter-spacing:.16em;
 
     text-transform:uppercase;
 
@@ -74,7 +174,7 @@
 
     width:auto;
 
-    min-width:150px;
+    min-width:158px;
 
     background:transparent;
 
@@ -82,24 +182,92 @@
 
     border-radius:0;
 
-    padding:11px 4px;
+    padding:12px 8px;
 
     color:var(--soft);
 
     font-size:12px;
+
+    cursor:pointer;
 }
 
-.expert-filter select:focus{
-    box-shadow:none;
-}
-
-
-
-.review-log-open:hover{
+.expert-filter select:hover{
     color:var(--text);
 }
 
-/* --- provenance badge inside the result --- */
+.expert-filter select:focus{
+
+    box-shadow:none;
+
+    color:var(--gold);
+}
+
+/* --- review log button --- */
+
+.review-log-open{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:9px;
+
+    padding:11px 17px;
+
+    border:1px solid var(--line);
+
+    border-radius:11px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.028),rgba(0,0,0,.18));
+
+    color:var(--muted);
+
+    font-size:10px;
+
+    font-weight:600;
+
+    letter-spacing:.16em;
+
+    text-transform:uppercase;
+
+    transition:.2s;
+}
+
+.review-log-open::before{
+
+    content:"";
+
+    width:6px;
+
+    height:6px;
+
+    border-radius:50%;
+
+    background:var(--teal);
+
+    box-shadow:0 0 9px rgba(105,169,158,.8);
+}
+
+.review-log-open:hover{
+
+    border-color:rgba(105,169,158,.45);
+
+    color:var(--text);
+
+    box-shadow:0 0 20px rgba(105,169,158,.08);
+}
+
+.review-log-open:focus-visible{
+
+    outline:1px solid var(--gold);
+
+    outline-offset:3px;
+}
+
+/* =========================
+   PROVENANCE BADGE
+========================= */
 
 .provenance{
 
@@ -163,7 +331,9 @@
     margin-top:10px;
 }
 
-/* --- drawer --- */
+/* =========================
+   DRAWER
+========================= */
 
 .drawer-scrim{
 
@@ -289,7 +459,9 @@
     flex:1;
 }
 
-/* --- form --- */
+/* =========================
+   FORM
+========================= */
 
 .field{
     margin-bottom:17px;
@@ -791,23 +963,6 @@
     }
 }
 
-@media(prefers-reduced-motion:reduce){
-
-    .led.blink{
-
-        animation:none;
-
-        background:#5fdd9a;
-
-        box-shadow:0 0 10px rgba(95,221,154,.75);
-    }
-
-    .picker-menu{
-        animation:none;
-    }
-
-}
-
 .picker-list[hidden]{
     display:none;
 }
@@ -1121,7 +1276,9 @@
     font-weight:500;
 }
 
-/* --- toast --- */
+/* =========================
+   TOAST
+========================= */
 
 .review-toast{
 
@@ -1152,6 +1309,27 @@
     z-index:50;
 }
 
+/* =========================
+   MOTION AND MOBILE
+========================= */
+
+@media(prefers-reduced-motion:reduce){
+
+    .led.blink{
+
+        animation:none;
+
+        background:#5fdd9a;
+
+        box-shadow:0 0 10px rgba(95,221,154,.75);
+    }
+
+    .picker-menu{
+        animation:none;
+    }
+
+}
+
 @media(max-width:650px){
 
     .drawer{
@@ -1163,264 +1341,14 @@
     }
 
     .expert-filter{
+
         width:100%;
+
+        justify-content:space-between;
     }
 
-    /* --- controls in the actions row --- */
-
-.review-switch{
-
-    display:inline-flex;
-
-    align-items:center;
-
-    gap:11px;
-
-    margin:0;
-
-    padding:11px 16px;
-
-    border:1px solid var(--line);
-
-    border-radius:11px;
-
-    background:
-        linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.2));
-
-    box-shadow:inset 0 1px 2px rgba(0,0,0,.4);
-
-    color:var(--soft);
-
-    font-size:12px;
-
-    cursor:pointer;
-
-    transition:.2s;
-}
-
-.review-switch:hover{
-
-    border-color:#596273;
-
-    color:var(--text);
-}
-
-/* the indicator lamp, drawn rather than borrowed from the browser */
-
-.review-switch input{
-
-    appearance:none;
-
-    -webkit-appearance:none;
-
-    width:15px;
-
-    height:15px;
-
-    margin:0;
-
-    flex:none;
-
-    border:1px solid var(--line);
-
-    border-radius:5px;
-
-    background:#0b0e14;
-
-    box-shadow:inset 0 1px 3px rgba(0,0,0,.7);
-
-    cursor:pointer;
-
-    transition:.22s;
-}
-
-.review-switch input:checked{
-
-    border-color:rgba(216,173,85,.6);
-
-    background:
-        radial-gradient(circle at 50% 42%,#f0cb7d,var(--gold) 62%);
-
-    box-shadow:
-        0 0 12px rgba(216,173,85,.5),
-        inset 0 1px 0 rgba(255,255,255,.35);
-}
-
-.review-switch input:focus-visible{
-
-    outline:1px solid var(--gold);
-
-    outline-offset:3px;
-}
-
-.review-switch.on{
-
-    border-color:rgba(216,173,85,.38);
-
-    color:var(--gold);
-
-    box-shadow:
-        inset 0 1px 2px rgba(0,0,0,.4),
-        0 0 20px rgba(216,173,85,.07);
-}
-
-.review-switch small{
-
-    color:var(--muted);
-
-    font-size:10px;
-
-    letter-spacing:.08em;
-
-    text-transform:uppercase;
-}
-
-/* --- follow picker --- */
-
-.expert-filter{
-
-    display:inline-flex;
-
-    align-items:center;
-
-    gap:2px;
-
-    padding:0 6px 0 14px;
-
-    border:1px solid var(--line);
-
-    border-radius:11px;
-
-    background:
-        linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.2));
-
-    box-shadow:inset 0 1px 2px rgba(0,0,0,.4);
-
-    transition:.2s;
-}
-
-.expert-filter:hover{
-    border-color:#596273;
-}
-
-.expert-filter[hidden]{
-    display:none;
-}
-
-.expert-filter label{
-
-    margin:0;
-
-    padding-right:11px;
-
-    border-right:1px solid var(--line);
-
-    color:var(--muted);
-
-    font-size:9.5px;
-
-    font-weight:600;
-
-    letter-spacing:.16em;
-
-    text-transform:uppercase;
-
-    white-space:nowrap;
-}
-
-.expert-filter select{
-
-    width:auto;
-
-    min-width:158px;
-
-    background:transparent;
-
-    border:0;
-
-    border-radius:0;
-
-    padding:12px 8px;
-
-    color:var(--soft);
-
-    font-size:12px;
-
-    cursor:pointer;
-}
-
-.expert-filter select:hover{
-    color:var(--text);
-}
-
-.expert-filter select:focus{
-
-    box-shadow:none;
-
-    color:var(--gold);
-}
-
-/* --- review log --- */
-
-.review-log-open{
-
-    display:inline-flex;
-
-    align-items:center;
-
-    gap:9px;
-
-    padding:11px 17px;
-
-    border:1px solid var(--line);
-
-    border-radius:11px;
-
-    background:
-        linear-gradient(180deg,rgba(255,255,255,.028),rgba(0,0,0,.18));
-
-    color:var(--muted);
-
-    font-size:10px;
-
-    font-weight:600;
-
-    letter-spacing:.16em;
-
-    text-transform:uppercase;
-
-    transition:.2s;
-}
-
-.review-log-open::before{
-
-    content:"";
-
-    width:6px;
-
-    height:6px;
-
-    border-radius:50%;
-
-    background:var(--teal);
-
-    box-shadow:0 0 9px rgba(105,169,158,.8);
-}
-
-.review-log-open:hover{
-
-    border-color:rgba(105,169,158,.45);
-
-    color:var(--text);
-
-    box-shadow:0 0 20px rgba(105,169,158,.08);
-}
-
-.review-log-open:focus-visible{
-
-    outline:1px solid var(--gold);
-
-    outline-offset:3px;
-}
+    .expert-filter select{
+        min-width:0;
+    }
 
 }
