@@ -27,3 +27,11 @@ http://localhost:5000/api/review/stats
    Use the register the song lives in,
      including Hindi, Bengali or Urdu terms where they name the feeling better
      than English.
+
+
+
+     firebase login
+
+     firebase init
+
+     firebase deploy

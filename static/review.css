@@ -49,17 +49,21 @@
 
 /* the indicator lamp, drawn rather than borrowed from the browser */
 
+/* the tick well, drawn rather than borrowed from the browser */
+
 .review-switch input{
 
     appearance:none;
 
     -webkit-appearance:none;
 
-    width:15px;
+    width:17px;
 
-    height:15px;
+    height:17px;
 
     margin:0;
+
+    padding:0;
 
     flex:none;
 
@@ -67,26 +71,38 @@
 
     border-radius:5px;
 
-    background:#0b0e14;
+    background-color:#0b0e14;
+
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cdefs%3E%3Cfilter id='g' x='-50%25' y='-50%25' width='200%25' height='200%25'%3E%3CfeGaussianBlur stdDeviation='1.1'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M3.8 8.4l2.7 2.7L12.2 5.3' fill='none' stroke='%23d8ad55' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round' filter='url(%23g)'/%3E%3Cpath d='M3.8 8.4l2.7 2.7L12.2 5.3' fill='none' stroke='%23f6d994' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+    background-repeat:no-repeat;
+
+    background-position:center;
+
+    background-size:0 0;
 
     box-shadow:inset 0 1px 3px rgba(0,0,0,.7);
 
     cursor:pointer;
 
-    transition:.22s;
+    transition:
+        background-size .22s cubic-bezier(.3,1.5,.6,1),
+        border-color .2s,
+        box-shadow .2s;
 }
 
 .review-switch input:checked{
 
-    border-color:rgba(216,173,85,.6);
+    background-size:100% 100%;
 
-    background:
-        radial-gradient(circle at 50% 42%,#f0cb7d,var(--gold) 62%);
+    border-color:rgba(216,173,85,.5);
 
     box-shadow:
-        0 0 12px rgba(216,173,85,.5),
-        inset 0 1px 0 rgba(255,255,255,.35);
+        inset 0 1px 3px rgba(0,0,0,.7),
+        inset 0 0 8px rgba(216,173,85,.18),
+        0 0 12px rgba(216,173,85,.22);
 }
+
 
 .review-switch input:focus-visible{
 
