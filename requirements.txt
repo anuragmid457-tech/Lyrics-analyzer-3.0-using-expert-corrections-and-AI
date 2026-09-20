@@ -5,30 +5,22 @@
 #   python -m pip install --upgrade pip
 #   pip install -r requirements.txt
 #
-# Then put GOOGLE_API_KEY=... in a .env file beside app.py.
-#
-# Resolved and imported on CPython 3.12.3. Every package below ships a wheel,
-# so nothing compiles and you need no build tools on Windows.
+# .env needs GOOGLE_API_KEY and DATABASE_URL.
 
 Flask>=3.0,<4.0
 python-dotenv>=1.0,<2.0
+gunicorn>=21.2
 
-# Analyser stack.
-#
-# The <0.4 caps matter. langchain-google-genai 4.x was rewritten against
-# Google's consolidated SDK and requires langchain-core >= 1.3, which cannot
-# coexist with the 0.3 line your analyser files are written for. Pinning the
-# genai package below 3.0 states that directly instead of leaving pip to
-# discover it by backtracking.
+# analyser stack. The <0.4 caps matter: langchain-google-genai 4.x requires
+# langchain-core >= 1.3, which cannot coexist with the 0.3 line these files
+# are written for.
 langchain>=0.3,<0.4
 langchain-core>=0.3,<0.4
 langchain-community>=0.3,<0.4
 langchain-google-genai>=2.0,<3.0
 
-# PyPDFLoader's backend, used by detect_emotion().
+# PyPDFLoader's backend, used by detect_emotion()
 pypdf>=4.2
 
-# Nothing else is needed. Cosine similarity in learning.py is plain Python and
-# storage is the sqlite3 module from the standard library, so no numpy and no
-# database server.
-gunicorn>=21.2
+# PostgreSQL. [binary] ships a compiled wheel, so nothing builds on Windows.
+psycopg[binary]>=3.1

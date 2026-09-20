@@ -24,9 +24,9 @@ try:                        # filenames differ in case between machines
     import learning
     from review import review
 except ImportError:         # pragma: no cover
-    import Database as database
-    import Learning as learning
-    from Review import review
+    import database as database
+    import learning as learning
+    from review import review
 
 import graph
 import lyrics_senti_analysis

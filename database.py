@@ -1,13 +1,17 @@
 """
-database.py - the only module that talks to SQLite.
+database.py - the only module that talks to PostgreSQL.
 
 Nothing here knows about Flask, prompts or embeddings. It stores rows and
 returns dicts. learning.py decides what the rows mean; review.py decides who
-is allowed to write them.
+is allowed to write them. Because every query lives in this one file, moving
+from SQLite to Postgres touched nothing else in the project.
 
-Corrections carry the name of the expert who made them, so a reading can be
-asked to follow one person's judgement rather than the pooled average of
-everyone who has ever edited.
+The database lives with Supabase rather than on the machine running the app,
+so corrections survive a redeploy, a restart, and the free tier wiping its
+disk. Local runs and the hosted site point at the same one.
+
+    DATABASE_URL must be set, e.g. in .env:
+      DATABASE_URL=postgresql://postgres.xxxx:PASSWORD@host.supabase.com:5432/postgres
 
     init()                              create the tables, safe every boot
     save_analysis(...)      -> id       record a reading
@@ -25,40 +29,72 @@ import hashlib
 import json
 import os
 import re
-import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-HERE = Path(__file__).parent
+import psycopg
+from psycopg.rows import dict_row
 
-DB_PATH = os.getenv("LYRIQ_DB", str(HERE / "lyriq.db"))
+HERE = Path(__file__).parent
 SCHEMA_PATH = HERE / "schema.sql"
 
 # Corrections saved before names were required show up under this.
 UNATTRIBUTED = "Unattributed"
 
 
+def _dsn():
+    url = os.getenv("DATABASE_URL", "").strip()
+    if not url:
+        raise RuntimeError(
+            "DATABASE_URL is not set. Put your Supabase connection string in .env "
+            "locally, and in the Environment tab on your host."
+        )
+    # Supabase requires TLS; say so explicitly rather than relying on defaults.
+    if "sslmode=" not in url:
+        url += ("&" if "?" in url else "?") + "sslmode=require"
+    return url
+
+
 # --- plumbing ------------------------------------------------------------
 
 def connect():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+    """One connection per call. Simple, and fine at this traffic."""
+    return psycopg.connect(_dsn(), row_factory=dict_row)
 
 
 def init():
     """Create the tables if they are not there. Idempotent."""
     with connect() as conn:
-        conn.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
+        with conn.cursor() as cur:
+            cur.execute(SCHEMA_PATH.read_text(encoding="utf-8"))
+        conn.commit()
 
 
 def _now():
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def _row(record):
-    return dict(record) if record is not None else None
+def _one(sql, params=()):
+    with connect() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, params)
+            return cur.fetchone()
+
+
+def _all(sql, params=()):
+    with connect() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, params)
+            return cur.fetchall()
+
+
+def _run(sql, params=()):
+    with connect() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, params)
+            row = cur.fetchone() if cur.description else None
+        conn.commit()
+        return row
 
 
 def _json(value, fallback=None):
@@ -80,11 +116,7 @@ def excerpt(text: str, limit: int = 120) -> str:
 
 
 def _editor_clause(editors):
-    """SQL fragment restricting rows to a list of expert names.
-
-    UNATTRIBUTED stands for the rows saved before a name was required, which
-    are stored as NULL or blank rather than under any name.
-    """
+    """SQL fragment restricting rows to a list of expert names."""
     if not editors:
         return "", []
 
@@ -97,7 +129,7 @@ def _editor_clause(editors):
         parts.append("(editor IS NULL OR TRIM(editor) = '')")
         names = [n for n in names if n != UNATTRIBUTED]
     if names:
-        parts.append("TRIM(editor) IN (%s)" % ",".join("?" for _ in names))
+        parts.append("TRIM(editor) IN (%s)" % ",".join(["%s"] * len(names)))
         params.extend(names)
 
     return " AND (" + " OR ".join(parts) + ")", params
@@ -107,48 +139,45 @@ def _editor_clause(editors):
 
 def save_analysis(input_text, output, source="model", learned_from=None):
     """Record one reading and return its id."""
-    with connect() as conn:
-        cursor = conn.execute(
-            """INSERT INTO analyses
-                   (created_at, fingerprint, excerpt, input_text,
-                    output, source, learned_from)
-               VALUES (?, ?, ?, ?, ?, ?, ?)""",
-            (
-                _now(),
-                fingerprint(input_text),
-                excerpt(input_text),
-                input_text,
-                json.dumps(output, ensure_ascii=False),
-                source,
-                json.dumps(learned_from, ensure_ascii=False) if learned_from else None,
-            ),
-        )
-        return cursor.lastrowid
+    row = _run(
+        """INSERT INTO analyses
+               (created_at, fingerprint, excerpt, input_text,
+                output, source, learned_from)
+           VALUES (%s, %s, %s, %s, %s, %s, %s)
+           RETURNING id""",
+        (
+            _now(),
+            fingerprint(input_text),
+            excerpt(input_text),
+            input_text,
+            json.dumps(output, ensure_ascii=False),
+            source,
+            json.dumps(learned_from, ensure_ascii=False) if learned_from else None,
+        ),
+    )
+    return row["id"]
 
 
 def get_analysis(analysis_id):
-    with connect() as conn:
-        record = _row(conn.execute(
-            "SELECT * FROM analyses WHERE id = ?", (analysis_id,)
-        ).fetchone())
+    record = _one("SELECT * FROM analyses WHERE id = %s", (analysis_id,))
     if record is None:
         return None
+    record = dict(record)
     record["output"] = _json(record["output"], {})
     record["learned_from"] = _json(record["learned_from"], [])
     return record
 
 
 def recent_analyses(limit=20):
-    with connect() as conn:
-        rows = conn.execute(
-            """SELECT a.id, a.created_at, a.excerpt, a.source,
-                      (SELECT COUNT(*) FROM corrections c
-                        WHERE c.analysis_id = a.id AND c.active = 1) AS corrections
-                 FROM analyses a
-             ORDER BY a.created_at DESC, a.id DESC
-                LIMIT ?""",
-            (limit,),
-        ).fetchall()
+    rows = _all(
+        """SELECT a.id, a.created_at, a.excerpt, a.source,
+                  (SELECT COUNT(*) FROM corrections c
+                    WHERE c.analysis_id = a.id AND c.active = 1) AS corrections
+             FROM analyses a
+         ORDER BY a.created_at DESC, a.id DESC
+            LIMIT %s""",
+        (limit,),
+    )
     return [dict(row) for row in rows]
 
 
@@ -161,26 +190,26 @@ def save_correction(analysis_id, original, corrected, changed,
     if analysis is None:
         raise ValueError(f"No analysis with id {analysis_id}.")
 
-    with connect() as conn:
-        cursor = conn.execute(
-            """INSERT INTO corrections
-                   (created_at, analysis_id, fingerprint, excerpt,
-                    original, corrected, changed, editor, note, embedding, active)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)""",
-            (
-                _now(),
-                analysis_id,
-                analysis["fingerprint"],
-                analysis["excerpt"],
-                json.dumps(original, ensure_ascii=False),
-                json.dumps(corrected, ensure_ascii=False),
-                json.dumps(changed, ensure_ascii=False),
-                (editor or "").strip() or None,
-                (note or "").strip() or None,
-                json.dumps(embedding) if embedding else None,
-            ),
-        )
-        return cursor.lastrowid
+    row = _run(
+        """INSERT INTO corrections
+               (created_at, analysis_id, fingerprint, excerpt,
+                original, corrected, changed, editor, note, embedding, active)
+           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 1)
+           RETURNING id""",
+        (
+            _now(),
+            analysis_id,
+            analysis["fingerprint"],
+            analysis["excerpt"],
+            json.dumps(original, ensure_ascii=False),
+            json.dumps(corrected, ensure_ascii=False),
+            json.dumps(changed, ensure_ascii=False),
+            (editor or "").strip() or None,
+            (note or "").strip() or None,
+            json.dumps(embedding) if embedding else None,
+        ),
+    )
+    return row["id"]
 
 
 def _hydrate_correction(record, with_vector=False):
@@ -197,35 +226,30 @@ def _hydrate_correction(record, with_vector=False):
 
 
 def active_corrections(with_vector=True, limit=400, editors=None):
-    """Every correction still allowed to teach, newest first.
-
-    Pass editors to hear from named experts only.
-    """
+    """Every correction still allowed to teach, newest first."""
     clause, params = _editor_clause(editors)
-    with connect() as conn:
-        rows = conn.execute(
-            f"""SELECT * FROM corrections
-                 WHERE active = 1{clause}
-              ORDER BY created_at DESC, id DESC
-                 LIMIT ?""",
-            params + [limit],
-        ).fetchall()
+    rows = _all(
+        f"""SELECT * FROM corrections
+             WHERE active = 1{clause}
+          ORDER BY created_at DESC, id DESC
+             LIMIT %s""",
+        params + [limit],
+    )
     return [_hydrate_correction(row, with_vector) for row in rows]
 
 
 def list_corrections(limit=50, include_retired=True, editors=None):
     """For the review log. Vectors stripped, they are noise on screen."""
     clause, params = _editor_clause(editors)
-    where = "WHERE 1 = 1" if include_retired else "WHERE active = 1"
-    with connect() as conn:
-        rows = conn.execute(
-            f"""SELECT id, created_at, analysis_id, excerpt, changed,
-                       editor, note, active
-                  FROM corrections {where}{clause}
-              ORDER BY created_at DESC, id DESC
-                 LIMIT ?""",
-            params + [limit],
-        ).fetchall()
+    where = "WHERE TRUE" if include_retired else "WHERE active = 1"
+    rows = _all(
+        f"""SELECT id, created_at, analysis_id, excerpt, changed,
+                   editor, note, active
+              FROM corrections {where}{clause}
+          ORDER BY created_at DESC, id DESC
+             LIMIT %s""",
+        params + [limit],
+    )
     out = []
     for row in rows:
         record = dict(row)
@@ -236,34 +260,27 @@ def list_corrections(limit=50, include_retired=True, editors=None):
 
 
 def get_correction(correction_id, with_vector=False):
-    with connect() as conn:
-        record = conn.execute(
-            "SELECT * FROM corrections WHERE id = ?", (correction_id,)
-        ).fetchone()
+    record = _one("SELECT * FROM corrections WHERE id = %s", (correction_id,))
     return _hydrate_correction(record, with_vector) if record else None
 
 
 def correction_for(text, editors=None):
     """Newest active correction for an input identical to this one."""
     clause, params = _editor_clause(editors)
-    with connect() as conn:
-        record = conn.execute(
-            f"""SELECT * FROM corrections
-                 WHERE fingerprint = ? AND active = 1{clause}
-              ORDER BY created_at DESC, id DESC
-                 LIMIT 1""",
-            [fingerprint(text)] + params,
-        ).fetchone()
+    record = _one(
+        f"""SELECT * FROM corrections
+             WHERE fingerprint = %s AND active = 1{clause}
+          ORDER BY created_at DESC, id DESC
+             LIMIT 1""",
+        [fingerprint(text)] + params,
+    )
     return _hydrate_correction(record) if record else None
 
 
 def retire_correction(correction_id, active=False):
     """Stop a correction teaching, or put it back. The row is never deleted."""
-    with connect() as conn:
-        conn.execute(
-            "UPDATE corrections SET active = ? WHERE id = ?",
-            (1 if active else 0, correction_id),
-        )
+    _run("UPDATE corrections SET active = %s WHERE id = %s",
+         (1 if active else 0, correction_id))
     return get_correction(correction_id)
 
 
@@ -271,40 +288,35 @@ def retire_correction(correction_id, active=False):
 
 def experts():
     """Who has corrected readings, and how much of it still teaches."""
-    with connect() as conn:
-        rows = conn.execute(
-            """SELECT COALESCE(NULLIF(TRIM(editor), ''), ?) AS name,
-                      COUNT(*)                              AS corrections,
-                      SUM(active)                           AS teaching,
-                      MAX(created_at)                       AS last_edit
-                 FROM corrections
-             GROUP BY name
-             ORDER BY teaching DESC, corrections DESC, name ASC""",
-            (UNATTRIBUTED,),
-        ).fetchall()
+    rows = _all(
+        """SELECT COALESCE(NULLIF(TRIM(editor), ''), %s) AS name,
+                  COUNT(*)                               AS corrections,
+                  COALESCE(SUM(active), 0)               AS teaching,
+                  MAX(created_at)                        AS last_edit
+             FROM corrections
+         GROUP BY COALESCE(NULLIF(TRIM(editor), ''), %s)
+         ORDER BY teaching DESC, corrections DESC, name ASC""",
+        (UNATTRIBUTED, UNATTRIBUTED),
+    )
     return [dict(row) for row in rows]
 
 
 # --- preferences ---------------------------------------------------------
 
 def get_preference(key, fallback=None):
-    with connect() as conn:
-        record = conn.execute(
-            "SELECT value FROM preferences WHERE key = ?", (key,)
-        ).fetchone()
+    record = _one("SELECT value FROM preferences WHERE key = %s", (key,))
     return record["value"] if record else fallback
 
 
 def set_preference(key, value):
-    with connect() as conn:
-        conn.execute(
-            """INSERT INTO preferences (key, value, updated_at)
-               VALUES (?, ?, ?)
-               ON CONFLICT(key) DO UPDATE
-                  SET value = excluded.value,
-                      updated_at = excluded.updated_at""",
-            (key, str(value), _now()),
-        )
+    _run(
+        """INSERT INTO preferences (key, value, updated_at)
+           VALUES (%s, %s, %s)
+           ON CONFLICT (key) DO UPDATE
+              SET value = EXCLUDED.value,
+                  updated_at = EXCLUDED.updated_at""",
+        (key, str(value), _now()),
+    )
     return get_preference(key)
 
 
@@ -319,17 +331,16 @@ def set_json_preference(key, value):
 # --- summary -------------------------------------------------------------
 
 def stats():
-    with connect() as conn:
-        row = conn.execute(
-            """SELECT
-                 (SELECT COUNT(*) FROM analyses)                     AS analyses,
-                 (SELECT COUNT(*) FROM corrections)                  AS corrections,
-                 (SELECT COUNT(*) FROM corrections WHERE active = 1) AS teaching,
-                 (SELECT COUNT(*) FROM corrections
-                   WHERE active = 1 AND embedding IS NOT NULL)       AS embedded,
-                 (SELECT COUNT(DISTINCT COALESCE(NULLIF(TRIM(editor), ''), ?))
-                    FROM corrections)                                AS experts,
-                 (SELECT MAX(created_at) FROM corrections)           AS last_edit""",
-            (UNATTRIBUTED,),
-        ).fetchone()
+    row = _one(
+        """SELECT
+             (SELECT COUNT(*) FROM analyses)                     AS analyses,
+             (SELECT COUNT(*) FROM corrections)                  AS corrections,
+             (SELECT COUNT(*) FROM corrections WHERE active = 1) AS teaching,
+             (SELECT COUNT(*) FROM corrections
+               WHERE active = 1 AND embedding IS NOT NULL)       AS embedded,
+             (SELECT COUNT(DISTINCT COALESCE(NULLIF(TRIM(editor), ''), %s))
+                FROM corrections)                                AS experts,
+             (SELECT MAX(created_at) FROM corrections)           AS last_edit""",
+        (UNATTRIBUTED,),
+    )
     return dict(row)

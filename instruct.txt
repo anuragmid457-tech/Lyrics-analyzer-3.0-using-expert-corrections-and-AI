@@ -1,5 +1,9 @@
 ctrl + shift + O = find words in code
 
+python migrate_to_postgres.py
+
+DATABASE_POSTGRES PASSWORD == ANURAG_THE_VILLIAN
+
 
 git init
 git branch -M main
@@ -35,3 +39,10 @@ http://localhost:5000/api/review/stats
      firebase init
 
      firebase deploy
+
+
+     # Connect to Postgres via the shared transaction-mode pooler (IPv4-only)
+DATABASE_URL="postgresql://postgres.txopirfjznzzgkufpskj:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+
+# Connect to Postgres via the shared session-mode pooler (used for migrations)
+DIRECT_URL="postgresql://postgres.txopirfjznzzgkufpskj:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
