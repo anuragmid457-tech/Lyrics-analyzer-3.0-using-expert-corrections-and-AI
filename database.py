@@ -287,19 +287,24 @@ def retire_correction(correction_id, active=False):
 # --- experts -------------------------------------------------------------
 
 def experts():
-    """Who has corrected readings, and how much of it still teaches."""
+    """Who has corrected readings, and how much of it still teaches.
+
+    The COALESCE runs in a subquery rather than the GROUP BY, because
+    Postgres will not group by an expression containing a bind parameter.
+    """
     rows = _all(
-        """SELECT COALESCE(NULLIF(TRIM(editor), ''), %s) AS name,
-                  COUNT(*)                               AS corrections,
-                  COALESCE(SUM(active), 0)               AS teaching,
-                  MAX(created_at)                        AS last_edit
-             FROM corrections
-         GROUP BY COALESCE(NULLIF(TRIM(editor), ''), %s)
+        """SELECT name,
+                  COUNT(*)                 AS corrections,
+                  COALESCE(SUM(active), 0) AS teaching,
+                  MAX(created_at)          AS last_edit
+             FROM (SELECT COALESCE(NULLIF(TRIM(editor), ''), %s) AS name,
+                          active, created_at
+                     FROM corrections) AS named
+         GROUP BY name
          ORDER BY teaching DESC, corrections DESC, name ASC""",
-        (UNATTRIBUTED, UNATTRIBUTED),
+        (UNATTRIBUTED,),
     )
     return [dict(row) for row in rows]
-
 
 # --- preferences ---------------------------------------------------------
 
