@@ -94,27 +94,34 @@
 
 /* the tick, two borders rotated into a check */
 
+/* the tick, two borders rotated into a check */
+
+.review-switch input{
+    position:relative;
+}
+
 .review-switch input:checked::after{
 
     content:"";
 
-    display:block;
+    position:absolute;
+
+    left:50%;
+
+    top:46%;
 
     width:4px;
 
     height:8px;
 
-    margin:1px auto 0;
-
     border:solid var(--gold);
 
     border-width:0 2px 2px 0;
 
-    transform:rotate(45deg);
+    transform:translate(-50%,-50%) rotate(45deg);
 
     filter:drop-shadow(0 0 5px rgba(216,173,85,.9));
 }
-
 .review-switch input:focus-visible{
 
     outline:1px solid var(--gold);
