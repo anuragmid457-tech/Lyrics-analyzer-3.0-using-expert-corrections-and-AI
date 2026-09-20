@@ -1,17 +1,7 @@
-# secrets — Gemini API key
 .env
-
-# the corrections database
 lyriq.db
 *.db
-
-# python
 __pycache__/
 *.py[cod]
 .venv/
-venv/
-
-# editors
 .vscode/
-.idea/
-Thumbs.db
