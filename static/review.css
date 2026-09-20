@@ -6,30 +6,6 @@
 
 /* --- controls in the actions row --- */
 
-.review-switch{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:9px;
-
-    margin:0;
-
-    padding:11px 15px;
-
-    border:1px solid var(--line);
-
-    border-radius:10px;
-
-    color:var(--soft);
-
-    font-size:12px;
-
-    cursor:pointer;
-
-    transition:.2s;
-}
 
 .review-switch:hover{
     border-color:#596273;
@@ -117,20 +93,7 @@
     box-shadow:none;
 }
 
-.review-log-open{
 
-    background:none;
-
-    border:0;
-
-    color:var(--muted);
-
-    font-size:12px;
-
-    padding:11px 4px;
-
-    border-bottom:1px dotted var(--line);
-}
 
 .review-log-open:hover{
     color:var(--text);
