@@ -11,6 +11,10 @@
      · a provenance line under each reading saying which one produced it
      · Edit this reading, which opens the correction drawer
      · a review log: who changed what, expert standings, retire and restore
+
+   Every menu here is drawn by the page rather than by a native <select>.
+   Windows hands the option list of a real select to the OS, which ignores
+   the page's colours and renders unreadable pale strips on a dark theme.
 ============================================ */
 
 (function () {
@@ -59,6 +63,8 @@
         ranking: [],
         current: null
     };
+
+    var followPicker = null;   // set by mountControls, refreshed on every change
 
 
     /* =========================
@@ -134,6 +140,105 @@
        CONTROLS IN THE ACTIONS ROW
     ========================= */
 
+    function buildFollowPicker(onChoose) {
+        var node = el("div", "expert-filter");
+        node.appendChild(el("span", "filter-label", "Follow"));
+
+        var trigger = el("button", "filter-trigger");
+        trigger.type = "button";
+        trigger.setAttribute("aria-haspopup", "true");
+        trigger.setAttribute("aria-expanded", "false");
+
+        var valueText = el("span", "filter-value", "Every expert");
+        trigger.appendChild(valueText);
+        trigger.appendChild(el("span", "picker-caret", "▾"));
+
+        var menu = el("div", "filter-menu");
+        menu.hidden = true;
+
+        var chosen = "";          // "" means every expert
+
+        function close() {
+            menu.hidden = true;
+            trigger.setAttribute("aria-expanded", "false");
+            document.removeEventListener("mousedown", outside, true);
+            document.removeEventListener("keydown", escape, true);
+        }
+
+        function open() {
+            menu.hidden = false;
+            trigger.setAttribute("aria-expanded", "true");
+            document.addEventListener("mousedown", outside, true);
+            document.addEventListener("keydown", escape, true);
+        }
+
+        function outside(event) {
+            if (!node.contains(event.target)) close();
+        }
+
+        function escape(event) {
+            if (event.key !== "Escape") return;
+            event.stopPropagation();
+            close();
+            trigger.focus();
+        }
+
+        trigger.addEventListener("click", function () {
+            if (menu.hidden) { open(); } else { close(); }
+        });
+
+        function label(name) {
+            if (!name) {
+                return state.experts.length
+                    ? "Every expert (" + state.experts.length + ")"
+                    : "Every expert";
+            }
+            var expert = state.experts.filter(function (e) { return e.name === name; })[0];
+            if (!expert) return name;
+            var standing = state.ranking.indexOf(name);
+            return name
+                + (standing === -1 ? "" : " · #" + (standing + 1))
+                + " · " + expert.teaching
+                + (expert.teaching === 1 ? " edit" : " edits");
+        }
+
+        function row(name) {
+            var button = el("button", "picker-option");
+            button.type = "button";
+            button.textContent = label(name);
+            button.classList.toggle("on", name === chosen);
+            button.addEventListener("click", function () {
+                chosen = name;
+                valueText.textContent = label(name);
+                close();
+                refresh();
+                onChoose(name ? [name] : []);
+            });
+            return button;
+        }
+
+        function refresh() {
+            menu.innerHTML = "";
+            menu.appendChild(row(""));
+            state.experts.forEach(function (expert) {
+                menu.appendChild(row(expert.name));
+            });
+            valueText.textContent = label(chosen);
+        }
+
+        node.appendChild(trigger);
+        node.appendChild(menu);
+
+        return {
+            node: node,
+            refresh: refresh,
+            set: function (names) {
+                chosen = (names && names[0]) || "";
+                refresh();
+            }
+        };
+    }
+
     function mountControls() {
         var actions = document.querySelector(".actions");
         if (!actions) return;
@@ -150,14 +255,18 @@
         label.appendChild(caption);
         actions.appendChild(label);
 
-        var picker = el("div", "expert-filter");
-        var pickerLabel = el("label", null, "Follow");
-        pickerLabel.setAttribute("for", "expert-select");
-        var select = document.createElement("select");
-        select.id = "expert-select";
-        picker.appendChild(pickerLabel);
-        picker.appendChild(select);
-        actions.appendChild(picker);
+        followPicker = buildFollowPicker(async function (names) {
+            state.filter = names;
+            try {
+                await post("/preferences", { filter: names });
+                toast(names.length
+                    ? "Following " + names[0] + " only."
+                    : "Following every expert on file.");
+            } catch (error) {
+                toast(error.message);
+            }
+        });
+        actions.appendChild(followPicker.node);
 
         var logButton = el("button", "review-log-open", "Review log");
         logButton.type = "button";
@@ -167,7 +276,7 @@
         box.addEventListener("change", async function () {
             state.useLearned = box.checked;
             label.classList.toggle("on", box.checked);
-            picker.hidden = !box.checked;
+            followPicker.node.hidden = !box.checked;
             try {
                 await post("/preferences", { use_learned: box.checked });
                 toast(box.checked
@@ -178,48 +287,19 @@
             }
         });
 
-        select.addEventListener("change", async function () {
-            var chosen = select.value ? [select.value] : [];
-            state.filter = chosen;
-            try {
-                await post("/preferences", { filter: chosen });
-                toast(chosen.length
-                    ? "Following " + chosen[0] + " only."
-                    : "Following every expert on file.");
-            } catch (error) {
-                toast(error.message);
-            }
-        });
-
-        loadPreferences(box, label, select, picker);
+        loadPreferences(box, label);
     }
 
-    function fillExpertSelect(select) {
-        if (!select) return;
-        select.innerHTML = "";
-
-        var all = document.createElement("option");
-        all.value = "";
-        all.textContent = state.experts.length
-            ? "Every expert (" + state.experts.length + ")"
-            : "Every expert";
-        select.appendChild(all);
-
-        state.experts.forEach(function (expert) {
-            var option = document.createElement("option");
-            option.value = expert.name;
-            var standing = state.ranking.indexOf(expert.name);
-            option.textContent = expert.name
-                + (standing === -1 ? "" : " · #" + (standing + 1))
-                + " · " + expert.teaching
-                + (expert.teaching === 1 ? " edit" : " edits");
-            select.appendChild(option);
-        });
-
-        select.value = state.filter.length ? state.filter[0] : "";
+    function showCount(stats) {
+        var teaching = (stats || {}).teaching || 0;
+        var count = document.getElementById("learned-count");
+        if (!count) return;
+        count.textContent = teaching
+            ? "· " + teaching + (teaching === 1 ? " edit" : " edits")
+            : "· none yet";
     }
 
-    async function loadPreferences(box, label, select, picker) {
+    async function loadPreferences(box, label) {
         try {
             var data = await api("/preferences");
             state.useLearned = data.use_learned;
@@ -229,16 +309,11 @@
 
             box.checked = data.use_learned;
             label.classList.toggle("on", data.use_learned);
-            if (picker) picker.hidden = !data.use_learned;
-            fillExpertSelect(select);
-
-            var teaching = (data.stats || {}).teaching || 0;
-            var count = document.getElementById("learned-count");
-            if (count) {
-                count.textContent = teaching
-                    ? "· " + teaching + (teaching === 1 ? " edit" : " edits")
-                    : "· none yet";
+            if (followPicker) {
+                followPicker.node.hidden = !data.use_learned;
+                followPicker.set(state.filter);
             }
+            showCount(data.stats);
         } catch (error) {
             /* the page still works without the review layer */
         }
@@ -250,15 +325,8 @@
             state.experts = data.experts || [];
             state.filter = data.filter || [];
             state.ranking = data.ranking || [];
-            fillExpertSelect(document.getElementById("expert-select"));
-
-            var teaching = (data.stats || {}).teaching || 0;
-            var count = document.getElementById("learned-count");
-            if (count) {
-                count.textContent = teaching
-                    ? "· " + teaching + (teaching === 1 ? " edit" : " edits")
-                    : "· none yet";
-            }
+            if (followPicker) followPicker.set(state.filter);
+            showCount(data.stats);
         } catch (error) { /* leave the old list in place */ }
     }
 
@@ -901,56 +969,105 @@
 
     /* =========================
        EXPERT STANDINGS
+       Three rows of dark menus, one per place, drawn like every other
+       menu here rather than as native selects.
     ========================= */
 
     function rankingBlock(experts, ranking) {
         var wrap = el("div", "standings");
         wrap.appendChild(el("div", "group-title", "Expert standings"));
 
-        var blurb = el("p", "log-note",
+        wrap.appendChild(el("p", "log-note",
             "Rank your top three. When several corrections match the same song, "
-            + "the model is told to prefer the higher-ranked expert.");
-        wrap.appendChild(blurb);
+            + "the model is told to prefer the higher-ranked expert."));
 
-        var selects = [];
+        var chosen = [ranking[0] || "", ranking[1] || "", ranking[2] || ""];
+        var pickers = [];
 
-        ["First", "Second", "Third"].forEach(function (place, index) {
+        chosen.forEach(function (_, index) {
             var row = el("div", "rank-row");
             row.appendChild(el("span", "rank-place", "#" + (index + 1)));
 
-            var select = document.createElement("select");
-            var none = document.createElement("option");
-            none.value = "";
-            none.textContent = "Nobody";
-            select.appendChild(none);
+            var picker = el("div", "rank-picker");
 
-            experts.forEach(function (expert) {
-                var option = document.createElement("option");
-                option.value = expert.name;
-                option.textContent = expert.name + " · " + expert.teaching
-                    + (expert.teaching === 1 ? " edit" : " edits");
-                select.appendChild(option);
+            var trigger = el("button", "filter-trigger rank-trigger");
+            trigger.type = "button";
+            trigger.setAttribute("aria-expanded", "false");
+            var valueText = el("span", "filter-value");
+            trigger.appendChild(valueText);
+            trigger.appendChild(el("span", "picker-caret", "▾"));
+
+            var menu = el("div", "filter-menu");
+            menu.hidden = true;
+
+            function close() {
+                menu.hidden = true;
+                trigger.setAttribute("aria-expanded", "false");
+                document.removeEventListener("mousedown", outside, true);
+            }
+
+            function outside(event) {
+                if (!picker.contains(event.target)) close();
+            }
+
+            trigger.addEventListener("click", function () {
+                if (menu.hidden) {
+                    menu.hidden = false;
+                    trigger.setAttribute("aria-expanded", "true");
+                    document.addEventListener("mousedown", outside, true);
+                } else {
+                    close();
+                }
             });
 
-            select.value = ranking[index] || "";
-            selects.push(select);
-            row.appendChild(select);
+            function label(name) {
+                if (!name) return "Nobody";
+                var expert = experts.filter(function (e) { return e.name === name; })[0];
+                return expert
+                    ? name + " · " + expert.teaching
+                        + (expert.teaching === 1 ? " edit" : " edits")
+                    : name;
+            }
+
+            function draw() {
+                menu.innerHTML = "";
+                [""].concat(experts.map(function (e) { return e.name; }))
+                    .forEach(function (name) {
+                        var option = el("button", "picker-option");
+                        option.type = "button";
+                        option.textContent = label(name);
+                        option.classList.toggle("on", name === chosen[index]);
+                        option.addEventListener("click", function () {
+                            chosen[index] = name;
+                            valueText.textContent = label(name);
+                            close();
+                            pickers.forEach(function (p) { p.draw(); });
+                        });
+                        menu.appendChild(option);
+                    });
+                valueText.textContent = label(chosen[index]);
+            }
+
+            picker.appendChild(trigger);
+            picker.appendChild(menu);
+            row.appendChild(picker);
             wrap.appendChild(row);
+
+            pickers.push({ draw: draw });
+            draw();
         });
 
         var save = el("button", "secondary rank-save", "Save standings");
         save.type = "button";
         save.addEventListener("click", async function () {
-            var chosen = [];
-            selects.forEach(function (select) {
-                if (select.value && chosen.indexOf(select.value) === -1) {
-                    chosen.push(select.value);
-                }
+            var order = [];
+            chosen.forEach(function (name) {
+                if (name && order.indexOf(name) === -1) order.push(name);
             });
             try {
-                var result = await post("/experts/ranking", { ranking: chosen });
+                var result = await post("/experts/ranking", { ranking: order });
                 state.ranking = result.ranking || [];
-                fillExpertSelect(document.getElementById("expert-select"));
+                if (followPicker) followPicker.set(state.filter);
                 toast(state.ranking.length
                     ? "Standings saved: " + state.ranking.join(" then ") + "."
                     : "Standings cleared. Every expert is weighed equally.");
@@ -1016,7 +1133,7 @@
                     : "") + ".";
             shell.body.appendChild(tally);
 
-            fillExpertSelect(document.getElementById("expert-select"));
+            if (followPicker) followPicker.set(state.filter);
         } catch (error) {
             shell.body.innerHTML = "";
             shell.body.appendChild(el("div", "drawer-error", error.message));
