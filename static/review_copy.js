@@ -7,8 +7,8 @@
 
    What it adds:
      · a switch choosing learned corrections or the plain model
-     · a Follow menu: the roster of experts on top, the ones you are actually
-       following at the bottom. Tick any number of them.
+     · a picker choosing whose corrections the model should follow: everyone,
+       one person, or any set of them
      · a provenance line under each reading saying which one produced it
      · Edit this reading, which opens the correction drawer
      · a review log: who changed what, expert standings, retire and restore
@@ -57,7 +57,7 @@
         spiritual_yearning: "#8c81c8"
     };
 
-    // A search box only earns its place once the roster is long enough to scroll.
+    // A search box only earns its place once the list is long enough to scroll.
     var SEARCH_FROM = 8;
 
     var state = {
@@ -142,13 +142,13 @@
     /* =========================
        FOLLOW PICKER
 
-       Roster on top, selection at the bottom. Any number of experts may be
-       ticked; an empty selection means everyone, which is the default. The
-       menu stays open while you tick, because choosing five people through
-       a menu that closed each time would be miserable.
+       Any number of experts. An empty selection means everyone, which is
+       both the default and what "Every expert" resets to. The menu stays
+       open while you tick names, because choosing five people one click at
+       a time through a closing menu would be miserable.
     ========================= */
 
-    function buildFollowPicker(onChoose) {
+        function buildFollowPicker(onChoose) {
         var node = el("div", "expert-filter");
         node.appendChild(el("span", "filter-label", "Follow"));
 
@@ -166,22 +166,19 @@
 
         // top: the roster
         var head = el("div", "filter-head", "Experts on file");
-
         var search = document.createElement("input");
         search.type = "text";
         search.className = "filter-search";
         search.placeholder = "Search experts";
         search.hidden = true;
-
         var list = el("div", "filter-list");
 
-        // bottom: who the model will actually hear from
+        // bottom: who is actually being followed
         var chosenBox = el("div", "filter-chosen");
         var chosenTitle = el("div", "filter-chosen-head");
         var chips = el("div", "filter-chips");
         var clear = el("button", "filter-clear", "Follow everyone");
         clear.type = "button";
-
         chosenBox.appendChild(chosenTitle);
         chosenBox.appendChild(chips);
         chosenBox.appendChild(clear);
@@ -222,6 +219,11 @@
         trigger.addEventListener("click", function () {
             if (menu.hidden) { open(); } else { close(); }
         });
+
+        function countOf(name) {
+            var expert = state.experts.filter(function (e) { return e.name === name; })[0];
+            return expert ? expert.teaching : 0;
+        }
 
         function summary() {
             if (!chosen.length) {
@@ -281,6 +283,7 @@
             search.hidden = state.experts.length < SEARCH_FROM;
             head.textContent = "Experts on file · " + state.experts.length;
 
+            // the bottom section: who the model will actually hear from
             chips.innerHTML = "";
             if (chosen.length) {
                 chosenTitle.textContent = "Following · " + chosen.length;
@@ -320,8 +323,6 @@
             node: node,
             refresh: draw,
             set: function (names) {
-                // Keep only names that still exist, so a retired expert does
-                // not linger in the filter and silence the model.
                 var known = state.experts.map(function (e) { return e.name; });
                 chosen = (names || []).filter(function (name) {
                     return known.indexOf(name) !== -1;
@@ -1092,7 +1093,7 @@
             trigger.appendChild(valueText);
             trigger.appendChild(el("span", "picker-caret", "▾"));
 
-            var menu = el("div", "filter-menu rank-menu");
+            var menu = el("div", "filter-menu");
             menu.hidden = true;
 
             function close() {
@@ -1301,8 +1302,6 @@
     function start() {
         mountControls();
 
-        // renderResult is a top-level function declaration in the page's own
-        // script, so it lives on the global object and can be wrapped here.
         var original = window.renderResult;
         if (typeof original === "function") {
             window.renderResult = function (data) {

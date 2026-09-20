@@ -1,6 +1,6 @@
 /* =========================
    REVIEW LAYER
-   Correction drawer, learned-mode switch, follow menu, log.
+   Correction drawer, learned-mode switch, follow picker, log.
    Uses the LYRIQ tokens already on :root, adds none of its own.
 
    Every menu here is drawn by the page. A native <select> hands its option
@@ -10,6 +10,8 @@
 
 /* =========================
    CONTROLS IN THE ACTIONS ROW
+   Instrument-panel language: inset wells, hairline borders, a gold lamp
+   for the live state and a teal pilot dot on the log.
 ========================= */
 
 .review-switch{
@@ -49,9 +51,9 @@
     color:var(--text);
 }
 
-.review-switch input{
+/* the checkbox, drawn rather than borrowed from the browser */
 
-    position:relative;
+.review-switch input{
 
     appearance:none;
 
@@ -92,6 +94,12 @@
 
 /* the tick, two borders rotated into a check */
 
+/* the tick, two borders rotated into a check */
+
+.review-switch input{
+    position:relative;
+}
+
 .review-switch input:checked::after{
 
     content:"";
@@ -114,7 +122,6 @@
 
     filter:drop-shadow(0 0 5px rgba(216,173,85,.9));
 }
-
 .review-switch input:focus-visible{
 
     outline:1px solid var(--gold);
@@ -145,8 +152,9 @@
 }
 
 /* =========================
-   FOLLOW MENU
-   Roster on top, the current selection pinned at the bottom.
+   FOLLOW PICKER
+   Same shell as the switch beside it: a labelled well with a divider,
+   and a dark menu that drops below it listing every expert on file.
 ========================= */
 
 .expert-filter{
@@ -249,10 +257,6 @@
     outline-offset:2px;
 }
 
-.filter-trigger.narrowed .filter-value{
-    color:var(--gold);
-}
-
 .filter-value{
 
     flex:1;
@@ -272,15 +276,19 @@
 
     top:calc(100% + 7px);
 
-    min-width:290px;
+    min-width:100%;
 
     width:max-content;
 
-    max-width:360px;
+    max-width:340px;
+
+    max-height:320px;
+
+    overflow-y:auto;
 
     z-index:30;
 
-    padding:8px 0 0;
+    padding:6px;
 
     background:var(--surface3);
 
@@ -293,285 +301,21 @@
         inset 0 1px 0 rgba(255,255,255,.04);
 
     animation:picker-in .16s ease;
-
-    overflow:hidden;
 }
 
 .filter-menu[hidden]{
     display:none;
 }
 
-/* --- roster --- */
-
-.filter-head{
-
-    padding:2px 13px 9px;
-
-    color:var(--muted);
-
-    font-size:9.5px;
-
-    font-weight:600;
-
-    letter-spacing:.16em;
-
-    text-transform:uppercase;
-}
-
-.filter-search{
-
-    width:calc(100% - 16px);
-
-    margin:0 8px 7px;
-
-    padding:9px 11px;
-
-    background:#0b0e14;
-
-    border:1px solid var(--line);
-
-    border-radius:9px;
-
-    color:var(--text);
-
-    font-size:12px;
-}
-
-.filter-search:focus{
-
-    outline:none;
-
-    border-color:rgba(216,173,85,.6);
-
-    box-shadow:0 0 0 3px rgba(216,173,85,.07);
-}
-
-.filter-search[hidden]{
-    display:none;
-}
-
-.filter-list{
-
-    max-height:230px;
-
-    overflow-y:auto;
-
-    padding:0 8px 8px;
-}
-
-.filter-option{
-    gap:11px;
-}
-
-.filter-name{
-    flex:1;
-}
-
-.filter-meta{
-
-    color:var(--muted);
-
-    font-size:10px;
-
-    font-variant-numeric:tabular-nums;
-
-    white-space:nowrap;
-}
-
-/* --- the tick box --- */
-
-.tick-box{
-
-    position:relative;
-
-    width:15px;
-
-    height:15px;
-
-    flex:none;
-
-    border:1px solid var(--line);
-
-    border-radius:4px;
-
-    background:#0b0e14;
-
-    box-shadow:inset 0 1px 2px rgba(0,0,0,.6);
-
-    transition:.18s;
-}
-
-.filter-option.ticked .tick-box{
-
-    border-color:rgba(216,173,85,.6);
-
-    background:
-        linear-gradient(180deg,rgba(216,173,85,.18),rgba(216,173,85,.05));
-
-    box-shadow:0 0 10px rgba(216,173,85,.25);
-}
-
-.filter-option.ticked .tick-box::after{
-
-    content:"";
-
-    position:absolute;
-
-    left:50%;
-
-    top:46%;
-
-    width:3px;
-
-    height:7px;
-
-    border:solid var(--gold);
-
-    border-width:0 2px 2px 0;
-
-    transform:translate(-50%,-50%) rotate(45deg);
-
-    filter:drop-shadow(0 0 4px rgba(216,173,85,.9));
-}
-
-.filter-option.ticked .filter-name{
-    color:var(--gold);
-}
-
-/* --- the selection, pinned below the roster --- */
-
-.filter-chosen{
-
-    padding:11px 13px 12px;
-
-    border-top:1px solid var(--line);
-
-    background:rgba(0,0,0,.28);
-}
-
-.filter-chosen-head{
-
-    color:var(--gold);
-
-    font-size:9.5px;
-
-    font-weight:600;
-
-    letter-spacing:.16em;
-
-    text-transform:uppercase;
-
-    margin-bottom:9px;
-}
-
-.filter-chips{
-
-    display:flex;
-
-    flex-wrap:wrap;
-
-    gap:6px;
-}
-
-.filter-chip{
-
-    display:inline-flex;
-
-    align-items:center;
-
-    gap:8px;
-
-    padding:5px 11px;
-
-    border:1px solid rgba(216,173,85,.4);
-
-    border-radius:999px;
-
-    background:rgba(216,173,85,.08);
-
-    color:var(--gold);
-
-    font-size:11px;
-
-    transition:.16s;
-}
-
-.filter-chip:hover{
-
-    border-color:rgba(216,173,85,.75);
-
-    background:rgba(216,173,85,.15);
-}
-
-.chip-x{
-
-    font-size:9px;
-
-    opacity:.7;
-}
-
-.filter-clear{
-
-    display:block;
-
-    width:100%;
-
-    margin-top:11px;
-
-    padding:9px;
-
-    border:1px solid var(--line);
-
-    border-radius:9px;
-
-    background:
-        linear-gradient(180deg,rgba(255,255,255,.028),rgba(0,0,0,.18));
-
-    color:var(--muted);
-
-    font-size:9.5px;
-
-    font-weight:600;
-
-    letter-spacing:.16em;
-
-    text-transform:uppercase;
-
-    transition:.18s;
-}
-
-.filter-clear:hover{
-
-    border-color:#596273;
-
-    color:var(--text);
-}
-
-.filter-clear[hidden]{
-    display:none;
-}
-
-.filter-empty{
-
-    color:var(--muted);
-
-    font-size:11.5px;
-
-    line-height:1.5;
-
-    margin:4px 3px 0;
-}
-
-.filter-menu::-webkit-scrollbar,
-.filter-list::-webkit-scrollbar{
+.filter-menu::-webkit-scrollbar{
     width:8px;
 }
 
-.filter-list::-webkit-scrollbar-track{
+.filter-menu::-webkit-scrollbar-track{
     background:transparent;
 }
 
-.filter-list::-webkit-scrollbar-thumb{
+.filter-menu::-webkit-scrollbar-thumb{
 
     background:var(--line);
 
@@ -1481,13 +1225,6 @@
     border-color:#596273;
 }
 
-.rank-menu{
-
-    min-width:100%;
-
-    padding:6px;
-}
-
 .rank-save{
 
     width:100%;
@@ -1756,13 +1493,267 @@
         min-width:0;
     }
 
-    .filter-menu{
+    /* --- follow menu: roster on top, selection at the bottom --- */
 
-        min-width:0;
+.filter-head{
 
-        width:100%;
+    padding:4px 11px 8px;
 
-        max-width:none;
-    }
+    color:var(--muted);
+
+    font-size:9.5px;
+
+    font-weight:600;
+
+    letter-spacing:.16em;
+
+    text-transform:uppercase;
+}
+
+.filter-search{
+
+    width:calc(100% - 12px);
+
+    margin:0 6px 6px;
+
+    padding:9px 11px;
+
+    background:#0b0e14;
+
+    border:1px solid var(--line);
+
+    border-radius:9px;
+
+    color:var(--text);
+
+    font-size:12px;
+}
+
+.filter-search:focus{
+
+    border-color:rgba(216,173,85,.6);
+
+    box-shadow:0 0 0 3px rgba(216,173,85,.07);
+}
+
+.filter-search[hidden]{
+    display:none;
+}
+
+.filter-list{
+
+    max-height:230px;
+
+    overflow-y:auto;
+}
+
+.filter-option{
+    gap:11px;
+}
+
+.filter-name{
+    flex:1;
+}
+
+.filter-meta{
+
+    color:var(--muted);
+
+    font-size:10px;
+
+    font-variant-numeric:tabular-nums;
+
+    white-space:nowrap;
+}
+
+/* the tick */
+
+.tick-box{
+
+    position:relative;
+
+    width:15px;
+
+    height:15px;
+
+    flex:none;
+
+    border:1px solid var(--line);
+
+    border-radius:4px;
+
+    background:#0b0e14;
+
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.6);
+
+    transition:.18s;
+}
+
+.filter-option.ticked .tick-box{
+
+    border-color:rgba(216,173,85,.6);
+
+    background:linear-gradient(180deg,rgba(216,173,85,.18),rgba(216,173,85,.05));
+
+    box-shadow:0 0 10px rgba(216,173,85,.25);
+}
+
+.filter-option.ticked .tick-box::after{
+
+    content:"";
+
+    position:absolute;
+
+    left:50%;
+
+    top:46%;
+
+    width:3px;
+
+    height:7px;
+
+    border:solid var(--gold);
+
+    border-width:0 2px 2px 0;
+
+    transform:translate(-50%,-50%) rotate(45deg);
+
+    filter:drop-shadow(0 0 4px rgba(216,173,85,.9));
+}
+
+.filter-option.ticked .filter-name{
+    color:var(--gold);
+}
+
+/* the selection section */
+
+.filter-chosen{
+
+    margin-top:6px;
+
+    padding:10px 11px 11px;
+
+    border-top:1px solid var(--line);
+
+    background:rgba(0,0,0,.24);
+
+    border-radius:0 0 9px 9px;
+}
+
+.filter-chosen-head{
+
+    color:var(--gold);
+
+    font-size:9.5px;
+
+    font-weight:600;
+
+    letter-spacing:.16em;
+
+    text-transform:uppercase;
+
+    margin-bottom:9px;
+}
+
+.filter-chips{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:6px;
+}
+
+.filter-chip{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:7px;
+
+    padding:5px 10px;
+
+    border:1px solid rgba(216,173,85,.4);
+
+    border-radius:999px;
+
+    background:rgba(216,173,85,.08);
+
+    color:var(--gold);
+
+    font-size:11px;
+
+    transition:.16s;
+}
+
+.filter-chip:hover{
+
+    border-color:rgba(216,173,85,.75);
+
+    background:rgba(216,173,85,.14);
+}
+
+.chip-x{
+
+    font-size:9px;
+
+    opacity:.75;
+}
+
+.filter-clear{
+
+    display:block;
+
+    width:100%;
+
+    margin-top:10px;
+
+    padding:9px;
+
+    border:1px solid var(--line);
+
+    border-radius:9px;
+
+    background:linear-gradient(180deg,rgba(255,255,255,.028),rgba(0,0,0,.18));
+
+    color:var(--muted);
+
+    font-size:9.5px;
+
+    font-weight:600;
+
+    letter-spacing:.16em;
+
+    text-transform:uppercase;
+
+    transition:.18s;
+}
+
+.filter-clear:hover{
+
+    border-color:#596273;
+
+    color:var(--text);
+}
+
+.filter-clear[hidden]{
+    display:none;
+}
+
+.filter-empty{
+
+    color:var(--muted);
+
+    font-size:11.5px;
+
+    line-height:1.5;
+
+    margin:6px 0 0;
+}
+
+.filter-trigger.narrowed .filter-value{
+    color:var(--gold);
+}
 
 }
