@@ -7,14 +7,15 @@
 
    What it adds:
      · a switch choosing learned corrections or the plain model
-     · a picker choosing whose corrections the model should follow
+     · a picker choosing whose corrections the model should follow: everyone,
+       one person, or any set of them
      · a provenance line under each reading saying which one produced it
      · Edit this reading, which opens the correction drawer
      · a review log: who changed what, expert standings, retire and restore
 
-   Every menu here is drawn by the page rather than by a native <select>.
-   Windows hands the option list of a real select to the OS, which ignores
-   the page's colours and renders unreadable pale strips on a dark theme.
+   Every menu here is drawn by the page. Windows hands the option list of a
+   native <select> to the OS, which ignores the page's colours and renders
+   unreadable pale strips on a dark theme.
 ============================================ */
 
 (function () {
@@ -56,6 +57,9 @@
         spiritual_yearning: "#8c81c8"
     };
 
+    // A search box only earns its place once the list is long enough to scroll.
+    var SEARCH_FROM = 8;
+
     var state = {
         useLearned: true,
         experts: [],
@@ -64,7 +68,7 @@
         current: null
     };
 
-    var followPicker = null;   // set by mountControls, refreshed on every change
+    var followPicker = null;
 
 
     /* =========================
@@ -109,7 +113,6 @@
         setTimeout(function () { node.remove(); }, 2800);
     }
 
-    // The reviewer's own name, remembered between sessions so it is typed once.
     function rememberedName() {
         try { return window.localStorage.getItem("lyriq-editor") || ""; }
         catch (error) { return ""; }
@@ -137,7 +140,12 @@
 
 
     /* =========================
-       CONTROLS IN THE ACTIONS ROW
+       FOLLOW PICKER
+
+       Any number of experts. An empty selection means everyone, which is
+       both the default and what "Every expert" resets to. The menu stays
+       open while you tick names, because choosing five people one click at
+       a time through a closing menu would be miserable.
     ========================= */
 
     function buildFollowPicker(onChoose) {
@@ -156,7 +164,26 @@
         var menu = el("div", "filter-menu");
         menu.hidden = true;
 
-        var chosen = "";          // "" means every expert
+        var search = document.createElement("input");
+        search.type = "text";
+        search.className = "filter-search";
+        search.placeholder = "Search experts";
+        search.hidden = true;
+
+        var list = el("div", "filter-list");
+
+        var foot = el("div", "filter-foot");
+        var count = el("span", "filter-count");
+        var clear = el("button", "filter-clear", "Every expert");
+        clear.type = "button";
+        foot.appendChild(count);
+        foot.appendChild(clear);
+
+        menu.appendChild(search);
+        menu.appendChild(list);
+        menu.appendChild(foot);
+
+        var chosen = [];          // empty means every expert
 
         function close() {
             menu.hidden = true;
@@ -170,6 +197,7 @@
             trigger.setAttribute("aria-expanded", "true");
             document.addEventListener("mousedown", outside, true);
             document.addEventListener("keydown", escape, true);
+            if (!search.hidden) search.focus();
         }
 
         function outside(event) {
@@ -187,12 +215,7 @@
             if (menu.hidden) { open(); } else { close(); }
         });
 
-        function label(name) {
-            if (!name) {
-                return state.experts.length
-                    ? "Every expert (" + state.experts.length + ")"
-                    : "Every expert";
-            }
+        function describeExpert(name) {
             var expert = state.experts.filter(function (e) { return e.name === name; })[0];
             if (!expert) return name;
             var standing = state.ranking.indexOf(name);
@@ -202,39 +225,96 @@
                 + (expert.teaching === 1 ? " edit" : " edits");
         }
 
-        function row(name) {
-            var button = el("button", "picker-option");
+        function summary() {
+            if (!chosen.length) {
+                return state.experts.length
+                    ? "Every expert (" + state.experts.length + ")"
+                    : "Every expert";
+            }
+            if (chosen.length === 1) return chosen[0];
+            if (chosen.length === 2) return chosen.join(" and ");
+            return chosen.length + " of " + state.experts.length + " experts";
+        }
+
+        function save() {
+            onChoose(chosen.slice());
+        }
+
+        function toggle(name) {
+            var at = chosen.indexOf(name);
+            if (at === -1) { chosen.push(name); } else { chosen.splice(at, 1); }
+            draw();
+            save();
+        }
+
+        function row(expert) {
+            var button = el("button", "picker-option filter-option");
             button.type = "button";
-            button.textContent = label(name);
-            button.classList.toggle("on", name === chosen);
-            button.addEventListener("click", function () {
-                chosen = name;
-                valueText.textContent = label(name);
-                close();
-                refresh();
-                onChoose(name ? [name] : []);
-            });
+
+            var box = el("span", "tick-box");
+            button.appendChild(box);
+            button.appendChild(el("span", "filter-name", describeExpert(expert.name)));
+
+            var on = chosen.indexOf(expert.name) !== -1;
+            button.classList.toggle("ticked", on);
+            button.setAttribute("aria-pressed", String(on));
+
+            button.addEventListener("click", function () { toggle(expert.name); });
             return button;
         }
 
-        function refresh() {
-            menu.innerHTML = "";
-            menu.appendChild(row(""));
-            state.experts.forEach(function (expert) {
-                menu.appendChild(row(expert.name));
-            });
-            valueText.textContent = label(chosen);
+        function draw() {
+            var needle = search.value.trim().toLowerCase();
+
+            list.innerHTML = "";
+            state.experts
+                .filter(function (expert) {
+                    return !needle || expert.name.toLowerCase().indexOf(needle) !== -1;
+                })
+                .forEach(function (expert) {
+                    list.appendChild(row(expert));
+                });
+
+            if (!list.children.length) {
+                list.appendChild(el("p", "filter-empty",
+                    state.experts.length
+                        ? "No expert matches that."
+                        : "No corrections yet, so nobody to follow."));
+            }
+
+            search.hidden = state.experts.length < SEARCH_FROM;
+
+            count.textContent = chosen.length
+                ? chosen.length + " selected"
+                : "Following everyone";
+            clear.hidden = !chosen.length;
+
+            valueText.textContent = summary();
+            trigger.classList.toggle("narrowed", chosen.length > 0);
         }
+
+        search.addEventListener("input", draw);
+
+        clear.addEventListener("click", function () {
+            chosen = [];
+            draw();
+            save();
+        });
 
         node.appendChild(trigger);
         node.appendChild(menu);
 
         return {
             node: node,
-            refresh: refresh,
+            refresh: draw,
             set: function (names) {
-                chosen = (names && names[0]) || "";
-                refresh();
+                // Keep only names that still exist, so a retired expert does
+                // not linger in the filter and silence the model.
+                var known = state.experts.map(function (e) { return e.name; });
+                chosen = (names || []).filter(function (name) {
+                    return known.indexOf(name) !== -1;
+                });
+                draw();
             }
         };
     }
@@ -259,9 +339,11 @@
             state.filter = names;
             try {
                 await post("/preferences", { filter: names });
-                toast(names.length
-                    ? "Following " + names[0] + " only."
-                    : "Following every expert on file.");
+                toast(names.length === 0
+                    ? "Following every expert on file."
+                    : names.length === 1
+                        ? "Following " + names[0] + " only."
+                        : "Following " + names.length + " experts: " + names.join(", ") + ".");
             } catch (error) {
                 toast(error.message);
             }
@@ -338,8 +420,11 @@
     function describe(learning) {
         if (!learning) return null;
 
-        var following = (learning.experts || []).length
-            ? " Following " + learning.experts.join(", ") + "."
+        var experts = learning.experts || [];
+        var following = experts.length
+            ? " Following " + (experts.length > 3
+                ? experts.length + " experts"
+                : experts.join(", ")) + "."
             : "";
 
         if (learning.source === "correction") {
@@ -463,7 +548,7 @@
 
 
     /* =========================
-       PICKER
+       EDITOR PICKER
     ========================= */
 
     function ledRow(text) {
@@ -969,8 +1054,6 @@
 
     /* =========================
        EXPERT STANDINGS
-       Three rows of dark menus, one per place, drawn like every other
-       menu here rather than as native selects.
     ========================= */
 
     function rankingBlock(experts, ranking) {
@@ -1067,7 +1150,7 @@
             try {
                 var result = await post("/experts/ranking", { ranking: order });
                 state.ranking = result.ranking || [];
-                if (followPicker) followPicker.set(state.filter);
+                if (followPicker) followPicker.refresh();
                 toast(state.ranking.length
                     ? "Standings saved: " + state.ranking.join(" then ") + "."
                     : "Standings cleared. Every expert is weighed equally.");
@@ -1120,7 +1203,6 @@
                 shell.body.appendChild(logRow(correction));
             });
 
-            // The headcount the drawer closes on.
             var people = stats.experts || state.experts.length;
             var tally = el("div", "log-tally");
             tally.innerHTML = "<b>" + people + "</b> "
@@ -1133,7 +1215,7 @@
                     : "") + ".";
             shell.body.appendChild(tally);
 
-            if (followPicker) followPicker.set(state.filter);
+            if (followPicker) followPicker.refresh();
         } catch (error) {
             shell.body.innerHTML = "";
             shell.body.appendChild(el("div", "drawer-error", error.message));
@@ -1207,8 +1289,6 @@
     function start() {
         mountControls();
 
-        // renderResult is a top-level function declaration in the page's own
-        // script, so it lives on the global object and can be wrapped here.
         var original = window.renderResult;
         if (typeof original === "function") {
             window.renderResult = function (data) {

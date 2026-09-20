@@ -1493,4 +1493,165 @@
         min-width:0;
     }
 
+    .filter-search{
+
+    width:100%;
+
+    margin-bottom:6px;
+
+    padding:9px 11px;
+
+    background:#0b0e14;
+
+    border:1px solid var(--line);
+
+    border-radius:9px;
+
+    color:var(--text);
+
+    font-size:12px;
+}
+
+.filter-search[hidden]{
+    display:none;
+}
+
+.filter-list{
+
+    max-height:220px;
+
+    overflow-y:auto;
+}
+
+.filter-option{
+    gap:11px;
+}
+
+.filter-name{
+    flex:1;
+}
+
+.tick-box{
+
+    width:14px;
+
+    height:14px;
+
+    flex:none;
+
+    border:1px solid var(--line);
+
+    border-radius:4px;
+
+    background:#0b0e14;
+
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.6);
+
+    position:relative;
+
+    transition:.18s;
+}
+
+.filter-option.ticked .tick-box{
+
+    border-color:rgba(216,173,85,.6);
+
+    background:linear-gradient(180deg,rgba(216,173,85,.16),rgba(216,173,85,.05));
+}
+
+.filter-option.ticked .tick-box::after{
+
+    content:"";
+
+    position:absolute;
+
+    left:50%;
+
+    top:46%;
+
+    width:3px;
+
+    height:7px;
+
+    border:solid var(--gold);
+
+    border-width:0 2px 2px 0;
+
+    transform:translate(-50%,-50%) rotate(45deg);
+
+    filter:drop-shadow(0 0 4px rgba(216,173,85,.9));
+}
+
+.filter-option.ticked .filter-name{
+    color:var(--gold);
+}
+
+.filter-foot{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:10px;
+
+    margin-top:6px;
+
+    padding-top:8px;
+
+    border-top:1px solid var(--line);
+}
+
+.filter-count{
+
+    color:var(--muted);
+
+    font-size:10px;
+
+    letter-spacing:.1em;
+
+    text-transform:uppercase;
+}
+
+.filter-clear{
+
+    background:none;
+
+    border:0;
+
+    color:var(--muted);
+
+    font-size:10px;
+
+    letter-spacing:.1em;
+
+    text-transform:uppercase;
+
+    border-bottom:1px dotted var(--line);
+
+    padding:0 0 1px;
+}
+
+.filter-clear:hover{
+    color:var(--gold);
+}
+
+.filter-clear[hidden]{
+    display:none;
+}
+
+.filter-empty{
+
+    color:var(--muted);
+
+    font-size:12px;
+
+    margin:8px 11px;
+}
+
+.filter-trigger.narrowed .filter-value{
+    color:var(--gold);
+}
+
 }
