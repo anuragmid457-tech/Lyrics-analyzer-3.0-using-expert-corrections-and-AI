@@ -20,11 +20,12 @@ heard first when several have something to say about the same song.
 import json
 import math
 import os
+import re
 
 try:                        # filenames differ in case between machines
     import database
 except ImportError:         # pragma: no cover
-    import Database as database
+    import database as database
 
 # --- tuning knobs --------------------------------------------------------
 
@@ -250,6 +251,46 @@ def _teaching_lines(correction):
     if correction.get("note"):
         lines.append(f"  their reasoning: {correction['note']}")
     return lines
+
+VOCAB_HEADER = (
+    "\n\n=== Reviewer vocabulary ===\n"
+    "Terms the experts reviewing this system have used for emotion labels, with "
+    "how often each was chosen. Where one of these names the feeling in this song "
+    "better than a standard English label, prefer it, and match their habit of "
+    "joining two or three terms with a slash. Do not force a term that does not "
+    "fit the song, and do not list these in your output.\n"
+)
+
+
+def vocabulary(editors=None, limit=30):
+    """Every emotion term the experts have written, commonest first.
+
+    Read from the corrected side of each correction, split on the separators
+    the editor used, so a compound like masti/playfulness contributes both.
+    """
+    terms = {}
+    for correction in database.active_corrections(with_vector=False, editors=editors):
+        for field in ("primary_emotion", "canonical_emotion"):
+            move = (correction.get("changed") or {}).get(field)
+            if not move:
+                continue
+            for part in re.split(r"[/,]", move.get("to", "")):
+                term = part.strip()
+                if not term or len(term) > 40:
+                    continue
+                entry = terms.setdefault(term.lower(), {"term": term, "count": 0})
+                entry["count"] += 1
+
+    return sorted(terms.values(), key=lambda e: -e["count"])[:limit]
+
+
+def vocabulary_block(editors=None):
+    """The glossary as a block to append to the analyser's input."""
+    terms = vocabulary(editors)
+    if not terms:
+        return ""
+    listing = ", ".join(f"{t['term']} (used {t['count']}x)" for t in terms)
+    return VOCAB_HEADER + listing + "\n=== end of reviewer vocabulary ===\n"
 
 
 def guidance_for(text, limit=MAX_MATCHES, threshold=THRESHOLD,

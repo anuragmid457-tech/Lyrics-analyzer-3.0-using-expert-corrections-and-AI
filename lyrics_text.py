@@ -36,6 +36,8 @@ ANNOTATION FRAMEWORK (follow all three layers):
 2. Categorical — give TWO labels:
    primary_emotion: your own words for the exact vibe. One to three terms joined
      with "/" when a single word will not do. 
+        Where a reviewer vocabulary is supplied below the lyrics, prefer its terms
+   when one of them names this song's feeling more exactly than an English label.
    canonical_emotion: the same reading mapped onto this closed set —
      joy, love, longing, sadness, grief, nostalgia, anger, fear, anxiety, peace,
      devotion, spiritual_yearning, hope, patriotism, playfulness, loneliness,

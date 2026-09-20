@@ -156,7 +156,8 @@ def api_analyze():
     )
 
     try:
-        result = lyrics_text.analyze(text + guidance)
+        vocab = learning.vocabulary_block(editors=experts) if use_learned else ""
+        result = lyrics_text.analyze(text + vocab + guidance)
     except Exception as exc:  # noqa: BLE001 - show the real cause in the UI
         return jsonify({"error": f"{type(exc).__name__}: {exc}"}), 500
 
