@@ -31,3 +31,4 @@ pypdf>=4.2
 # Nothing else is needed. Cosine similarity in learning.py is plain Python and
 # storage is the sqlite3 module from the standard library, so no numpy and no
 # database server.
+gunicorn>=21.2
