@@ -940,7 +940,10 @@
         return input;
     }
 
-    function sliderField(parent, id, label, value, low, high, was) {
+    function sliderField(parent, id, label, value, low, high, was, opts) {
+        opts = opts || {};
+        var digits = opts.digits === undefined ? 2 : opts.digits;
+
         var wrap = el("div", "field");
         wrap.appendChild(el("label", null, label)).setAttribute("for", id);
 
@@ -950,14 +953,18 @@
         input.id = id;
         input.min = low;
         input.max = high;
-        input.step = 0.01;
+        input.step = opts.step || 0.01;
         input.value = number(value);
 
         var readout = document.createElement("output");
-        readout.textContent = number(value).toFixed(2);
+        readout.textContent = number(value).toFixed(digits);
+
+        // kept on the element so a linked slider can move this one from code
+        input._readout = readout;
+        input._digits = digits;
 
         input.addEventListener("input", function () {
-            readout.textContent = number(input.value).toFixed(2);
+            readout.textContent = number(input.value).toFixed(digits);
             syncQuadrant();
         });
 
@@ -965,13 +972,32 @@
         row.appendChild(readout);
         wrap.appendChild(row);
 
+        if (opts.hint) wrap.appendChild(el("span", "was", opts.hint));
+
         if (was !== undefined && was !== null) {
             var note = el("span", "was");
-            note.innerHTML = "model said <b>" + number(was).toFixed(2) + "</b>";
+            note.innerHTML = "model said <b>" + number(was).toFixed(digits) + "</b>";
             wrap.appendChild(note);
         }
         parent.appendChild(wrap);
         return input;
+    }
+
+    // Move a slider from code and keep its number readout in step.
+    function setSlider(input, value) {
+        input.value = value;
+        if (input._readout) {
+            input._readout.textContent = number(value).toFixed(input._digits);
+        }
+    }
+
+    // The expression index on the result card is valence rescaled to 0-100.
+    function indexFromValence(valence) {
+        return Math.round((number(valence) + 1) / 2 * 100);
+    }
+
+    function valenceFromIndex(index) {
+        return Math.round((number(index) / 100 * 2 - 1) * 100) / 100;
     }
 
     function syncQuadrant() {
@@ -1037,6 +1063,26 @@
 
         var valence = sliderField(body, "edit-valence", "Valence",
             data.valence, -1, 1, data.valence);
+
+        // The same judgement as valence, on the 0-100 scale the result card
+        // shows. Saving stores valence; the index is always derived from it,
+        // so an edit made here teaches the model exactly as a valence edit does.
+        var expressionIndex = sliderField(body, "edit-index", "Expression index",
+            indexFromValence(data.valence), 0, 100, indexFromValence(data.valence), {
+                step: 1,
+                digits: 0,
+                hint: "valence on a 0 to 100 scale; moving either one moves the other"
+            });
+
+        valence.addEventListener("input", function () {
+            setSlider(expressionIndex, indexFromValence(valence.value));
+        });
+
+        expressionIndex.addEventListener("input", function () {
+            setSlider(valence, valenceFromIndex(expressionIndex.value));
+            syncQuadrant();
+        });
+
         var arousal = sliderField(body, "edit-arousal", "Arousal",
             data.arousal, -1, 1, data.arousal);
 
