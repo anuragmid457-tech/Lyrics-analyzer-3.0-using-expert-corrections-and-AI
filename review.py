@@ -5,19 +5,30 @@ app.py stays the thin layer it was: it registers this and carries on. Every
 route here is mounted under /api/review.
 
     GET    /api/review/analysis/<id>            the reading being edited
-    POST   /api/review/correction               save an expert edit
+    POST   /api/review/unlock                   check the editor password
+    POST   /api/review/correction               save an expert edit        (password)
     GET    /api/review/corrections              the review log
-    POST   /api/review/correction/<id>/retire   stop one teaching, or restore it
+    POST   /api/review/correction/<id>/retire   stop one teaching, or restore  (password)
     GET    /api/review/experts                  who has corrected, and standings
-    POST   /api/review/experts/ranking          set the top three
+    POST   /api/review/experts/ranking          set the top three          (password)
     GET    /api/review/preferences              mode and expert filter
-    POST   /api/review/preferences              change them
+    POST   /api/review/preferences              change them                (password)
     GET    /api/review/stats                    counts for the panel
 
-A correction must carry the name of the person who made it. An unattributed
-edit teaches the model something without anyone being answerable for it, and
-it cannot be filtered or ranked afterwards.
+Reading is open to anyone. Every route that changes something needs the
+editor password, sent by the page in an X-Editor-Key header. The password
+itself lives only in the EDITOR_PASSWORD environment variable on the server;
+it is never written into the page, so inspecting the site cannot reveal it.
+
+A correction must also carry the name of the person who made it. An
+unattributed edit teaches the model something without anyone being
+answerable for it, and it cannot be filtered or ranked afterwards.
 """
+
+import hmac
+import os
+import time
+from functools import wraps
 
 from flask import Blueprint, jsonify, request
 
@@ -41,6 +52,45 @@ EDITABLE = {
 
 QUADRANTS = {"Q1", "Q2", "Q3", "Q4"}
 
+# Seconds to wait after a wrong password. Harmless to a person who mistyped,
+# and it turns a script guessing thousands of passwords into a slow one.
+WRONG_PASSWORD_DELAY = 0.8
+
+
+# --- the editor password -------------------------------------------------
+
+def _editor_password():
+    return os.getenv("EDITOR_PASSWORD", "")
+
+
+def require_editor(view):
+    """Allow the request only if it carries the editor password.
+
+    Fails closed: if EDITOR_PASSWORD is not set on the server, nobody can
+    edit, rather than everybody. Forgetting the variable should lock the
+    site, not open it.
+    """
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        expected = _editor_password()
+        if not expected:
+            return jsonify({
+                "error": "Editing is switched off: no EDITOR_PASSWORD is set on the server.",
+                "locked": True,
+            }), 503
+
+        supplied = request.headers.get("X-Editor-Key", "")
+        # compare_digest takes the same time whether the first character or
+        # the last one is wrong, so response timing leaks nothing.
+        if not hmac.compare_digest(supplied.encode("utf-8"), expected.encode("utf-8")):
+            time.sleep(WRONG_PASSWORD_DELAY)
+            return jsonify({"error": "Editor password required.", "locked": True}), 401
+
+        return view(*args, **kwargs)
+    return wrapped
+
+
+# --- validation ----------------------------------------------------------
 
 def _clamp(value, low, high, fallback=0.0):
     try:
@@ -105,6 +155,13 @@ def clean(submitted, original):
 
 # --- routes --------------------------------------------------------------
 
+@review.post("/unlock")
+@require_editor
+def unlock():
+    """Lets the page check a password before anyone starts editing."""
+    return jsonify({"ok": True})
+
+
 @review.get("/analysis/<int:analysis_id>")
 def read_analysis(analysis_id):
     record = database.get_analysis(analysis_id)
@@ -120,6 +177,7 @@ def read_analysis(analysis_id):
 
 
 @review.post("/correction")
+@require_editor
 def write_correction():
     payload = request.get_json(silent=True) or {}
 
@@ -179,6 +237,7 @@ def read_corrections():
 
 
 @review.post("/correction/<int:correction_id>/retire")
+@require_editor
 def retire(correction_id):
     payload = request.get_json(silent=True) or {}
     restore = bool(payload.get("restore"))
@@ -199,6 +258,7 @@ def read_experts():
 
 
 @review.post("/experts/ranking")
+@require_editor
 def write_ranking():
     """Order the experts by standing. First listed is heard first."""
     payload = request.get_json(silent=True) or {}
@@ -222,6 +282,7 @@ def read_preferences():
 
 
 @review.post("/preferences")
+@require_editor
 def write_preferences():
     payload = request.get_json(silent=True) or {}
 

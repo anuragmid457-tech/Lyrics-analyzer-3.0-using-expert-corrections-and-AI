@@ -123,164 +123,19 @@
         catch (error) { /* private browsing, no matter */ }
     }
 
-    /* --- editor password ---
-       The password is never in this file. The page asks for it, the server
-       checks it, and only what the person typed is kept, in sessionStorage,
-       which belongs to this one tab and is wiped when the tab closes. */
-
-    var KEY_SLOT = "lyriq-editor-key";
-
-    function storedKey() {
-        try { return window.sessionStorage.getItem(KEY_SLOT) || ""; }
-        catch (error) { return ""; }
-    }
-
-    function storeKey(key) {
-        try {
-            if (key) { window.sessionStorage.setItem(KEY_SLOT, key); }
-            else { window.sessionStorage.removeItem(KEY_SLOT); }
-        } catch (error) { /* private browsing: it will simply ask again */ }
-    }
-
     async function api(path, options) {
         var response = await fetch(API + path, options);
         var data = await response.json().catch(function () { return {}; });
-        if (!response.ok) {
-            var error = new Error(data.error || "The request failed.");
-            error.status = response.status;
-            error.locked = Boolean(data.locked);
-            throw error;
-        }
+        if (!response.ok) throw new Error(data.error || "The request failed.");
         return data;
     }
 
-    function send(path, body, key) {
+    function post(path, body) {
         return api(path, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Editor-Key": key || ""
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body)
         });
-    }
-
-    // Every write goes through here. With no password yet, or one the server
-    // rejects, it asks once and retries; cancelling the prompt cancels the write.
-    async function post(path, body) {
-        var key = storedKey();
-        if (!key) {
-            key = await askForKey();
-            if (!key) throw new Error("Editing needs the editor password.");
-        }
-        try {
-            return await send(path, body, key);
-        } catch (error) {
-            if (error.status !== 401) throw error;
-            storeKey("");
-            key = await askForKey("That password was not accepted. Try again.");
-            if (!key) throw new Error("Editing needs the editor password.");
-            return send(path, body, key);
-        }
-    }
-
-    async function requireKey() {
-        if (storedKey()) return true;
-        return Boolean(await askForKey());
-    }
-
-    var pendingAsk = null;
-
-    function askForKey(message) {
-        if (pendingAsk) return pendingAsk;
-
-        pendingAsk = new Promise(function (resolve) {
-            var scrim = el("div", "lock-scrim");
-            var card = el("div", "lock-card");
-            card.setAttribute("role", "dialog");
-            card.setAttribute("aria-modal", "true");
-            card.setAttribute("aria-label", "Editor password");
-
-            card.appendChild(el("div", "result-label", "LYRIQ · Editors only"));
-            card.appendChild(el("h3", null, "Enter the editor password"));
-            card.appendChild(el("p", "lock-blurb",
-                "Corrections, standings and the follow setting can only be changed "
-                + "by reviewers with the password. It is checked on the server "
-                + "and is not written anywhere in this page."));
-
-            var input = document.createElement("input");
-            input.type = "password";
-            input.className = "lock-input";
-            input.placeholder = "Password";
-            input.autocomplete = "current-password";
-            card.appendChild(input);
-
-            var errorSlot = el("div", "lock-error", message || "");
-            errorSlot.hidden = !message;
-            card.appendChild(errorSlot);
-
-            var row = el("div", "lock-actions");
-            var unlock = el("button", "primary", "Unlock");
-            unlock.type = "button";
-            var cancel = el("button", "secondary", "Cancel");
-            cancel.type = "button";
-            row.appendChild(unlock);
-            row.appendChild(cancel);
-            card.appendChild(row);
-
-            scrim.appendChild(card);
-            document.body.appendChild(scrim);
-            setTimeout(function () { input.focus(); }, 30);
-
-            function finish(key) {
-                document.removeEventListener("keydown", onKey, true);
-                scrim.remove();
-                pendingAsk = null;
-                resolve(key);
-            }
-
-            // Captured first, so Escape closes this box without also
-            // closing a drawer that may be open beneath it.
-            function onKey(event) {
-                if (event.key !== "Escape") return;
-                event.stopPropagation();
-                finish(null);
-            }
-            document.addEventListener("keydown", onKey, true);
-
-            async function tryUnlock() {
-                var key = input.value;
-                if (!key) { input.focus(); return; }
-                unlock.disabled = true;
-                unlock.textContent = "Checking";
-                try {
-                    await send("/unlock", {}, key);
-                    storeKey(key);
-                    toast("Unlocked. Editing stays open in this tab until you close it.");
-                    finish(key);
-                } catch (error) {
-                    errorSlot.hidden = false;
-                    errorSlot.textContent = error.status === 401
-                        ? "That password is not right."
-                        : error.message;
-                    input.value = "";
-                    input.focus();
-                    unlock.disabled = false;
-                    unlock.textContent = "Unlock";
-                }
-            }
-
-            unlock.addEventListener("click", tryUnlock);
-            input.addEventListener("keydown", function (event) {
-                if (event.key === "Enter") tryUnlock();
-            });
-            cancel.addEventListener("click", function () { finish(null); });
-            scrim.addEventListener("mousedown", function (event) {
-                if (event.target === scrim) finish(null);
-            });
-        });
-
-        return pendingAsk;
     }
 
 
@@ -503,7 +358,6 @@
                         : "Following " + names.length + " experts: " + names.join(", ") + ".");
             } catch (error) {
                 toast(error.message);
-                refreshExperts();     // put the menu back to what the server holds
             }
         });
         actions.appendChild(followPicker.node);
@@ -524,11 +378,6 @@
                     : "Learned corrections off. Readings come from the model alone.");
             } catch (error) {
                 toast(error.message);
-                // refused, so the switch goes back to where it was
-                box.checked = !box.checked;
-                state.useLearned = box.checked;
-                label.classList.toggle("on", box.checked);
-                followPicker.node.hidden = !box.checked;
             }
         });
 
@@ -646,9 +495,7 @@
 
         var button = el("button", "secondary edit-output", "Edit this reading");
         button.type = "button";
-        button.addEventListener("click", async function () {
-            if (await requireKey()) openEditor(data);
-        });
+        button.addEventListener("click", function () { openEditor(data); });
         body.appendChild(button);
     }
 
@@ -1330,80 +1177,6 @@
 
 
     /* =========================
-       CORRECTIONS BY EXPERT
-
-       Tick one or more names to see only their corrections; tick "Every
-       expert", or untick everyone, to see them all. Purely a view: nothing
-       here changes what the model follows, which is the Follow menu's job.
-    ========================= */
-
-    function logFilterBlock(experts, entries) {
-        var wrap = el("div", "log-filter");
-        wrap.appendChild(el("div", "group-title", "Corrections by expert"));
-
-        var grid = el("div", "log-filter-grid");
-        var count = el("p", "log-filter-count");
-        var picked = [];          // empty means every expert
-
-        function tickRow(text, meta, isOn, onClick) {
-            var button = el("button", "picker-option filter-option");
-            button.type = "button";
-            button.appendChild(el("span", "tick-box"));
-            button.appendChild(el("span", "filter-name", text));
-            if (meta) button.appendChild(el("span", "filter-meta", meta));
-            button.classList.toggle("ticked", isOn);
-            button.setAttribute("aria-pressed", String(isOn));
-            button.addEventListener("click", onClick);
-            return button;
-        }
-
-        function apply() {
-            var shown = 0;
-            entries.forEach(function (entry) {
-                var visible = !picked.length || picked.indexOf(entry.editor) !== -1;
-                entry.node.hidden = !visible;
-                if (visible) shown += 1;
-            });
-            count.textContent = picked.length
-                ? "Showing " + shown + " of " + entries.length + " corrections, from "
-                    + picked.join(", ") + "."
-                : "Showing all " + entries.length + " corrections, from every expert.";
-        }
-
-        function draw() {
-            grid.innerHTML = "";
-
-            grid.appendChild(tickRow(
-                "Every expert",
-                entries.length + (entries.length === 1 ? " edit" : " edits"),
-                !picked.length,
-                function () { picked = []; draw(); }
-            ));
-
-            experts.forEach(function (expert) {
-                grid.appendChild(tickRow(
-                    expert.name,
-                    expert.corrections + (expert.corrections === 1 ? " edit" : " edits"),
-                    picked.indexOf(expert.name) !== -1,
-                    function () {
-                        var at = picked.indexOf(expert.name);
-                        if (at === -1) { picked.push(expert.name); } else { picked.splice(at, 1); }
-                        draw();
-                    }
-                ));
-            });
-
-            apply();
-        }
-
-        wrap.appendChild(grid);
-        wrap.appendChild(count);
-        draw();
-        return wrap;
-    }
-
-
-    /* =========================
        REVIEW LOG
     ========================= */
 
@@ -1417,7 +1190,7 @@
         shell.body.appendChild(el("p", "log-empty", "Loading…"));
 
         try {
-            var data = await api("/corrections?limit=500");
+            var data = await api("/corrections?limit=100");
             shell.body.innerHTML = "";
 
             state.experts = data.experts || [];
@@ -1433,19 +1206,14 @@
                 : "No corrections yet. Read a song, then edit what the model got wrong.";
             shell.body.appendChild(summary);
 
-            // Build every row once; the expert filter only shows and hides them.
-            var entries = (data.corrections || []).map(function (correction) {
-                return { editor: correction.editor, node: logRow(correction) };
-            });
-
             if (state.experts.length) {
                 shell.body.appendChild(rankingBlock(state.experts, state.ranking));
-                shell.body.appendChild(logFilterBlock(state.experts, entries));
+                shell.body.appendChild(el("div", "group-title", "Every correction"));
             }
 
-            var listing = el("div", "log-listing");
-            entries.forEach(function (entry) { listing.appendChild(entry.node); });
-            shell.body.appendChild(listing);
+            (data.corrections || []).forEach(function (correction) {
+                shell.body.appendChild(logRow(correction));
+            });
 
             var people = stats.experts || state.experts.length;
             var tally = el("div", "log-tally");
@@ -1463,18 +1231,6 @@
         } catch (error) {
             shell.body.innerHTML = "";
             shell.body.appendChild(el("div", "drawer-error", error.message));
-        }
-
-        // Forget the password in this tab, for a shared or borrowed computer.
-        if (storedKey()) {
-            var lock = el("button", "secondary", "Lock editing");
-            lock.type = "button";
-            lock.addEventListener("click", function () {
-                storeKey("");
-                lock.remove();
-                toast("Locked. The password will be asked for before the next edit.");
-            });
-            shell.foot.appendChild(lock);
         }
 
         var done = el("button", "secondary", "Close");
