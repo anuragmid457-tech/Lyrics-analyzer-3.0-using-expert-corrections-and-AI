@@ -879,6 +879,242 @@
 
 
     /* =========================
+       EXPRESSION BOXES
+
+       The primary emotion is a set of expressions, not a string with
+       slashes in it, so the editor treats it that way: one box per
+       expression, each editable or removable on its own, and an Add
+       expression button offering the list or a typed term.
+
+       A hidden input holds the joined value, so everything downstream
+       still reads primary.value and hears a change event.
+    ========================= */
+
+    function buildTermEditor(parent, id, labelText, value, opts) {
+        opts = opts || {};
+
+        var wrap = el("div", "field");
+        var labelNode = el("label", null, labelText);
+        labelNode.setAttribute("for", id);
+        wrap.appendChild(labelNode);
+
+        var shell = el("div", "term-edit");
+        var list = el("div", "term-edit-list");
+        shell.appendChild(list);
+
+        var add = el("button", "term-add");
+        add.type = "button";
+        add.appendChild(el("span", "term-add-plus", "+"));
+        add.appendChild(el("span", null, "Add expression"));
+        shell.appendChild(add);
+
+        var menu = el("div", "term-add-menu");
+        menu.hidden = true;
+
+        var fromList = ledRow("Choose from the list");
+        var manual = ledRow("Add manually");
+        menu.appendChild(fromList);
+        menu.appendChild(manual);
+
+        var options = el("div", "term-add-options");
+        options.hidden = true;
+        menu.appendChild(options);
+
+        var typed = el("div", "term-add-typed");
+        typed.hidden = true;
+        var typeBox = document.createElement("input");
+        typeBox.type = "text";
+        typeBox.className = "free-input";
+        typeBox.placeholder = opts.placeholder || "e.g. bakchodi";
+        var confirm = el("button", "term-add-ok", "Add");
+        confirm.type = "button";
+        typed.appendChild(typeBox);
+        typed.appendChild(confirm);
+        menu.appendChild(typed);
+
+        shell.appendChild(menu);
+        wrap.appendChild(shell);
+
+        var hidden = document.createElement("input");
+        hidden.type = "hidden";
+        hidden.id = id;
+        wrap.appendChild(hidden);
+
+        if (opts.hint) wrap.appendChild(el("span", "was", opts.hint));
+        if (opts.was !== undefined && asText(opts.was) !== "") {
+            var was = el("span", "was");
+            was.innerHTML = "model said <b>" + escapeHTML(asText(opts.was)) + "</b>";
+            wrap.appendChild(was);
+        }
+
+        var terms = splitTerms(value);
+
+        function commit() {
+            hidden.value = terms.join("/");
+            hidden.dispatchEvent(new Event("change"));
+            draw();
+        }
+
+        function addTerm(term) {
+            term = String(term || "").trim();
+            if (!term) return;
+            if (terms.indexOf(term) === -1) terms.push(term);
+            commit();
+        }
+
+        function rename(position, term) {
+            term = String(term || "").trim();
+            if (!term) { draw(); return; }
+            if (terms.indexOf(term) !== -1 && terms[position] !== term) { draw(); return; }
+            terms[position] = term;
+            commit();
+        }
+
+        function remove(position) {
+            terms.splice(position, 1);
+            commit();
+        }
+
+        function box(term, position) {
+            var node = el("span", "term-edit-box");
+
+            var colour = EMOTION_COLOR[term.toLowerCase()];
+            if (colour) {
+                var dot = el("span", "swatch");
+                dot.style.background = colour;
+                node.appendChild(dot);
+            }
+
+            var name = el("span", "term-edit-name", pretty(term));
+            node.appendChild(name);
+
+            var pen = el("button", "term-edit-pen", "✎");
+            pen.type = "button";
+            pen.title = "Edit " + term;
+            node.appendChild(pen);
+
+            var cross = el("button", "term-edit-x", "✕");
+            cross.type = "button";
+            cross.title = "Remove " + term;
+            cross.addEventListener("click", function () { remove(position); });
+            node.appendChild(cross);
+
+            pen.addEventListener("click", function () {
+                var field = document.createElement("input");
+                field.type = "text";
+                field.className = "term-edit-input";
+                field.value = term;
+
+                node.replaceChild(field, name);
+                pen.hidden = true;
+                field.focus();
+                field.select();
+
+                var done = false;
+                function finish() {
+                    if (done) return;
+                    done = true;
+                    rename(position, field.value);
+                }
+                field.addEventListener("blur", finish);
+                field.addEventListener("keydown", function (event) {
+                    if (event.key === "Enter") { event.preventDefault(); finish(); }
+                    if (event.key === "Escape") { event.stopPropagation(); done = true; draw(); }
+                });
+            });
+
+            return node;
+        }
+
+        function draw() {
+            list.innerHTML = "";
+            if (!terms.length) {
+                list.appendChild(el("span", "term-edit-empty",
+                    "No expression yet. Add one below."));
+            }
+            terms.forEach(function (term, position) {
+                list.appendChild(box(term, position));
+            });
+        }
+
+        function closeMenu() {
+            menu.hidden = true;
+            options.hidden = true;
+            typed.hidden = true;
+            fromList.classList.remove("on");
+            manual.classList.remove("on");
+            add.setAttribute("aria-expanded", "false");
+            document.removeEventListener("mousedown", awayFromMenu, true);
+        }
+
+        function awayFromMenu(event) {
+            if (!shell.contains(event.target)) closeMenu();
+        }
+
+        add.addEventListener("click", function () {
+            if (menu.hidden) {
+                menu.hidden = false;
+                add.setAttribute("aria-expanded", "true");
+                document.addEventListener("mousedown", awayFromMenu, true);
+            } else {
+                closeMenu();
+            }
+        });
+
+        fromList.addEventListener("click", function () {
+            blink(fromList);
+            fromList.classList.add("on");
+            manual.classList.remove("on");
+            typed.hidden = true;
+            options.hidden = false;
+        });
+
+        manual.addEventListener("click", function () {
+            blink(manual);
+            manual.classList.add("on");
+            fromList.classList.remove("on");
+            options.hidden = true;
+            typed.hidden = false;
+            setTimeout(function () { typeBox.focus(); }, 30);
+        });
+
+        (opts.list || []).forEach(function (option) {
+            if (!option) return;
+            var row = el("button", "picker-option");
+            row.type = "button";
+            var colour = EMOTION_COLOR[option.toLowerCase()];
+            if (colour) {
+                var dot = el("span", "swatch");
+                dot.style.background = colour;
+                row.appendChild(dot);
+            }
+            row.appendChild(el("span", null, option));
+            row.addEventListener("click", function () {
+                addTerm(option);
+                closeMenu();
+            });
+            options.appendChild(row);
+        });
+
+        function addTyped() {
+            addTerm(typeBox.value);
+            typeBox.value = "";
+            closeMenu();
+        }
+
+        confirm.addEventListener("click", addTyped);
+        typeBox.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") { event.preventDefault(); addTyped(); }
+        });
+
+        hidden.value = terms.join("/");
+        draw();
+        parent.appendChild(wrap);
+        return hidden;
+    }
+
+
+    /* =========================
        FORM BUILDERS
     ========================= */
 
@@ -1054,11 +1290,12 @@
 
         group(body, "Verdict");
 
-        var primary = textField(body, "edit-primary", "Primary emotion",
+        var primary = buildTermEditor(body, "edit-primary", "Primary emotion",
             data.primary_emotion, {
                 list: LABELS.slice(),
-                swatch: true,
-                hint: "your own words, joined with / when one will not do"
+                was: data.primary_emotion,
+                placeholder: "e.g. bakchodi",
+                hint: "one box per expression; each gets its own index below"
             });
 
         var canonical = textField(body, "edit-canonical", "Canonical emotion",
