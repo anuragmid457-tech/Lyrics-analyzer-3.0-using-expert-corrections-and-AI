@@ -2920,59 +2920,93 @@ function renderResult(data){
     }
 
 
-    /* Expression index */
+        /* Index and term chips */
 
     if(
         data.valence !== undefined
     ){
 
-        const score =
-            Math.round(
-                (
-                    (
-                        number(data.valence)
-                        + 1
-                    )
-                    / 2
-                )
-                * 100
-            );
+        const overall =
+            Math.round(((number(data.valence) + 1) / 2) * 100);
+
+
+        const indices =
+            data.emotion_indices
+            &&
+            typeof data.emotion_indices === "object"
+                ? data.emotion_indices
+                : {};
+
+
+        const terms =
+            Object.keys(indices).length
+                ? Object.keys(indices)
+                : String(data.primary_emotion || "")
+                    .split(/[\/,]/)
+                    .map(t => t.trim())
+                    .filter(Boolean);
+
+
+        const tint = term =>
+            COLORS[term.toLowerCase().replace(/\s+/g,"_")]
+            ||
+            color;
+
+
+        let chips =
+            '<button type="button" class="term-chip on" '
+            + 'data-term="Expression" data-index="' + overall + '" '
+            + 'data-color="' + color + '">'
+            + '<span class="dot" style="background:' + color + '"></span>'
+            + 'Expression<span class="score">' + overall + '</span>'
+            + '</button>';
+
+
+        terms.forEach(term => {
+
+            const score =
+                indices[term] === undefined
+                    ? overall
+                    : Math.round(number(indices[term]) * 100);
+
+            chips +=
+                '<button type="button" class="term-chip" '
+                + 'data-term="' + escapeHTML(term) + '" '
+                + 'data-index="' + score + '" '
+                + 'data-color="' + tint(term) + '">'
+                + '<span class="dot" style="background:' + tint(term) + '"></span>'
+                + escapeHTML(pretty(term))
+                + '<span class="score">' + score + '</span>'
+                + '</button>';
+
+        });
 
 
         html +=
 
-            '<div class="score-row">'
+            '<div class="index-row">'
 
             +
 
-            '<div class="score" style="color:'
+            '<div class="index-card">'
             +
-            color
+            '<div class="index-value" style="color:' + color + '">'
+            + overall +
+            '</div>'
             +
-            '">'
-            +
-            score
+            '<div class="index-label">Expression index</div>'
             +
             '</div>'
 
             +
 
-            '<div class="score-description">'
-            +
-            'expression'
-            +
-            '<br>'
-            +
-            'index'
-            +
-            '</div>'
+            '<div class="index-terms">' + chips + '</div>'
 
             +
 
             '</div>';
 
     }
-
 
     /* Emotion pills */
 

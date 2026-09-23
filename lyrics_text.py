@@ -38,6 +38,11 @@ ANNOTATION FRAMEWORK (follow all three layers):
      with "/" when a single word will not do. 
         Where a reviewer vocabulary is supplied below the lyrics, prefer its terms
    when one of them names this song's feeling more exactly than an English label.
+      emotion_indices: an object with one entry per term in primary_emotion,
+     each a float in [0.0, 1.0] for how strongly the song expresses that term
+     on its own. For "masti/romance/sensual" give all three, e.g.
+     {"masti": 0.85, "romance": 0.60, "sensual": 0.35}. Judge each separately:
+     a song can be heavy on masti and light on sensual.
    canonical_emotion: the same reading mapped onto this closed set —
      joy, love, longing, sadness, grief, nostalgia, anger, fear, anxiety, peace,
      devotion, spiritual_yearning, hope, patriotism, playfulness, loneliness,
@@ -76,6 +81,7 @@ Return ONLY a raw JSON object, no markdown fences, no commentary, in exactly thi
   "arousal": 0.0,
   "quadrant": "",
   "primary_emotion": "",
+  "emotion_indices": {},
   "secondary_emotions": [],
   "mixed_emotion": false,
   "rasa": null,

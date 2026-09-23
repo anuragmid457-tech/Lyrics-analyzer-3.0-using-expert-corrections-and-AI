@@ -39,6 +39,7 @@ RANK_KEY = "expert_rank"         # ordered list, best first, at most three
 WATCHED = [
     "valence",
     "arousal",
+    "emotion_indices",
     "quadrant",
     "primary_emotion",
     "canonical_emotion",
@@ -132,6 +133,8 @@ def _rank_of(editor, ranking):
 # --- diffing -------------------------------------------------------------
 
 def _comparable(value):
+    if isinstance(value, dict):
+        return ", ".join(f"{k} {float(v):.2f}" for k, v in value.items())
     if isinstance(value, list):
         return ", ".join(str(item) for item in value)
     if isinstance(value, bool):

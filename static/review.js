@@ -1000,6 +1000,30 @@
         return Math.round((number(index) / 100 * 2 - 1) * 100) / 100;
     }
 
+    function pretty(value) {
+        return String(value === null || value === undefined ? "" : value)
+            .replace(/_/g, " ");
+    }
+
+    // A primary emotion may be a compound: masti/romance/sensual. Each term
+    // carries its own index, so they are split out wherever they are needed.
+    function splitTerms(label) {
+        return String(label || "")
+            .split(/[\/,]/)
+            .map(function (part) { return part.trim(); })
+            .filter(function (part) { return part.length > 0; });
+    }
+
+    // Terms already scored come first, then any the label mentions but the
+    // model did not score, so an edited label still gets sliders.
+    function termsOf(data) {
+        var terms = Object.keys((data && data.emotion_indices) || {});
+        splitTerms(data && data.primary_emotion).forEach(function (term) {
+            if (terms.indexOf(term) === -1) terms.push(term);
+        });
+        return terms;
+    }
+
     function syncQuadrant() {
         var valence = document.getElementById("edit-valence");
         var arousal = document.getElementById("edit-arousal");
@@ -1086,6 +1110,50 @@
         var arousal = sliderField(body, "edit-arousal", "Arousal",
             data.arousal, -1, 1, data.arousal);
 
+        var arousalIndex = sliderField(body, "edit-arousal-index",
+            "Arousal expression index",
+            indexFromValence(data.arousal), 0, 100, indexFromValence(data.arousal), {
+                step: 1,
+                digits: 0,
+                hint: "arousal on a 0 to 100 scale; moving either one moves the other"
+            });
+
+        arousal.addEventListener("input", function () {
+            setSlider(arousalIndex, indexFromValence(arousal.value));
+        });
+
+        arousalIndex.addEventListener("input", function () {
+            setSlider(arousal, valenceFromIndex(arousalIndex.value));
+            syncQuadrant();
+        });
+
+        // Romance is its own reading, not a rescaling of the two above: a song
+        // can be warm and energetic without being romantic at all. The model
+        // returns it as 0 to 1; this slider is that number as 0 to 100.
+        // One slider per term in the primary emotion. A compound like
+        // masti/romance/sensual gets three, each scored on its own, because
+        // a song can be heavy on masti and light on sensual.
+        var termSliders = [];
+
+        termsOf(data).forEach(function (term, position) {
+            var stored = (data.emotion_indices || {})[term];
+            var start = stored === undefined || stored === null
+                ? indexFromValence(data.valence)
+                : Math.round(number(stored) * 100);
+
+            var slider = sliderField(body, "edit-term-" + position,
+                pretty(term) + " index", start, 0, 100,
+                stored === undefined || stored === null ? null : start, {
+                    step: 1,
+                    digits: 0,
+                    hint: position === 0
+                        ? "how strongly the song expresses this term, judged on its own"
+                        : undefined
+                });
+
+            termSliders.push({ term: term, slider: slider });
+        });
+
         var quadrant = textField(body, "edit-quadrant", "Quadrant", data.quadrant, {
             list: ["Q1", "Q2", "Q3", "Q4"],
             strict: true,
@@ -1168,6 +1236,10 @@
                 mixed_emotion: mixed.checked,
                 valence: number(valence.value),
                 arousal: number(arousal.value),
+                emotion_indices: termSliders.reduce(function (out, item) {
+                    out[item.term] = Math.round(number(item.slider.value)) / 100;
+                    return out;
+                }, {}),
                 quadrant: quadrant.value,
                 confidence: number(confidence.value),
                 rasa: rasa.value.trim() || null,
@@ -1585,11 +1657,45 @@
 
 
     /* =========================
+       TERM CHIPS ON THE RESULT CARD
+
+       The card shows one big index. Clicking a term swaps that number for
+       the term's own index. Bound once, by delegation, so it survives the
+       card being rewritten on every reading.
+    ========================= */
+
+    function mountIndexSwitch() {
+        var body = document.getElementById("body");
+        if (!body) return;
+
+        body.addEventListener("click", function (event) {
+            var chip = event.target && event.target.closest
+                ? event.target.closest(".term-chip")
+                : null;
+            if (!chip || !body.contains(chip)) return;
+
+            var value = body.querySelector(".index-value");
+            var label = body.querySelector(".index-label");
+            if (!value || !label) return;
+
+            value.textContent = chip.dataset.index;
+            value.style.color = chip.dataset.color || "";
+            label.textContent = pretty(chip.dataset.term) + " index";
+
+            [].forEach.call(body.querySelectorAll(".term-chip"), function (other) {
+                other.classList.toggle("on", other === chip);
+            });
+        });
+    }
+
+
+    /* =========================
        MOUNT
     ========================= */
 
     function start() {
         mountControls();
+        mountIndexSwitch();
 
         // renderResult is a top-level function declaration in the page's own
         // script, so it lives on the global object and can be wrapped here.

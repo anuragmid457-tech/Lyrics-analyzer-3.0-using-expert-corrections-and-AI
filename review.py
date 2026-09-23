@@ -43,7 +43,7 @@ review = Blueprint("review", __name__, url_prefix="/api/review")
 
 EDITABLE = {
     "primary_emotion", "canonical_emotion", "secondary_emotions", "mixed_emotion",
-    "valence", "arousal", "quadrant",
+    "valence", "arousal", "quadrant", "emotion_indices",
     "rasa", "parjaay", "tradition", "language",
     "summary", "confidence",
     "music_therapy", "music_therapy_context", "recommendation_tags",
@@ -51,6 +51,10 @@ EDITABLE = {
 }
 
 QUADRANTS = {"Q1", "Q2", "Q3", "Q4"}
+
+# A compound label rarely runs past three or four terms; the cap is only
+# there so a malformed submission cannot fill the column.
+MAX_TERMS = 8
 
 # Seconds to wait after a wrong password. Harmless to a person who mistyped,
 # and it turns a script guessing thousands of passwords into a slow one.
@@ -122,6 +126,30 @@ def _quadrant_from(valence, arousal):
     return "Q2" if arousal >= 0 else "Q3"
 
 
+def _indices(value):
+    """Per-term indices as {term: 0.0-1.0}, tidied.
+
+    The browser sends one entry per term of the primary emotion. Anything
+    unparseable is dropped rather than stored, so a bad submission cannot
+    leave odd values behind for the model to learn from.
+    """
+    if not isinstance(value, dict):
+        return {}
+    out = {}
+    for term, score in list(value.items())[:MAX_TERMS]:
+        name = str(term).strip()
+        if not name:
+            continue
+        try:
+            number = float(score)
+        except (TypeError, ValueError):
+            continue
+        if number != number:
+            continue
+        out[name] = round(max(0.0, min(1.0, number)), 2)
+    return out
+
+
 def clean(submitted, original):
     """Merge the reviewer's edits onto the original verdict, tidied."""
     out = dict(original or {})
@@ -133,6 +161,12 @@ def clean(submitted, original):
     out["valence"] = _clamp(out.get("valence"), -1.0, 1.0)
     out["arousal"] = _clamp(out.get("arousal"), -1.0, 1.0)
     out["confidence"] = _clamp(out.get("confidence"), 0.0, 1.0)
+
+    indices = _indices(out.get("emotion_indices"))
+    if indices:
+        out["emotion_indices"] = indices
+    else:
+        out.pop("emotion_indices", None)
 
     quadrant = str(out.get("quadrant") or "")[:2].upper()
     out["quadrant"] = quadrant if quadrant in QUADRANTS else _quadrant_from(
