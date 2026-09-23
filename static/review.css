@@ -2133,6 +2133,10 @@
     border-radius:99px;
 }
 
+.term-fields{
+    display:block;
+}
+
 /* =========================
    MOTION AND MOBILE
 ========================= */

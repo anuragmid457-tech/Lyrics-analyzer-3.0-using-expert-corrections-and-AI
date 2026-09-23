@@ -1133,26 +1133,55 @@
         // One slider per term in the primary emotion. A compound like
         // masti/romance/sensual gets three, each scored on its own, because
         // a song can be heavy on masti and light on sensual.
+        //
+        // They are rebuilt whenever the label changes, so renaming masti to
+        // obsession leaves a slider called obsession, and nothing is saved
+        // under a term the label no longer mentions.
+        var termsWrap = el("div", "term-fields");
+        body.appendChild(termsWrap);
+
         var termSliders = [];
 
-        termsOf(data).forEach(function (term, position) {
-            var stored = (data.emotion_indices || {})[term];
-            var start = stored === undefined || stored === null
-                ? indexFromValence(data.valence)
-                : Math.round(number(stored) * 100);
+        function renderTermSliders() {
+            var onScreen = {};
+            termSliders.forEach(function (item) {
+                onScreen[item.term] = Math.round(number(item.slider.value));
+            });
 
-            var slider = sliderField(body, "edit-term-" + position,
-                pretty(term) + " index", start, 0, 100,
-                stored === undefined || stored === null ? null : start, {
-                    step: 1,
-                    digits: 0,
-                    hint: position === 0
-                        ? "how strongly the song expresses this term, judged on its own"
-                        : undefined
-                });
+            var stored = data.emotion_indices || {};
+            termsWrap.innerHTML = "";
+            termSliders = [];
 
-            termSliders.push({ term: term, slider: slider });
-        });
+            splitTerms(primary.value).forEach(function (term, position) {
+                var saved = stored[term];
+                var hadSaved = saved !== undefined && saved !== null;
+                var was = hadSaved ? Math.round(number(saved) * 100) : null;
+
+                // keep whatever the reviewer had already dragged, then the
+                // model's own number, then the overall expression index
+                var start = onScreen[term] !== undefined
+                    ? onScreen[term]
+                    : (hadSaved ? was : indexFromValence(data.valence));
+
+                var slider = sliderField(termsWrap, "edit-term-" + position,
+                    pretty(term) + " index", start, 0, 100, was, {
+                        step: 1,
+                        digits: 0,
+                        hint: position === 0
+                            ? "how strongly the song expresses this term, judged on its own"
+                            : undefined
+                    });
+
+                termSliders.push({ term: term, slider: slider });
+            });
+        }
+
+        renderTermSliders();
+
+        // change covers both the picker and finishing a typed label; blur
+        // catches the case of clicking straight from the box to Save.
+        primary.addEventListener("change", renderTermSliders);
+        primary.addEventListener("blur", renderTermSliders);
 
         var quadrant = textField(body, "edit-quadrant", "Quadrant", data.quadrant, {
             list: ["Q1", "Q2", "Q3", "Q4"],
@@ -1228,6 +1257,9 @@
 
             save.disabled = true;
             save.textContent = "Saving";
+
+            // catches a rename made without leaving the label box
+            renderTermSliders();
 
             var corrected = {
                 primary_emotion: primary.value.trim(),
