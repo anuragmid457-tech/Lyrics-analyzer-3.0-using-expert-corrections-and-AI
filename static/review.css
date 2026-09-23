@@ -2402,6 +2402,26 @@
     border-color:rgba(216,173,85,.8);
 }
 
+.term-status{
+
+    color:var(--gold);
+
+    font-size:10.5px;
+
+    letter-spacing:.02em;
+}
+
+.term-status[hidden]{
+    display:none;
+}
+
+.slider-row input[type=range]:disabled{
+
+    opacity:.45;
+
+    cursor:progress;
+}
+
 /* =========================
    MOTION AND MOBILE
 ========================= */

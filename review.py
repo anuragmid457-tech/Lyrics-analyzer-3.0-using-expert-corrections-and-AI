@@ -256,6 +256,39 @@ def write_correction():
     }), 201
 
 
+@review.post("/score-terms")
+@require_editor
+def score_terms():
+    """Score expressions the reviewer added, against the song being edited.
+
+    The analyser only returns indices for terms it chose itself, so a term
+    the reviewer types has never been scored by anything. This asks the model
+    about those terms rather than leaving the editor to guess a number.
+    """
+    payload = request.get_json(silent=True) or {}
+
+    try:
+        analysis_id = int(payload.get("analysis_id"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Which reading are these terms for?"}), 400
+
+    terms = _names(payload.get("terms"))
+    if not terms:
+        return jsonify({"scores": {}})
+
+    analysis = database.get_analysis(analysis_id)
+    if analysis is None:
+        return jsonify({"error": "That reading is no longer on file."}), 404
+
+    try:
+        import scoring          # imported here so a missing key cannot break boot
+        scores = scoring.score_terms(analysis["input_text"], terms)
+    except Exception as exc:  # noqa: BLE001
+        return jsonify({"error": f"{type(exc).__name__}: {exc}"}), 500
+
+    return jsonify({"scores": scores})
+
+
 @review.get("/corrections")
 def read_corrections():
     limit = request.args.get("limit", default=50, type=int)

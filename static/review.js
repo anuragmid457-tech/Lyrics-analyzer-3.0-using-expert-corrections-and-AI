@@ -1379,29 +1379,35 @@
 
         var termSliders = [];
 
-        function renderTermSliders() {
-            var onScreen = {};
-            termSliders.forEach(function (item) {
-                onScreen[item.term] = Math.round(number(item.slider.value));
-            });
+        // What each term is worth, 0-100. Seeded with the model's own indices;
+        // a term the reviewer adds is absent here until the model scores it.
+        var termScores = {};
+        Object.keys(data.emotion_indices || {}).forEach(function (term) {
+            var value = data.emotion_indices[term];
+            if (value !== undefined && value !== null) {
+                termScores[term] = Math.round(number(value) * 100);
+            }
+        });
 
-            var stored = data.emotion_indices || {};
+        // Terms the reviewer has dragged themselves, which no scoring overwrites.
+        var termTouched = {};
+
+        function renderTermSliders() {
             termsWrap.innerHTML = "";
             termSliders = [];
 
-            splitTerms(primary.value).forEach(function (term, position) {
-                var saved = stored[term];
-                var hadSaved = saved !== undefined && saved !== null;
-                var was = hadSaved ? Math.round(number(saved) * 100) : null;
+            var pending = [];
 
-                // keep whatever the reviewer had already dragged, then the
-                // model's own number, then the overall expression index
-                var start = onScreen[term] !== undefined
-                    ? onScreen[term]
-                    : (hadSaved ? was : indexFromValence(data.valence));
+            splitTerms(primary.value).forEach(function (term, position) {
+                var known = termScores[term];
+                var unscored = known === undefined;
 
                 var slider = sliderField(termsWrap, "edit-term-" + position,
-                    pretty(term) + " index", start, 0, 100, was, {
+                    pretty(term) + " index",
+                    unscored ? 50 : known, 0, 100,
+                    (data.emotion_indices || {})[term] === undefined
+                        ? null
+                        : Math.round(number(data.emotion_indices[term]) * 100), {
                         step: 1,
                         digits: 0,
                         hint: position === 0
@@ -1409,8 +1415,67 @@
                             : undefined
                     });
 
-                termSliders.push({ term: term, slider: slider });
+                var wrap = slider.parentNode.parentNode;
+                var status = el("span", "was term-status");
+                status.hidden = true;
+                wrap.appendChild(status);
+
+                slider.addEventListener("input", function () {
+                    termTouched[term] = true;
+                    termScores[term] = Math.round(number(slider.value));
+                    status.hidden = true;
+                });
+
+                termSliders.push({ term: term, slider: slider, status: status });
+
+                if (unscored && !termTouched[term]) pending.push(term);
             });
+
+            if (pending.length) scorePending(pending);
+        }
+
+        // A term the reviewer typed has never been scored by anything, so it
+        // is sent to the model with the lyrics rather than given a placeholder.
+        async function scorePending(terms) {
+            var waiting = termSliders.filter(function (item) {
+                return terms.indexOf(item.term) !== -1;
+            });
+
+            waiting.forEach(function (item) {
+                item.slider.disabled = true;
+                item.status.hidden = false;
+                item.status.textContent = "reading the song for this expression…";
+            });
+
+            try {
+                var result = await post("/score-terms", {
+                    analysis_id: data.analysis_id,
+                    terms: terms
+                });
+                var scores = result.scores || {};
+
+                waiting.forEach(function (item) {
+                    item.slider.disabled = false;
+                    if (termTouched[item.term]) { item.status.hidden = true; return; }
+
+                    var score = scores[item.term];
+                    if (score === undefined || score === null) {
+                        item.status.textContent =
+                            "the model would not score this one; set it yourself";
+                        return;
+                    }
+
+                    var value = Math.round(number(score) * 100);
+                    termScores[item.term] = value;
+                    setSlider(item.slider, value);
+                    item.status.textContent = "scored by the model for this song";
+                });
+            } catch (error) {
+                waiting.forEach(function (item) {
+                    item.slider.disabled = false;
+                    item.status.textContent = "could not score this one; set it yourself";
+                });
+            }
         }
 
         renderTermSliders();
