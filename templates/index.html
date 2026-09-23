@@ -2920,7 +2920,7 @@ function renderResult(data){
     }
 
 
-        /* Index and term chips */
+           /* Overall index, and a box per term */
 
     if(
         data.valence !== undefined
@@ -2953,13 +2953,7 @@ function renderResult(data){
             color;
 
 
-        let chips =
-            '<button type="button" class="term-chip on" '
-            + 'data-term="Expression" data-index="' + overall + '" '
-            + 'data-color="' + color + '">'
-            + '<span class="dot" style="background:' + color + '"></span>'
-            + 'Expression<span class="score">' + overall + '</span>'
-            + '</button>';
+        let boxes = "";
 
 
         terms.forEach(term => {
@@ -2969,15 +2963,38 @@ function renderResult(data){
                     ? overall
                     : Math.round(number(indices[term]) * 100);
 
-            chips +=
-                '<button type="button" class="term-chip" '
-                + 'data-term="' + escapeHTML(term) + '" '
-                + 'data-index="' + score + '" '
-                + 'data-color="' + tint(term) + '">'
-                + '<span class="dot" style="background:' + tint(term) + '"></span>'
+            const shade = tint(term);
+
+            boxes +=
+
+                '<span class="term-box">'
+
+                +
+
+                '<button type="button" class="term-open" aria-expanded="false">'
+                + '<span class="dot" style="background:' + shade + '"></span>'
                 + escapeHTML(pretty(term))
-                + '<span class="score">' + score + '</span>'
-                + '</button>';
+                + '<span class="caret">▾</span>'
+                + '</button>'
+
+                +
+
+                '<span class="term-pop" hidden>'
+                + '<span class="term-pop-label">'
+                + 'Expression index for ' + escapeHTML(pretty(term))
+                + '</span>'
+                + '<div class="term-pop-value" style="color:' + shade + '">'
+                + score
+                + '</div>'
+                + '<span class="term-pop-bar">'
+                + '<span class="term-pop-fill" style="width:' + score + '%;'
+                + 'background:' + shade + '"></span>'
+                + '</span>'
+                + '</span>'
+
+                +
+
+                '</span>';
 
         });
 
@@ -2994,13 +3011,13 @@ function renderResult(data){
             + overall +
             '</div>'
             +
-            '<div class="index-label">Expression index</div>'
+            '<div class="index-label">Overall<br>expression index</div>'
             +
             '</div>'
 
             +
 
-            '<div class="index-terms">' + chips + '</div>'
+            '<div class="index-terms">' + boxes + '</div>'
 
             +
 

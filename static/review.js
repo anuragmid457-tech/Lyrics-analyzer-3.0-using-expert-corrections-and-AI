@@ -1657,35 +1657,52 @@
 
 
     /* =========================
-       TERM CHIPS ON THE RESULT CARD
+       TERM BOXES ON THE RESULT CARD
 
-       The card shows one big index. Clicking a term swaps that number for
-       the term's own index. Bound once, by delegation, so it survives the
-       card being rewritten on every reading.
+       Each term of the primary emotion sits in its own box. Clicking one
+       rolls a panel down from under it with that term's index; the big
+       number stays the overall expression index. Bound once, by delegation,
+       so it survives the card being rewritten on every reading.
     ========================= */
 
     function mountIndexSwitch() {
         var body = document.getElementById("body");
         if (!body) return;
 
-        body.addEventListener("click", function (event) {
-            var chip = event.target && event.target.closest
-                ? event.target.closest(".term-chip")
-                : null;
-            if (!chip || !body.contains(chip)) return;
-
-            var value = body.querySelector(".index-value");
-            var label = body.querySelector(".index-label");
-            if (!value || !label) return;
-
-            value.textContent = chip.dataset.index;
-            value.style.color = chip.dataset.color || "";
-            label.textContent = pretty(chip.dataset.term) + " index";
-
-            [].forEach.call(body.querySelectorAll(".term-chip"), function (other) {
-                other.classList.toggle("on", other === chip);
+        function closeAll(except) {
+            [].forEach.call(body.querySelectorAll(".term-box"), function (box) {
+                if (box === except) return;
+                box.classList.remove("open");
+                var pop = box.querySelector(".term-pop");
+                if (pop) pop.hidden = true;
+                var opener = box.querySelector(".term-open");
+                if (opener) opener.setAttribute("aria-expanded", "false");
             });
+        }
+
+        body.addEventListener("click", function (event) {
+            var opener = event.target && event.target.closest
+                ? event.target.closest(".term-open")
+                : null;
+            if (!opener || !body.contains(opener)) return;
+
+            var box = opener.closest(".term-box");
+            var pop = box.querySelector(".term-pop");
+            if (!pop) return;
+
+            var wasOpen = !pop.hidden;
+            closeAll(box);
+            pop.hidden = wasOpen;
+            box.classList.toggle("open", !wasOpen);
+            opener.setAttribute("aria-expanded", String(!wasOpen));
         });
+
+        // clicking anywhere else closes whichever panel is open
+        document.addEventListener("mousedown", function (event) {
+            if (event.target && event.target.closest
+                && event.target.closest(".term-box")) return;
+            closeAll(null);
+        }, true);
     }
 
 
