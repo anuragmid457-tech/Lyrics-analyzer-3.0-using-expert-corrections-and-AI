@@ -47,15 +47,134 @@
         Q4: "Q4 · calm, serene"
     };
 
+    /* --- colour of an expression ---
+
+       The colour belongs to the word, not to any number: heartbreak is dark
+       red whether its index is 20 or 90. Exact names are looked up first,
+       then a keyword scan catches compounds and words nobody listed, so
+       "bakchodi/masti" reads as masti rather than falling back to grey. */
+
     var EMOTION_COLOR = {
-        love: "#c98293", joy: "#d8ad55", devotion: "#8c81c8",
-        longing: "#7e8fd6", sadness: "#668fc0", serenity: "#69a99e",
-        anger: "#c86c69", fear: "#c07a3f", peace: "#69a99e",
-        grief: "#668fc0", nostalgia: "#8c81c8", anxiety: "#c07a3f",
-        hope: "#d8ad55", patriotism: "#c98293", playfulness: "#d8ad55",
-        loneliness: "#668fc0", acceptance: "#69a99e", wonder: "#8c81c8",
-        spiritual_yearning: "#8c81c8"
+        // sorrow and its neighbours
+        heartbreak: "#8e2f3f",
+        betrayal: "#8e2f3f",
+        grief: "#4f6f9e",
+        sadness: "#668fc0",
+        sorrow: "#5c7fae",
+        karuna: "#4f6f9e",
+        loneliness: "#7f8aa3",
+        melancholy: "#6b7fa8",
+
+        // love and desire
+        love: "#f2a7bd",
+        romance: "#f2a7bd",
+        prem: "#f2a7bd",
+        shringara: "#e58ba8",
+        affection: "#f0b3c4",
+        sensual: "#c4568f",
+        eroticism: "#c4568f",
+        desire: "#c4568f",
+        obsession: "#a83a5b",
+
+        // wanting what is absent
+        longing: "#6f9bd8",
+        viraha: "#6f9bd8",
+        biraha: "#6f9bd8",
+        yearning: "#6f9bd8",
+        spiritual_yearning: "#8c81c8",
+        nostalgia: "#a88fc0",
+
+        // brightness
+        joy: "#d8ad55",
+        happiness: "#d8ad55",
+        masti: "#e0a33f",
+        playfulness: "#e0a33f",
+        bakchodi: "#e8b84b",
+        mischief: "#e8b84b",
+        celebration: "#e6bd57",
+        hope: "#7fc4a8",
+        wonder: "#9db8e8",
+        adbhuta: "#9db8e8",
+
+        // stillness
+        serenity: "#69a99e",
+        peace: "#69a99e",
+        shanta: "#69a99e",
+        acceptance: "#77b3a4",
+        calm: "#69a99e",
+
+        // heat
+        anger: "#c8452f",
+        raudra: "#c8452f",
+        rage: "#b83a26",
+        fear: "#c07a3f",
+        anxiety: "#c07a3f",
+        bhayanaka: "#c07a3f",
+
+        // the rest
+        devotion: "#8c81c8",
+        bhakti: "#8c81c8",
+        patriotism: "#d98f3d",
+        veera: "#d98f3d",
+        pride: "#d98f3d",
+        empowerment: "#b06fd8",
+        confidence: "#b06fd8"
     };
+
+    // Checked in order, so the more specific word wins: heartbreak before
+    // heart, spiritual before spirit.
+    var COLOUR_KEYWORDS = [
+        ["heartbreak", "#8e2f3f"], ["heart break", "#8e2f3f"],
+        ["breakup", "#8e2f3f"], ["betray", "#8e2f3f"],
+        ["obsess", "#a83a5b"],
+        ["sensual", "#c4568f"], ["erotic", "#c4568f"], ["lust", "#c4568f"],
+        ["desire", "#c4568f"], ["seduct", "#c4568f"],
+        ["romanc", "#f2a7bd"], ["love", "#f2a7bd"], ["prem", "#f2a7bd"],
+        ["shringar", "#e58ba8"], ["affection", "#f0b3c4"],
+        ["longing", "#6f9bd8"], ["yearn", "#6f9bd8"],
+        ["viraha", "#6f9bd8"], ["biraha", "#6f9bd8"], ["bicched", "#6f9bd8"],
+        ["nostalg", "#a88fc0"], ["memory", "#a88fc0"],
+        ["grief", "#4f6f9e"], ["mourn", "#4f6f9e"], ["karuna", "#4f6f9e"],
+        ["sad", "#668fc0"], ["sorrow", "#5c7fae"], ["melanchol", "#6b7fa8"],
+        ["lonel", "#7f8aa3"], ["alone", "#7f8aa3"],
+        ["bakchod", "#e8b84b"], ["masti", "#e0a33f"], ["mischief", "#e8b84b"],
+        ["play", "#e0a33f"], ["fun", "#e0a33f"], ["flirt", "#e8a9b8"],
+        ["joy", "#d8ad55"], ["happy", "#d8ad55"], ["happiness", "#d8ad55"],
+        ["celebrat", "#e6bd57"], ["festiv", "#e6bd57"], ["euphor", "#e8b84b"],
+        ["devotion", "#8c81c8"], ["bhakti", "#8c81c8"], ["spiritual", "#8c81c8"],
+        ["divine", "#8c81c8"], ["prayer", "#8c81c8"],
+        ["seren", "#69a99e"], ["peace", "#69a99e"], ["shanta", "#69a99e"],
+        ["calm", "#69a99e"], ["accept", "#77b3a4"],
+        ["anger", "#c8452f"], ["rage", "#b83a26"], ["raudra", "#c8452f"],
+        ["fear", "#c07a3f"], ["anxi", "#c07a3f"], ["dread", "#c07a3f"],
+        ["hope", "#7fc4a8"], ["wonder", "#9db8e8"], ["awe", "#9db8e8"],
+        ["patriot", "#d98f3d"], ["pride", "#d98f3d"], ["swadesh", "#d98f3d"],
+        ["baddie", "#b06fd8"], ["independ", "#b06fd8"],
+        ["empower", "#b06fd8"], ["confiden", "#b06fd8"],
+        ["main character", "#b06fd8"]
+    ];
+
+    var COLOUR_FALLBACK = "#d8ad55";
+
+    function colourFor(label) {
+        // a compound takes its colour from the expression it leads with
+        var first = splitTerms(label)[0] || String(label || "");
+        var word = first.toLowerCase().replace(/\s+/g, " ").trim();
+        if (!word) return COLOUR_FALLBACK;
+
+        var exact = EMOTION_COLOR[word] || EMOTION_COLOR[word.replace(/\s+/g, "_")];
+        if (exact) return exact;
+
+        for (var i = 0; i < COLOUR_KEYWORDS.length; i += 1) {
+            if (word.indexOf(COLOUR_KEYWORDS[i][0]) !== -1) {
+                return COLOUR_KEYWORDS[i][1];
+            }
+        }
+        return COLOUR_FALLBACK;
+    }
+
+    // the page's own renderResult uses this, so both agree on every colour
+    window.LYRIQ_COLOR = colourFor;
 
     // A search box only earns its place once the roster is long enough to scroll.
     var SEARCH_FROM = 8;
@@ -811,8 +930,7 @@
     function buildCircumplex(data) {
         var valence = Math.max(-1, Math.min(1, number(data.valence)));
         var arousal = Math.max(-1, Math.min(1, number(data.arousal)));
-        var shade = EMOTION_COLOR[String(data.primary_emotion || "")
-            .split(/[\/,]/)[0].trim().toLowerCase()] || "#d8ad55";
+        var shade = colourFor(data.primary_emotion);
 
         var wrap = el("div", "circumplex");
 
@@ -1117,7 +1235,7 @@
             row.type = "button";
             row.dataset.value = option;
 
-            var colour = options.swatch ? EMOTION_COLOR[option.toLowerCase()] : null;
+            var colour = options.swatch ? colourFor(option) : null;
             if (colour) {
                 var dot = el("span", "swatch");
                 dot.style.background = colour;
@@ -1146,7 +1264,7 @@
             valueText.textContent = current || "Not specified";
             valueText.classList.toggle("empty", !current);
 
-            var colour = options.swatch ? EMOTION_COLOR[current.toLowerCase()] : null;
+            var colour = options.swatch && current ? colourFor(current) : null;
             swatch.style.background = colour || "transparent";
             swatch.hidden = !colour;
 
@@ -1298,7 +1416,7 @@
         function box(term, position) {
             var node = el("span", "term-edit-box");
 
-            var colour = EMOTION_COLOR[term.toLowerCase()];
+            var colour = colourFor(term);
             if (colour) {
                 var dot = el("span", "swatch");
                 dot.style.background = colour;
@@ -1402,7 +1520,7 @@
             if (!option) return;
             var row = el("button", "picker-option");
             row.type = "button";
-            var colour = EMOTION_COLOR[option.toLowerCase()];
+            var colour = colourFor(option);
             if (colour) {
                 var dot = el("span", "swatch");
                 dot.style.background = colour;
@@ -1585,7 +1703,6 @@
         var arousal = document.getElementById("edit-arousal");
         var quadrant = document.getElementById("edit-quadrant");
         if (!valence || !arousal || !quadrant) return;
-        if (quadrant.dataset.touched === "1") return;
         quadrant.value = quadrantFrom(number(valence.value), number(arousal.value));
         if (quadrant._refresh) quadrant._refresh();
     }
@@ -1808,10 +1925,30 @@
         var quadrant = textField(body, "edit-quadrant", "Quadrant", data.quadrant, {
             list: ["Q1", "Q2", "Q3", "Q4"],
             strict: true,
-            hint: "follows valence and arousal until you choose one yourself"
+            hint: "tied to valence and arousal: change either side and the other follows"
         });
+        // Picking a quadrant moves the two sliders into it, keeping the
+        // strength of each and changing only the signs, so the point on the
+        // map lands in the quadrant chosen instead of contradicting it.
         quadrant.addEventListener("change", function () {
-            quadrant.dataset.touched = "1";
+            var code = String(quadrant.value || "").toUpperCase();
+            if (!/^Q[1-4]$/.test(code)) return;
+
+            var wantValence = (code === "Q1" || code === "Q4") ? 1 : -1;
+            var wantArousal = (code === "Q1" || code === "Q2") ? 1 : -1;
+
+            // a reading sitting on zero has no strength to keep, so it is
+            // placed mid-quadrant rather than left on the axis
+            var strengthV = Math.abs(number(valence.value)) || 0.5;
+            var strengthA = Math.abs(number(arousal.value)) || 0.5;
+
+            var newValence = Math.round(strengthV * wantValence * 100) / 100;
+            var newArousal = Math.round(strengthA * wantArousal * 100) / 100;
+
+            setSlider(valence, newValence);
+            setSlider(arousal, newArousal);
+            setSlider(expressionIndex, indexFromValence(newValence));
+            setSlider(arousalIndex, indexFromValence(newArousal));
         });
 
         var confidence = sliderField(body, "edit-confidence", "Confidence",
