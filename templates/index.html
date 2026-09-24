@@ -2776,19 +2776,18 @@ function renderRaw(text){
 
 function getColor(data){
 
-    const key =
-        String(
-            data.primary_emotion || ""
-        )
-        .toLowerCase()
-        .replace(/\s+/g,"_");
+    if(window.LYRIQ_COLOR){
+
+        return window.LYRIQ_COLOR(
+            data.primary_emotion
+            ||
+            data.canonical_emotion
+        );
+
+    }
 
 
-    return COLORS[key]
-        ||
-        QUADRANT_COLORS[data.quadrant]
-        ||
-        "#d8ad55";
+    return QUADRANT_COLORS[data.quadrant] || "#d8ad55";
 
 }
 
