@@ -649,36 +649,18 @@ textarea{
     hyphens:auto;
 }
 
-.result-sub{
+.canonical{
 
     color:var(--muted);
 
-    font-size:12px;
+    font-size:11px;
+
+    letter-spacing:.06em;
+
+    margin-top:4px;
 }
 
-.score-row{
-
-    display:flex;
-
-    align-items:end;
-
-    gap:14px;
-
-    margin:27px 0 24px;
-}
-
-.score{
-
-    font-family:Newsreader,Georgia,serif;
-
-    font-size:64px;
-
-    line-height:.8;
-
-    color:var(--gold);
-}
-
-.score-description{
+.result-sub{
 
     color:var(--muted);
 
@@ -2073,21 +2055,24 @@ const FAMILIES = [
 ];
 
 
+/* Colours live in review.js, which exposes window.LYRIQ_COLOR. These two
+   maps are only the fallback for the moment before that file loads. */
+
 const COLORS = {
 
-    love:"#c98293",
+    love:"#f2a7bd",
 
     joy:"#d8ad55",
 
     devotion:"#8c81c8",
 
-    longing:"#7e8fd6",
+    longing:"#6f9bd8",
 
     sadness:"#668fc0",
 
     serenity:"#69a99e",
 
-    anger:"#c86c69",
+    anger:"#c8452f",
 
     fear:"#c07a3f"
 
@@ -2135,6 +2120,34 @@ function number(value, fallback=0){
     return Number.isFinite(Number(value))
         ? Number(value)
         : fallback;
+
+}
+
+
+/* One expression, one colour, wherever it appears. */
+
+function shadeOf(term, fallback){
+
+    if(window.LYRIQ_COLOR)
+        return window.LYRIQ_COLOR(term);
+
+    return COLORS[
+        String(term ?? "")
+            .toLowerCase()
+            .replace(/\s+/g,"_")
+    ] || fallback || "#d8ad55";
+
+}
+
+
+/* A primary emotion may be a compound: masti/romance/sensual. */
+
+function splitTerms(label){
+
+    return String(label ?? "")
+        .split(/[\/,]/)
+        .map(part => part.trim())
+        .filter(Boolean);
 
 }
 
@@ -2320,11 +2333,15 @@ async function analyze(){
                 payload[field] = value;
 
         }
+    );
 
-        );
 
-        if(window.LYRIQ_MODEL){
+    /* which analyser reads it, chosen in the Model picker */
+
+    if(window.LYRIQ_MODEL){
+
         payload.model = window.LYRIQ_MODEL;
+
     }
 
 
@@ -2772,22 +2789,17 @@ function renderRaw(text){
 
 /* =========================
    RESULT COLOR
+   The colour belongs to the word, not to any number.
 ========================= */
 
 function getColor(data){
 
-    if(window.LYRIQ_COLOR){
-
-        return window.LYRIQ_COLOR(
-            data.primary_emotion
-            ||
-            data.canonical_emotion
-        );
-
-    }
-
-
-    return QUADRANT_COLORS[data.quadrant] || "#d8ad55";
+    return shadeOf(
+        splitTerms(data.primary_emotion)[0]
+        ||
+        data.canonical_emotion,
+        QUADRANT_COLORS[data.quadrant]
+    );
 
 }
 
@@ -2850,28 +2862,36 @@ function renderResult(data){
         '</div>';
 
 
+    /* Title: every expression in its own colour */
+
+    const titleTerms =
+        splitTerms(data.primary_emotion);
+
+
     html +=
 
         '<div class="result-title">'
         +
-        '<span style="color:'
-        +
-        color
-        +
-        '">'
-        +
-        escapeHTML(
-            pretty(
-                data.primary_emotion
-                ||
-                "Reading"
-            )
+        (
+            titleTerms.length
+
+                ? titleTerms
+                    .map(term =>
+                        '<span style="color:'
+                        + shadeOf(term, color)
+                        + '">'
+                        + escapeHTML(pretty(term))
+                        + '</span>'
+                    )
+                    .join('<span class="title-slash">/</span>')
+
+                : '<span style="color:' + color + '">Reading</span>'
         )
         +
-        '</span>'
-        +
         '</div>';
-            if(data.canonical_emotion){
+
+
+    if(data.canonical_emotion){
 
         html +=
 
@@ -2924,7 +2944,10 @@ function renderResult(data){
     }
 
 
-           /* Overall index, and a box per term */
+    /* =========================
+       OVERALL INDEX, AND A BOX PER EXPRESSION
+       Clicking a box rolls its own index down from underneath.
+    ========================= */
 
     if(
         data.valence !== undefined
@@ -2938,27 +2961,16 @@ function renderResult(data){
             data.emotion_indices
             &&
             typeof data.emotion_indices === "object"
+
                 ? data.emotion_indices
+
                 : {};
 
 
-               const labelTerms =
-            String(data.primary_emotion || "")
-                .split(/[\/,]/)
-                .map(t => t.trim())
-                .filter(Boolean);
-
-
         const terms =
-            labelTerms.length
-                ? labelTerms
+            titleTerms.length
+                ? titleTerms
                 : Object.keys(indices);
-
-
-        const tint = term =>
-            COLORS[term.toLowerCase().replace(/\s+/g,"_")]
-            ||
-            color;
 
 
         let boxes = "";
@@ -2966,12 +2978,15 @@ function renderResult(data){
 
         terms.forEach(term => {
 
-            const score =
-                indices[term] === undefined
-                    ? overall
-                    : Math.round(number(indices[term]) * 100);
+            const stored = indices[term];
 
-            const shade = tint(term);
+            const score =
+                stored === undefined || stored === null
+                    ? overall
+                    : Math.round(number(stored) * 100);
+
+            const shade = shadeOf(term, color);
+
 
             boxes +=
 
@@ -2979,7 +2994,7 @@ function renderResult(data){
 
                 +
 
-                + '<button type="button" class="term-open" aria-expanded="false">'
+                '<button type="button" class="term-open" aria-expanded="false">'
                 + '<span class="dot" style="background:' + shade + '"></span>'
                 + '<span class="term-word" style="color:' + shade + '">'
                 + escapeHTML(pretty(term))
@@ -2993,9 +3008,9 @@ function renderResult(data){
                 + '<span class="term-pop-label">'
                 + 'Expression index for ' + escapeHTML(pretty(term))
                 + '</span>'
-                + '<div class="term-pop-value" style="color:' + shade + '">'
+                + '<span class="term-pop-value" style="color:' + shade + '">'
                 + score
-                + '</div>'
+                + '</span>'
                 + '<span class="term-pop-bar">'
                 + '<span class="term-pop-fill" style="width:' + score + '%;'
                 + 'background:' + shade + '"></span>'
@@ -3018,7 +3033,9 @@ function renderResult(data){
             '<div class="index-card">'
             +
             '<div class="index-value" style="color:' + color + '">'
-            + overall +
+            +
+            overall
+            +
             '</div>'
             +
             '<div class="index-label">Overall<br>expression index</div>'
@@ -3027,13 +3044,18 @@ function renderResult(data){
 
             +
 
-            '<div class="index-terms">' + boxes + '</div>'
+            '<div class="index-terms">'
+            +
+            boxes
+            +
+            '</div>'
 
             +
 
             '</div>';
 
     }
+
 
     /* Emotion pills */
 
@@ -3157,30 +3179,18 @@ function renderResult(data){
                 );
 
 
-            html +=
+        html +=
 
-        '<div class="result-title">'
-        +
-        String(data.primary_emotion || "Reading")
-            .split(/[\/,]/)
-            .filter(p => p.trim())
-            .map(part => {
+            '<div class="result-section">'
 
-                const term = part.trim();
+            +
 
-                const shade =
-                    window.LYRIQ_COLOR
-                        ? window.LYRIQ_COLOR(term)
-                        : color;
+            '<div class="result-section-title">'
+            +
+            'Emotional character'
+            +
+            '</div>';
 
-                return '<span style="color:' + shade + '">'
-                    + escapeHTML(pretty(term))
-                    + '</span>';
-
-            })
-            .join('<span class="title-slash">/</span>')
-        +
-        '</div>';
 
         keys.forEach(
             family => {
@@ -3227,11 +3237,7 @@ function renderResult(data){
                     +
                     '%;'
                     +
-                    (
-                        family === top
-                            ? "background:"+color
-                            : ""
-                    )
+                    'background:' + shadeOf(family, color)
                     +
                     '"></span>'
 
