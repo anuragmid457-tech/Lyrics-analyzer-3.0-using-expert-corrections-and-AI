@@ -2780,4 +2780,21 @@
         gap:12px;
     }
 
+    .title-slash{
+
+    color:var(--muted);
+
+    padding:0 6px;
+
+    font-size:.62em;
+
+    vertical-align:middle;
+}
+
+.term-word{
+    font-weight:600;
+}
+
+
+
 }

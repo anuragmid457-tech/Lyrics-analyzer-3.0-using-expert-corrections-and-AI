@@ -2979,9 +2979,11 @@ function renderResult(data){
 
                 +
 
-                '<button type="button" class="term-open" aria-expanded="false">'
+                + '<button type="button" class="term-open" aria-expanded="false">'
                 + '<span class="dot" style="background:' + shade + '"></span>'
+                + '<span class="term-word" style="color:' + shade + '">'
                 + escapeHTML(pretty(term))
+                + '</span>'
                 + '<span class="caret">▾</span>'
                 + '</button>'
 
@@ -3157,15 +3159,29 @@ function renderResult(data){
 
         html +=
 
-            '<div class="result-section">'
+                html +=
 
-            +
+        '<div class="result-title">'
+        +
+        String(data.primary_emotion || "Reading")
+            .split("/")
+            .map(part => {
 
-            '<div class="result-section-title">'
-            +
-            'Emotional character'
-            +
-            '</div>';
+                const term = part.trim();
+
+                const shade =
+                    window.LYRIQ_COLOR
+                        ? window.LYRIQ_COLOR(term)
+                        : color;
+
+                return '<span style="color:' + shade + '">'
+                    + escapeHTML(pretty(term))
+                    + '</span>';
+
+            })
+            .join('<span class="title-slash">/</span>')
+        +
+        '</div>';
 
 
         keys.forEach(
