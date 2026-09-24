@@ -2459,6 +2459,260 @@
 }
 
 /* =========================
+   VALENCE AND AROUSAL MAP
+========================= */
+
+.circumplex{
+    margin-top:10px;
+}
+
+.circumplex-toggle{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:10px;
+
+    width:100%;
+}
+
+.circumplex-toggle .picker-caret{
+    transition:transform .22s ease,color .2s;
+}
+
+.circumplex-toggle.open{
+
+    color:var(--gold);
+
+    border-color:rgba(216,173,85,.4);
+}
+
+.circumplex-toggle.open .picker-caret{
+
+    transform:rotate(180deg);
+
+    color:var(--gold);
+}
+
+.circumplex-panel{
+
+    margin-top:11px;
+
+    padding:14px 14px 12px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.02),transparent),
+        var(--surface2);
+
+    border:1px solid var(--line);
+
+    border-radius:13px;
+
+    animation:term-roll .22s ease;
+}
+
+.circumplex-panel[hidden]{
+    display:none;
+}
+
+.circumplex-svg{
+
+    display:block;
+
+    width:100%;
+
+    height:auto;
+
+    overflow:visible;
+}
+
+/* --- the plot --- */
+
+.cx-quad{
+    transition:fill .3s;
+}
+
+.circumplex-svg.ready .cx-quad.live{
+    filter:brightness(1.9);
+}
+
+.cx-quad-label{
+
+    fill:var(--muted);
+
+    font-family:"DM Sans",system-ui,sans-serif;
+
+    font-size:8.5px;
+
+    letter-spacing:.09em;
+
+    text-transform:uppercase;
+}
+
+.cx-grid{
+
+    stroke:rgba(137,146,161,.13);
+
+    stroke-width:1;
+
+    stroke-dasharray:3 5;
+}
+
+.cx-axis{
+
+    stroke:rgba(137,146,161,.4);
+
+    stroke-width:1;
+}
+
+.cx-axis-label{
+
+    fill:var(--muted);
+
+    font-family:"DM Sans",system-ui,sans-serif;
+
+    font-size:8.5px;
+
+    letter-spacing:.06em;
+}
+
+/* --- guides from the point to each axis --- */
+
+.cx-guide{
+
+    stroke:rgba(216,173,85,.45);
+
+    stroke-width:1;
+
+    stroke-dasharray:3 4;
+
+    opacity:0;
+
+    transition:opacity .35s ease .45s;
+}
+
+.circumplex-svg.ready .cx-guide{
+    opacity:1;
+}
+
+/* --- the reading --- */
+
+.cx-point{
+
+    cursor:pointer;
+
+    transition:transform .65s cubic-bezier(.22,1.1,.36,1);
+}
+
+.cx-point:focus{
+    outline:none;
+}
+
+.cx-dot{
+
+    stroke:#080a0f;
+
+    stroke-width:2;
+}
+
+.cx-halo{
+
+    opacity:.2;
+
+    transform-box:fill-box;
+
+    transform-origin:center;
+}
+
+.circumplex-svg.ready .cx-halo{
+    animation:cx-pulse 2.4s ease-out infinite;
+}
+
+.cx-point:hover .cx-halo,
+.cx-point:focus-visible .cx-halo{
+    opacity:.34;
+}
+
+.cx-point.picked .cx-dot{
+    stroke:var(--gold);
+}
+
+@keyframes cx-pulse{
+
+    0%{
+
+        transform:scale(.7);
+
+        opacity:.34;
+    }
+
+    70%{
+
+        transform:scale(1.5);
+
+        opacity:0;
+    }
+
+    100%{
+
+        transform:scale(1.5);
+
+        opacity:0;
+    }
+}
+
+/* --- the readout below --- */
+
+.cx-readout{
+
+    margin-top:10px;
+
+    padding-top:10px;
+
+    border-top:1px solid var(--line);
+
+    min-height:40px;
+}
+
+.cx-hint{
+
+    color:var(--muted);
+
+    font-size:11px;
+}
+
+.cx-pair{
+
+    display:block;
+
+    font-family:Newsreader,Georgia,serif;
+
+    font-size:26px;
+
+    line-height:1.1;
+
+    color:var(--gold);
+
+    font-variant-numeric:tabular-nums;
+}
+
+.cx-detail{
+
+    display:block;
+
+    margin-top:4px;
+
+    color:var(--muted);
+
+    font-size:11px;
+
+    line-height:1.5;
+}
+
+/* =========================
    MOTION AND MOBILE
 ========================= */
 
@@ -2474,8 +2728,17 @@
     }
 
     .picker-menu,
-    .filter-menu{
+    .filter-menu,
+    .circumplex-panel{
         animation:none;
+    }
+
+    .circumplex-svg.ready .cx-halo{
+        animation:none;
+    }
+
+    .cx-point{
+        transition:none;
     }
 
 }

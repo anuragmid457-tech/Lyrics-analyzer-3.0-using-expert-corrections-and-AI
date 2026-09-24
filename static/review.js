@@ -774,6 +774,196 @@
             body.appendChild(badge);
         }
 
+        attachCircumplex(data, body);
+        attachEditButton(body, data);
+    }
+
+
+    /* =========================
+       VALENCE AND AROUSAL MAP
+
+       Russell's circumplex with the reading plotted on it. Drawn as SVG
+       rather than handed to a chart library, because the whole thing is one
+       point and four tinted boxes, and this way the entry animation and the
+       click behaviour stay ours.
+    ========================= */
+
+    var SVG_NS = "http://www.w3.org/2000/svg";
+
+    // the drawing is 320 wide, the axes cross at the middle, and one unit of
+    // valence or arousal is 128 units of drawing
+    var CX_MID = 160;
+    var CX_UNIT = 128;
+
+    function svg(tag, attrs) {
+        var node = document.createElementNS(SVG_NS, tag);
+        Object.keys(attrs || {}).forEach(function (key) {
+            node.setAttribute(key, attrs[key]);
+        });
+        return node;
+    }
+
+    function quadrantOf(valence, arousal) {
+        if (valence >= 0) return arousal >= 0 ? "Q1" : "Q4";
+        return arousal >= 0 ? "Q2" : "Q3";
+    }
+
+    function buildCircumplex(data) {
+        var valence = Math.max(-1, Math.min(1, number(data.valence)));
+        var arousal = Math.max(-1, Math.min(1, number(data.arousal)));
+        var shade = EMOTION_COLOR[String(data.primary_emotion || "")
+            .split(/[\/,]/)[0].trim().toLowerCase()] || "#d8ad55";
+
+        var wrap = el("div", "circumplex");
+
+        var toggle = el("button", "secondary circumplex-toggle");
+        toggle.type = "button";
+        toggle.appendChild(el("span", null, "Valence and arousal map"));
+        toggle.appendChild(el("span", "picker-caret", "▾"));
+        wrap.appendChild(toggle);
+
+        var panel = el("div", "circumplex-panel");
+        panel.hidden = true;
+        wrap.appendChild(panel);
+
+        var plot = svg("svg", {
+            viewBox: "0 0 320 320",
+            class: "circumplex-svg",
+            role: "img",
+            "aria-label": "Valence and arousal, with this reading plotted"
+        });
+
+        // the four quadrants, tinted the way the result card tints them
+        var quadrants = [
+            { code: "Q1", x: 160, y: 32, fill: "rgba(216,173,85,.07)",
+              label: "Q1 bright, rising", lx: 226, ly: 52 },
+            { code: "Q2", x: 32, y: 32, fill: "rgba(200,108,105,.07)",
+              label: "Q2 tense, agitated", lx: 94, ly: 52 },
+            { code: "Q3", x: 32, y: 160, fill: "rgba(102,143,192,.07)",
+              label: "Q3 subdued, heavy", lx: 94, ly: 276 },
+            { code: "Q4", x: 160, y: 160, fill: "rgba(105,169,158,.07)",
+              label: "Q4 calm, settled", lx: 226, ly: 276 }
+        ];
+
+        quadrants.forEach(function (q) {
+            plot.appendChild(svg("rect", {
+                x: q.x, y: q.y, width: 128, height: 128,
+                fill: q.fill, rx: 4,
+                class: "cx-quad" + (quadrantOf(valence, arousal) === q.code ? " live" : "")
+            }));
+            var text = svg("text", {
+                x: q.lx, y: q.ly, class: "cx-quad-label", "text-anchor": "middle"
+            });
+            text.textContent = q.label;
+            plot.appendChild(text);
+        });
+
+        // gridlines at the half marks
+        [-0.5, 0.5].forEach(function (step) {
+            plot.appendChild(svg("line", {
+                x1: CX_MID + step * CX_UNIT, y1: 32,
+                x2: CX_MID + step * CX_UNIT, y2: 288, class: "cx-grid"
+            }));
+            plot.appendChild(svg("line", {
+                x1: 32, y1: CX_MID - step * CX_UNIT,
+                x2: 288, y2: CX_MID - step * CX_UNIT, class: "cx-grid"
+            }));
+        });
+
+        // the axes
+        plot.appendChild(svg("line", { x1: 26, y1: 160, x2: 294, y2: 160, class: "cx-axis" }));
+        plot.appendChild(svg("line", { x1: 160, y1: 26, x2: 160, y2: 294, class: "cx-axis" }));
+
+        [["valence +1", 292, 152, "end"], ["valence −1", 28, 152, "start"],
+         ["arousal +1", 166, 32, "start"], ["arousal −1", 166, 292, "start"]
+        ].forEach(function (item) {
+            var tag = svg("text", {
+                x: item[1], y: item[2], class: "cx-axis-label", "text-anchor": item[3]
+            });
+            tag.textContent = item[0];
+            plot.appendChild(tag);
+        });
+
+        var x = CX_MID + valence * CX_UNIT;
+        var y = CX_MID - arousal * CX_UNIT;
+
+        // dashed guides from the point down to each axis
+        var guideX = svg("line", { x1: x, y1: y, x2: x, y2: 160, class: "cx-guide" });
+        var guideY = svg("line", { x1: x, y1: y, x2: 160, y2: y, class: "cx-guide" });
+        plot.appendChild(guideX);
+        plot.appendChild(guideY);
+
+        // the reading itself, in a group so it can be moved with a transform
+        var point = svg("g", {
+            class: "cx-point",
+            transform: "translate(" + CX_MID + "," + CX_MID + ")",
+            tabindex: "0",
+            role: "button",
+            "aria-label": "This reading. Click for its coordinates."
+        });
+        point.appendChild(svg("circle", { r: 15, class: "cx-halo", fill: shade }));
+        point.appendChild(svg("circle", { r: 7.5, class: "cx-dot", fill: shade }));
+        plot.appendChild(point);
+
+        panel.appendChild(plot);
+
+        var readout = el("div", "cx-readout");
+        readout.appendChild(el("span", "cx-hint", "Click the point for its coordinates"));
+        panel.appendChild(readout);
+
+        function showCoordinates() {
+            readout.innerHTML = "";
+            var pair = el("span", "cx-pair");
+            pair.appendChild(el("b", null, "(" + valence.toFixed(2)
+                + ", " + arousal.toFixed(2) + ")"));
+            readout.appendChild(pair);
+
+            var detail = el("span", "cx-detail");
+            detail.textContent = "valence " + valence.toFixed(2)
+                + " · arousal " + arousal.toFixed(2)
+                + " · " + (QUADRANT_LABELS[quadrantOf(valence, arousal)] || "");
+            readout.appendChild(detail);
+
+            point.classList.add("picked");
+        }
+
+        point.addEventListener("click", showCoordinates);
+        point.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                showCoordinates();
+            }
+        });
+
+        var drawn = false;
+
+        toggle.addEventListener("click", function () {
+            panel.hidden = !panel.hidden;
+            toggle.classList.toggle("open", !panel.hidden);
+
+            if (panel.hidden || drawn) return;
+            drawn = true;
+
+            // let the panel lay out, then move the point from the origin to
+            // its place so the transition has something to animate
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    plot.classList.add("ready");
+                    point.setAttribute("transform", "translate(" + x + "," + y + ")");
+                });
+            });
+        });
+
+        return wrap;
+    }
+
+    function attachCircumplex(data, body) {
+        if (data.valence === undefined || data.valence === null) return;
+        if (data.arousal === undefined || data.arousal === null) return;
+        body.appendChild(buildCircumplex(data));
+    }
+
+    function attachEditButton(body, data) {
         var button = el("button", "secondary edit-output", "Edit this reading");
         button.type = "button";
         button.addEventListener("click", async function () {
