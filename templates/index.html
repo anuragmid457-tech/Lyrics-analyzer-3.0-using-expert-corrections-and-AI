@@ -2123,6 +2123,33 @@ function number(value, fallback=0){
 
 }
 
+async function readJSON(response){
+
+    const text = await response.text();
+
+
+    try{
+
+        return JSON.parse(text);
+
+    }
+
+    catch(error){
+
+        throw new Error(
+
+            response.status === 502 || response.status === 504
+
+                ? "The server took too long to answer. Gemini is slower than Groq on the free instance — try again, or switch the Model picker."
+
+                : "The server returned an error page (" + response.status + ") instead of a result."
+
+        );
+
+    }
+
+}
+
 
 /* One expression, one colour, wherever it appears. */
 

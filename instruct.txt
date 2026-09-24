@@ -50,3 +50,6 @@ DIRECT_URL="postgresql://postgres.txopirfjznzzgkufpskj:[YOUR-PASSWORD]@aws-0-ap-
 git add .
 git commit -m "Change the system a bit. "
 git push
+
+
+Can there be a system where I will just write the name of the song, and the model will just fetch the lyrics? And then analyze the whole lyrics like it was doing previously, and then the same system repeats. Everything remains the same. The only thing is, I do not need to paste the lyrics. And the model will itself fetch the lyrics and swaralipi

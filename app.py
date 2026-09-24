@@ -137,7 +137,15 @@ def api_models():
 
 @app.post("/api/analyze")
 def api_analyze():
-    payload = request.get_json(silent=True) or {}
+    # Anything that escapes here would reach the browser as Flask's HTML
+    # error page, which the page cannot parse. Always answer in JSON.
+    try:
+        return _analyze(request.get_json(silent=True) or {})
+    except Exception as exc:  # noqa: BLE001
+        return jsonify({"error": f"{type(exc).__name__}: {exc}"}), 500
+
+
+def _analyze(payload):
     if not (payload.get("lyrics") or "").strip():
         return jsonify({"error": "Paste some lyrics to analyse."}), 400
 
