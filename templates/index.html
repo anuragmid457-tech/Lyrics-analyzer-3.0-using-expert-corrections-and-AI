@@ -2396,8 +2396,8 @@ async function analyze(){
             );
 
 
-        const data =
-            await response.json();
+                const data =
+            await readJSON(response);
 
 
         if(!response.ok){
@@ -2707,8 +2707,8 @@ async function drawGraph(payload, result){
             );
 
 
-        const data =
-            await response.json();
+                const data =
+            await readJSON(response);
 
 
         if(
