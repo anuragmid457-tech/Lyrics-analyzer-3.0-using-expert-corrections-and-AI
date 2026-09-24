@@ -3157,14 +3157,13 @@ function renderResult(data){
                 );
 
 
-        html +=
-
-                html +=
+            html +=
 
         '<div class="result-title">'
         +
         String(data.primary_emotion || "Reading")
-            .split("/")
+            .split(/[\/,]/)
+            .filter(p => p.trim())
             .map(part => {
 
                 const term = part.trim();
@@ -3182,7 +3181,6 @@ function renderResult(data){
             .join('<span class="title-slash">/</span>')
         +
         '</div>';
-
 
         keys.forEach(
             family => {
