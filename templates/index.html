@@ -2320,7 +2320,12 @@ async function analyze(){
                 payload[field] = value;
 
         }
-    );
+
+        );
+
+        if(window.LYRIQ_MODEL){
+        payload.model = window.LYRIQ_MODEL;
+    }
 
 
     setLoading(true);

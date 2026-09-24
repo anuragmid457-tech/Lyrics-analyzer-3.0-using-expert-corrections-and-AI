@@ -6,11 +6,12 @@ analyser files:
   lyrics_senti_analysis.py  -> analyze(lyrics: str) -> dict
   lyrics_text.py            -> detect_emotion(path) -> str   (reads a PDF)
 
-Four modules sit beside them:
+Five modules sit beside them:
+  models.py     which analysers the app can call, and their keys
   graph.py      section by section scores, shaped as Plotly figures
   learning.py   what past expert corrections should tell the analyser
   review.py     the expert-facing routes, registered as a blueprint
-  database.py   storage, and the only file that touches SQLite
+  database.py   storage, and the only file that touches SQLite or Postgres
 """
 
 import os
@@ -31,6 +32,7 @@ except ImportError:         # pragma: no cover
 import graph
 import lyrics_senti_analysis
 import lyrics_text
+import models
 
 app = Flask(__name__)
 app.register_blueprint(review)
@@ -82,6 +84,13 @@ def chosen_experts(payload):
     return learning.stored_filter() or None
 
 
+def chosen_model(payload):
+    """Which analyser reads this song. The browser names one per reading."""
+    wanted = str(payload.get("model") or "").strip()
+    ready = [entry["id"] for entry in models.available()]
+    return wanted if wanted in ready else models.default_id()
+
+
 # --- response shaping ----------------------------------------------------
 
 QUADRANTS = {
@@ -117,6 +126,15 @@ def index():
     return render_template("index.html")
 
 
+@app.get("/api/models")
+def api_models():
+    """What the picker offers. Only models whose key is set appear."""
+    return jsonify({
+        "models": models.available(),
+        "default": models.default_id(),
+    })
+
+
 @app.post("/api/analyze")
 def api_analyze():
     payload = request.get_json(silent=True) or {}
@@ -127,6 +145,13 @@ def api_analyze():
     use_learned = learned_mode(payload)
     experts = chosen_experts(payload) if use_learned else None
     ranking = learning.stored_ranking() if use_learned else []
+    model_id = chosen_model(payload)
+
+    if not model_id:
+        return jsonify({
+            "error": "No analyser is configured. Set GOOGLE_API_KEY, GROQ_API_KEY "
+                     "or MISTRAL_API_KEY on the server."
+        }), 503
 
     # An identical song corrected before is served from that correction rather
     # than asked again. Turn learned mode off to see what the model says alone.
@@ -138,6 +163,7 @@ def api_analyze():
                 text, hit["corrected"], source="correction",
                 learned_from=[hit["id"]],
             )
+            out["model"] = {"id": "", "label": "not asked"}
             out["learning"] = {
                 "mode": "learned",
                 "source": "correction",
@@ -154,10 +180,11 @@ def api_analyze():
         learning.guidance_for(text, editors=experts, ranking=ranking)
         if use_learned else ("", [])
     )
+    vocab = learning.vocabulary_block(editors=experts) if use_learned else ""
 
     try:
-        vocab = learning.vocabulary_block(editors=experts) if use_learned else ""
-        result = lyrics_text.analyze(text + vocab + guidance)
+        chat = models.get_model(model_id)
+        result = lyrics_text.analyze(text + vocab + guidance, chat=chat)
     except Exception as exc:  # noqa: BLE001 - show the real cause in the UI
         return jsonify({"error": f"{type(exc).__name__}: {exc}"}), 500
 
@@ -165,15 +192,18 @@ def api_analyze():
         return jsonify({"error": "analyze() returned something other than a dict."}), 500
     if result.get("parse_error"):
         return jsonify({
-            "error": "The model did not return valid JSON.",
+            "error": f"{models.label_of(model_id)} did not return valid JSON.",
             "raw": result.get("raw_output", ""),
         }), 502
 
     out = for_browser(result)
+    # the model is recorded on the reading, so a correction always says which
+    # analyser produced the verdict it is correcting
     out["analysis_id"] = database.save_analysis(
-        text, result, source="model",
+        text, result, source="model:" + model_id,
         learned_from=[match["id"] for match in matches] or None,
     )
+    out["model"] = {"id": model_id, "label": models.label_of(model_id)}
     out["learning"] = {
         "mode": "learned" if use_learned else "default",
         "source": "guided" if matches else "model",

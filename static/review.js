@@ -476,6 +476,131 @@
         };
     }
 
+    /* =========================
+       MODEL PICKER
+
+       Which analyser reads the next song. Chosen per reading rather than
+       stored on the server, because it is a comparison the person is making,
+       not a policy for everyone: two people can sit with the same corrections
+       and read the same song through different models.
+    ========================= */
+
+    var MODEL_SLOT = "lyriq-model";
+
+    function rememberedModel() {
+        try { return window.localStorage.getItem(MODEL_SLOT) || ""; }
+        catch (error) { return ""; }
+    }
+
+    function rememberModel(id) {
+        try { window.localStorage.setItem(MODEL_SLOT, id); }
+        catch (error) { /* private browsing, no matter */ }
+    }
+
+    function buildModelPicker() {
+        var node = el("div", "expert-filter model-filter");
+        node.appendChild(el("span", "filter-label", "Model"));
+
+        var trigger = el("button", "filter-trigger");
+        trigger.type = "button";
+        trigger.setAttribute("aria-haspopup", "true");
+        trigger.setAttribute("aria-expanded", "false");
+
+        var valueText = el("span", "filter-value", "Loading…");
+        trigger.appendChild(valueText);
+        trigger.appendChild(el("span", "picker-caret", "▾"));
+
+        var menu = el("div", "filter-menu");
+        menu.hidden = true;
+
+        var list = el("div", "filter-list");
+        menu.appendChild(list);
+
+        var catalogue = [];
+        var chosen = "";
+
+        function close() {
+            menu.hidden = true;
+            trigger.setAttribute("aria-expanded", "false");
+            document.removeEventListener("mousedown", outside, true);
+        }
+
+        function outside(event) {
+            if (!node.contains(event.target)) close();
+        }
+
+        trigger.addEventListener("click", function () {
+            if (menu.hidden) {
+                menu.hidden = false;
+                trigger.setAttribute("aria-expanded", "true");
+                document.addEventListener("mousedown", outside, true);
+            } else {
+                close();
+            }
+        });
+
+        function pick(id) {
+            chosen = id;
+            window.LYRIQ_MODEL = id;      // read by the page when it analyses
+            rememberModel(id);
+            draw();
+        }
+
+        function draw() {
+            list.innerHTML = "";
+
+            catalogue.forEach(function (entry) {
+                var row = el("button", "picker-option model-option");
+                row.type = "button";
+                row.classList.toggle("on", entry.id === chosen);
+
+                var text = el("span", "model-text");
+                text.appendChild(el("span", "model-name", entry.label));
+                if (entry.note) text.appendChild(el("span", "model-note", entry.note));
+                row.appendChild(text);
+
+                row.addEventListener("click", function () {
+                    pick(entry.id);
+                    close();
+                    toast("Next reading will use " + entry.label + ".");
+                });
+                list.appendChild(row);
+            });
+
+            if (!catalogue.length) {
+                list.appendChild(el("p", "filter-empty",
+                    "No analyser is configured on the server."));
+            }
+
+            var current = catalogue.filter(function (e) { return e.id === chosen; })[0];
+            valueText.textContent = current ? current.label : "None available";
+        }
+
+        node.appendChild(trigger);
+        node.appendChild(menu);
+
+        (async function load() {
+            try {
+                var data = await (await fetch("/api/models")).json();
+                catalogue = data.models || [];
+
+                var remembered = rememberedModel();
+                var known = catalogue.map(function (e) { return e.id; });
+                chosen = known.indexOf(remembered) !== -1
+                    ? remembered
+                    : (data.default || known[0] || "");
+
+                window.LYRIQ_MODEL = chosen;
+                node.hidden = catalogue.length < 2;   // no choice to make with one
+                draw();
+            } catch (error) {
+                node.hidden = true;
+            }
+        })();
+
+        return node;
+    }
+
     function mountControls() {
         var actions = document.querySelector(".actions");
         if (!actions) return;
@@ -507,6 +632,8 @@
             }
         });
         actions.appendChild(followPicker.node);
+
+        actions.appendChild(buildModelPicker());
 
         var logButton = el("button", "review-log-open", "Review log");
         logButton.type = "button";
@@ -631,8 +758,11 @@
         var summary = describe(data.learning);
         if (summary) {
             var badge = el("div", "provenance " + summary.tone);
+            var readBy = data.model && data.model.label && data.model.id
+                ? " Read by " + data.model.label + "."
+                : "";
             badge.innerHTML = "<b>" + (summary.tone === "learned" ? "Learned" : "Default")
-                + "</b><span>" + escapeHTML(summary.text) + "</span>";
+                + "</b><span>" + escapeHTML(summary.text + readBy) + "</span>";
 
             var matches = (data.learning && data.learning.matches) || [];
             if (matches.length) {

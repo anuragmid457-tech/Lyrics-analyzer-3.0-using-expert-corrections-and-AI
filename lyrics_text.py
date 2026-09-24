@@ -101,13 +101,13 @@ model = init_chat_model(
 )
 
 
-def analyze(lyrics: str) :
+def analyze(lyrics: str, chat=None):
     """Send one song to the model and parse the JSON verdict."""
     messages = [
         SystemMessage(content=SYSTEM_PROMPT),
         HumanMessage(content=f"Analyse the emotion of this song:\n\n{lyrics}"),
     ]
-    raw = model.invoke(messages).content
+    raw = (chat or model).invoke(messages).content
     if isinstance(raw, list):
         raw = "".join(
                 block.get("text", "") if isinstance(block, dict) else str(block)
