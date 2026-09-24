@@ -24,3 +24,4 @@ pypdf>=4.2
 
 # PostgreSQL. [binary] ships a compiled wheel, so nothing builds on Windows.
 psycopg[binary]>=3.1
+langchain-groq>=0.2,<0.3
