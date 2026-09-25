@@ -3094,6 +3094,121 @@
 }
 
 /* =========================
+   THE THREE BARS ON THE RESULT CARD
+========================= */
+
+.result-tabs{
+
+    display:flex;
+
+    gap:6px;
+
+    margin:14px 0 20px;
+
+    padding:5px;
+
+    border:1px solid var(--line);
+
+    border-radius:13px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.2));
+
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
+}
+
+.result-tab{
+
+    flex:1;
+
+    padding:10px 12px;
+
+    border:1px solid transparent;
+
+    border-radius:9px;
+
+    background:transparent;
+
+    color:var(--muted);
+
+    font-size:10px;
+
+    font-weight:600;
+
+    letter-spacing:.11em;
+
+    text-transform:uppercase;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    transition:.22s;
+}
+
+.result-tab:hover{
+    color:var(--text);
+}
+
+.result-tab.on{
+
+    color:var(--green);
+
+    border-color:rgba(62,242,163,.35);
+
+    background:
+        linear-gradient(180deg,rgba(62,242,163,.09),rgba(62,242,163,.02));
+
+    box-shadow:0 0 20px rgba(62,242,163,.08);
+}
+
+.result-tab:focus-visible{
+
+    outline:1px solid var(--green);
+
+    outline-offset:2px;
+}
+
+.tab-panel{
+
+    animation:rise .4s cubic-bezier(.16,.84,.3,1) both;
+}
+
+.tab-panel[hidden]{
+    display:none;
+}
+
+.panel-empty{
+
+    color:var(--muted);
+
+    font-size:12.5px;
+
+    line-height:1.6;
+
+    margin:0;
+}
+
+#result-foot{
+
+    margin-top:4px;
+}
+
+@media(max-width:650px){
+
+    .result-tabs{
+        flex-wrap:wrap;
+    }
+
+    .result-tab{
+        flex:1 1 40%;
+    }
+
+}
+
+/* =========================
    MOTION AND MOBILE
 ========================= */
 

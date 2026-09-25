@@ -874,6 +874,10 @@
         var body = document.getElementById("body");
         if (!body) return;
 
+        // The page lays out a footer under the tabs; fall back to the card
+        // itself when an older template has none.
+        var foot = document.getElementById("result-foot") || body;
+
         var summary = describe(data.learning);
         if (summary) {
             var badge = el("div", "provenance " + summary.tone);
@@ -890,11 +894,11 @@
                 why.addEventListener("click", function () { openMatches(matches); });
                 badge.appendChild(why);
             }
-            body.appendChild(badge);
+            foot.appendChild(badge);
         }
 
         attachCircumplex(data, body);
-        attachEditButton(body, data);
+        attachEditButton(foot, data);
     }
 
 
@@ -1209,8 +1213,25 @@
     }
 
     function attachCircumplex(data, body) {
-        if (data.valence === undefined || data.valence === null) return;
-        if (data.arousal === undefined || data.arousal === null) return;
+        var slot = document.getElementById("circumplex-slot");
+
+        if (data.valence === undefined || data.valence === null
+            || data.arousal === undefined || data.arousal === null) {
+            if (slot) {
+                slot.innerHTML = "";
+                slot.appendChild(el("p", "panel-empty",
+                    "This reading carries no valence or arousal, so there is "
+                    + "nothing to plot."));
+            }
+            return;
+        }
+
+        if (slot) {
+            slot.innerHTML = "";
+            slot.appendChild(buildCircumplex(data));
+            return;
+        }
+
         body.appendChild(buildCircumplex(data));
     }
 

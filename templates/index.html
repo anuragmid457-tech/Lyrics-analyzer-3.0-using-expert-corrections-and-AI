@@ -3921,6 +3921,42 @@ function renderResult(data){
         '</div>';
 
 
+    /* Three bars across the top of the card. The reading is one thing seen
+       three ways, so they are tabs over one card rather than three cards. */
+
+    html +=
+
+        '<div class="result-tabs" role="tablist" aria-label="Reading view">'
+
+        +
+
+        '<button type="button" class="result-tab on" role="tab" '
+        + 'aria-selected="true" data-panel="map">'
+        + 'Expression map'
+        + '</button>'
+
+        +
+
+        '<button type="button" class="result-tab" role="tab" '
+        + 'aria-selected="false" data-panel="reading">'
+        + 'Lyrics reading'
+        + '</button>'
+
+        +
+
+        '<button type="button" class="result-tab" role="tab" '
+        + 'aria-selected="false" data-panel="circumplex">'
+        + 'Valence and arousal'
+        + '</button>'
+
+        +
+
+        '</div>';
+
+
+    html += '<div class="tab-panel" data-panel="map">';
+
+
     /* Title: every expression in its own colour */
 
     const titleTerms =
@@ -4347,6 +4383,12 @@ function renderResult(data){
     }
 
 
+    html += '</div>';   /* end of the expression map panel */
+
+
+    html += '<div class="tab-panel" data-panel="reading" hidden>';
+
+
     /* AI interpretation */
 
     if(data.summary){
@@ -4731,6 +4773,31 @@ function renderResult(data){
     }
 
 
+    html += '</div>';   /* end of the lyrics reading panel */
+
+
+    /* The valence and arousal map is drawn by review.js, which fills this
+       slot when it has a reading to plot. */
+
+    html +=
+
+        '<div class="tab-panel" data-panel="circumplex" hidden>'
+        +
+        '<div id="circumplex-slot">'
+        +
+        '<p class="panel-empty">Preparing the map…</p>'
+        +
+        '</div>'
+        +
+        '</div>';
+
+
+    /* Below the tabs, and visible whichever one is open: where the reading
+       came from, and the button that opens the editor. */
+
+    html += '<div id="result-foot"></div>';
+
+
     html +=
 
         '<button '
@@ -4748,6 +4815,59 @@ function renderResult(data){
 
     $("body").innerHTML =
         html;
+
+
+    /* the three bars across the top */
+
+    const tabs = [
+        ...$("body").querySelectorAll(".result-tab")
+    ];
+
+
+    const panels = [
+        ...$("body").querySelectorAll(".tab-panel")
+    ];
+
+
+    tabs.forEach(
+        tab =>
+            tab.addEventListener(
+                "click",
+                () => {
+
+                    const wanted =
+                        tab.dataset.panel;
+
+
+                    tabs.forEach(
+                        other => {
+
+                            const on =
+                                other === tab;
+
+                            other.classList.toggle("on", on);
+
+                            other.setAttribute(
+                                "aria-selected",
+                                String(on)
+                            );
+
+                        }
+                    );
+
+
+                    panels.forEach(
+                        panel => {
+
+                            panel.hidden =
+                                panel.dataset.panel !== wanted;
+
+                        }
+                    );
+
+                }
+            )
+    );
 
 
     /* A reading is worth nothing off the bottom of the screen, so the card
