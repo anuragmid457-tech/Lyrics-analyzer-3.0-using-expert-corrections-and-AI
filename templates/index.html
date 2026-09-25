@@ -423,27 +423,159 @@ textarea{
     padding-top:21px;
 }
 
-.context-heading{
+.context-toggle{
 
     display:flex;
 
-    justify-content:space-between;
+    align-items:center;
 
-    margin-bottom:17px;
-}
+    gap:11px;
 
-.context-heading strong{
+    width:100%;
 
-    font-size:13px;
+    padding:13px 16px;
 
-    font-weight:500;
-}
+    border:1px dashed var(--line);
 
-.context-heading span{
+    border-radius:11px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.015),transparent);
 
     color:var(--muted);
 
-    font-size:11px;
+    font-size:10px;
+
+    font-weight:600;
+
+    letter-spacing:.16em;
+
+    text-transform:uppercase;
+
+    transition:.22s;
+}
+
+.context-toggle:hover{
+
+    border-color:rgba(62,242,163,.45);
+
+    color:var(--green);
+
+    box-shadow:0 0 24px rgba(62,242,163,.06);
+}
+
+.context-toggle.open{
+
+    border-style:solid;
+
+    border-color:rgba(62,242,163,.4);
+
+    color:var(--green);
+}
+
+.context-plus{
+
+    font-size:14px;
+
+    line-height:1;
+
+    transition:transform .3s cubic-bezier(.16,.84,.3,1);
+}
+
+.context-toggle.open .context-plus{
+
+    transform:rotate(135deg);
+}
+
+.context-caret{
+
+    margin-left:auto;
+
+    font-size:9px;
+
+    transition:transform .3s ease;
+}
+
+.context-toggle.open .context-caret{
+
+    transform:rotate(180deg);
+}
+
+#context-toggle-text{
+
+    text-align:left;
+}
+
+.context-body{
+
+    padding-top:19px;
+
+    animation:context-open .42s cubic-bezier(.16,.84,.3,1) both;
+}
+
+.context-body[hidden]{
+
+    display:none;
+}
+
+@keyframes context-open{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(-10px);
+
+        filter:blur(3px);
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:none;
+
+        filter:blur(0);
+    }
+
+}
+
+/* each field settles in turn as the panel opens */
+
+.context-body .fields > *{
+
+    animation:rise .45s cubic-bezier(.16,.84,.3,1) both;
+}
+
+.context-body .fields > *:nth-child(1){ animation-delay:.04s; }
+.context-body .fields > *:nth-child(2){ animation-delay:.07s; }
+.context-body .fields > *:nth-child(3){ animation-delay:.10s; }
+.context-body .fields > *:nth-child(4){ animation-delay:.13s; }
+.context-body .fields > *:nth-child(5){ animation-delay:.16s; }
+.context-body .fields > *:nth-child(6){ animation-delay:.19s; }
+.context-body .fields > *:nth-child(7){ animation-delay:.22s; }
+.context-body .fields > *:nth-child(8){ animation-delay:.25s; }
+.context-body .fields > *:nth-child(9){ animation-delay:.28s; }
+.context-body .fields > *:nth-child(10){ animation-delay:.31s; }
+
+.context-note{
+
+    color:var(--muted);
+
+    font-size:11.5px;
+
+    line-height:1.55;
+
+    margin:0 0 18px;
+
+    max-width:60ch;
+}
+
+.context-count{
+
+    color:var(--green);
+
+    font-variant-numeric:tabular-nums;
 }
 
 .fields{
@@ -1924,20 +2056,39 @@ select:focus{
 
     <div class="context">
 
-        <div class="context-heading">
+        <button
+            id="context-toggle"
+            class="context-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="context-body"
+        >
 
-            <strong>
-                Musical & cultural context
-            </strong>
+            <span class="context-plus">+</span>
 
-            <span>
-                All fields optional
+            <span id="context-toggle-text">
+                Give additional information
             </span>
 
-        </div>
+            <span class="context-caret">▾</span>
+
+        </button>
 
 
-        <div class="fields">
+        <div
+            id="context-body"
+            class="context-body"
+            hidden
+        >
+
+            <p class="context-note">
+                Title, tradition, raga, taal, laya, parjaay, swaralipi and
+                anything else you know. All optional; the lyrics alone are
+                enough.
+            </p>
+
+
+            <div class="fields">
 
 
             <div>
@@ -2165,6 +2316,8 @@ select:focus{
 
             </div>
 
+
+            </div>
 
         </div>
 
@@ -2688,6 +2841,9 @@ $("clear").addEventListener(
             "0 words";
 
 
+        updateContextLabel();
+
+
         $("err").innerHTML = "";
 
         $("body").innerHTML = "";
@@ -2705,6 +2861,133 @@ $("clear").addEventListener(
 
     }
 );
+
+
+/* =========================
+   ADDITIONAL INFORMATION
+
+   The optional fields stay out of the way until they are asked for. The
+   count on the button reports how many are filled, so a collapsed panel
+   never hides work already done.
+========================= */
+
+const contextToggle =
+    $("context-toggle");
+
+
+const contextBody =
+    $("context-body");
+
+
+const contextToggleText =
+    $("context-toggle-text");
+
+
+function filledCount(){
+
+    return FIELDS.filter(
+        field => {
+
+            const element = $(field);
+
+            return element && element.value.trim();
+
+        }
+    ).length;
+
+}
+
+
+function updateContextLabel(){
+
+    const open =
+        !contextBody.hidden;
+
+
+    const filled =
+        filledCount();
+
+
+    if(open){
+
+        contextToggleText.innerHTML =
+            "Hide additional information";
+
+        return;
+
+    }
+
+
+    contextToggleText.innerHTML =
+        filled
+            ? 'Additional information <span class="context-count">'
+                + filled
+                + (filled === 1 ? " field" : " fields")
+                + ' filled</span>'
+            : "Give additional information";
+
+}
+
+
+contextToggle.addEventListener(
+    "click",
+    () => {
+
+        const open =
+            contextBody.hidden;
+
+
+        contextBody.hidden = !open;
+
+
+        contextToggle.classList
+            .toggle("open", open);
+
+
+        contextToggle.setAttribute(
+            "aria-expanded",
+            String(open)
+        );
+
+
+        updateContextLabel();
+
+
+        if(open){
+
+            const first = $("title");
+
+            if(first)
+                setTimeout(() => first.focus(), 120);
+
+        }
+
+    }
+);
+
+
+/* the button keeps count as the fields are filled */
+
+FIELDS.forEach(
+    field => {
+
+        const element = $(field);
+
+
+        if(element){
+
+            element.addEventListener(
+                "input",
+                updateContextLabel
+            );
+
+        }
+
+    }
+);
+
+
+updateContextLabel();
 
 
 /* =========================
