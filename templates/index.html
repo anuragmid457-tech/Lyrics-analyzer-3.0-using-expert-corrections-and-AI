@@ -1023,6 +1023,197 @@ pre{
     max-width:78ch;
 }
 
+
+/* =========================
+   EXPERT MODE
+========================= */
+
+.expert-toolbar{
+    margin-top:18px;
+    padding:16px;
+    border:1px solid var(--line);
+    border-radius:13px;
+    background:rgba(21,26,34,.72);
+}
+
+.expert-toolbar-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+    flex-wrap:wrap;
+}
+
+.expert-title{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.04em;
+}
+
+.expert-dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 14px rgba(216,173,85,.35);
+}
+
+.expert-toggle{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--muted);
+    border-radius:999px;
+    padding:7px 14px;
+    font-size:11px;
+    transition:.2s;
+}
+
+.expert-toggle:hover{
+    border-color:#596273;
+    color:var(--text);
+}
+
+.expert-toggle.active{
+    color:var(--gold);
+    border-color:rgba(216,173,85,.55);
+    background:rgba(216,173,85,.06);
+}
+
+.expert-help{
+    margin:10px 0 0;
+    color:var(--muted);
+    font-size:11px;
+    line-height:1.5;
+}
+
+.expert-editor{
+    display:none;
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+}
+
+.expert-editor.show{
+    display:block;
+}
+
+.expert-selected{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:14px;
+}
+
+.expert-selected-label{
+    color:var(--muted);
+    font-size:10px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+}
+
+.expert-selected-value{
+    color:var(--gold);
+    font-size:12px;
+    font-weight:600;
+}
+
+.expert-controls{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+}
+
+.expert-control{
+    background:#0b0e14;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:11px;
+}
+
+.expert-control-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:8px;
+}
+
+.expert-control-head label{
+    margin:0;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+}
+
+.expert-value{
+    color:var(--soft);
+    font-size:12px;
+    font-weight:600;
+}
+
+.expert-range{
+    width:100%;
+    padding:0;
+    margin:4px 0 0;
+    accent-color:var(--gold);
+    background:transparent;
+    border:0;
+    box-shadow:none;
+}
+
+.expert-range:focus{
+    box-shadow:none;
+}
+
+.expert-number{
+    margin-top:8px;
+    padding:7px 9px;
+    font-size:11px;
+}
+
+.expert-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:12px;
+}
+
+.expert-reset{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--muted);
+    border-radius:8px;
+    padding:7px 11px;
+    font-size:10px;
+}
+
+.expert-reset:hover{
+    color:var(--text);
+    border-color:#596273;
+}
+
+.expert-status{
+    margin-top:10px;
+    color:var(--muted);
+    font-size:10px;
+}
+
+.expert-status.changed{
+    color:var(--gold);
+}
+
+@media(max-width:650px){
+    .expert-controls{
+        grid-template-columns:1fr;
+    }
+}
+
+
+
 /* =========================
    PHILOSOPHY
 ========================= */
@@ -1853,18 +2044,182 @@ pre{
     </div>
 
 
-    <p
-        id="graph-status"
-        class="graph-status"
-    >
-        Reading the song section by section…
+    
+<p
+    id="graph-status"
+    class="graph-status"
+>
+    Reading the song section by section…
+</p>
+
+<div
+    id="graph"
+    class="graph-canvas"
+></div>
+
+<!-- =========================
+     EXPERT MODE
+========================= -->
+
+<div class="expert-toolbar">
+
+    <div class="expert-toolbar-head">
+
+        <div class="expert-title">
+            <span class="expert-dot"></span>
+            Expert correction
+        </div>
+
+        <button
+            id="expert-toggle"
+            class="expert-toggle"
+            type="button"
+            aria-pressed="false"
+        >
+            Enable expert mode
+        </button>
+
+    </div>
+
+    <p class="expert-help">
+        Enable expert mode to select a song segment and adjust
+        its Valence–Arousal position. Model weights and emotional
+        distribution remain unchanged.
     </p>
 
-
     <div
-        id="graph"
-        class="graph-canvas"
-    ></div>
+        id="expert-editor"
+        class="expert-editor"
+    >
+
+        <div class="expert-selected">
+
+            <span class="expert-selected-label">
+                Selected segment
+            </span>
+
+            <span
+                id="expert-selected"
+                class="expert-selected-value"
+            >
+                Select a point on the Arc or Path
+            </span>
+
+        </div>
+
+        <div class="expert-controls">
+
+            <!-- VALENCE -->
+
+            <div class="expert-control">
+
+                <div class="expert-control-head">
+
+                    <label for="expert-valence">
+                        Valence
+                    </label>
+
+                    <span
+                        id="expert-valence-value"
+                        class="expert-value"
+                    >
+                        —
+                    </span>
+
+                </div>
+
+                <input
+                    id="expert-valence"
+                    class="expert-range"
+                    type="range"
+                    min="-1"
+                    max="1"
+                    step="0.01"
+                    disabled
+                >
+
+                <input
+                    id="expert-valence-number"
+                    class="expert-number"
+                    type="number"
+                    min="-1"
+                    max="1"
+                    step="0.01"
+                    disabled
+                    aria-label="Expert valence"
+                >
+
+            </div>
+
+            <!-- AROUSAL -->
+
+            <div class="expert-control">
+
+                <div class="expert-control-head">
+
+                    <label for="expert-arousal">
+                        Arousal
+                    </label>
+
+                    <span
+                        id="expert-arousal-value"
+                        class="expert-value"
+                    >
+                        —
+                    </span>
+
+                </div>
+
+                <input
+                    id="expert-arousal"
+                    class="expert-range"
+                    type="range"
+                    min="-1"
+                    max="1"
+                    step="0.01"
+                    disabled
+                >
+
+                <input
+                    id="expert-arousal-number"
+                    class="expert-number"
+                    type="number"
+                    min="-1"
+                    max="1"
+                    step="0.01"
+                    disabled
+                    aria-label="Expert arousal"
+                >
+
+            </div>
+
+        </div>
+
+        <div class="expert-actions">
+
+            <button
+                id="expert-reset"
+                class="expert-reset"
+                type="button"
+                disabled
+            >
+                Reset selected segment
+            </button>
+
+        </div>
+
+        <div
+            id="expert-status"
+            class="expert-status"
+        >
+            No expert corrections applied.
+        </div>
+
+    </div>
+
+</div>
+
+
 
 
     <div
@@ -2554,6 +2909,7 @@ $("file").addEventListener(
 );
 
 
+
 /* =========================
    MOVEMENT GRAPH
 ========================= */
@@ -2561,16 +2917,38 @@ $("file").addEventListener(
 let graphFigures = null;
 
 let graphConfig = {
-    responsive:true
+    responsive: true
 };
 
 let graphView = "arc";
 
+/*
+ * Expert corrections are intentionally kept separate
+ * from the model distribution/weight values.
+ *
+ * Example:
+ *
+ * expertEdits = {
+ *     "segment-1": {
+ *         valence: 0.65,
+ *         arousal: 0.42
+ *     }
+ * };
+ */
+let expertEdits = {};
+
+let expertMode = false;
+
+let selectedExpertSegment = null;
+
+
+/* =========================
+   GRAPH TABS
+========================= */
 
 const graphTabs = [
     ...document.querySelectorAll(".graph-tab")
 ];
-
 
 graphTabs.forEach(
     tab =>
@@ -2584,10 +2962,8 @@ graphTabs.forEach(
                         const on =
                             other === tab;
 
-
                         other.classList
                             .toggle("on", on);
-
 
                         other.setAttribute(
                             "aria-selected",
@@ -2597,68 +2973,243 @@ graphTabs.forEach(
                     }
                 );
 
-
                 graphView =
                     tab.dataset.view;
 
-
                 paintGraph();
+
+                /*
+                 * Expert mode works with Arc and Path.
+                 * Weight remains view-only.
+                 */
+                if(
+                    expertMode &&
+                    graphView === "profile"
+                ){
+
+                    $("expert-status").textContent =
+                        "Weight view is read-only. Select Arc or Path to edit Valence–Arousal.";
+
+                }
+                else{
+
+                    updateExpertStatus();
+
+                }
 
             }
         )
 );
 
 
-window.addEventListener(
-    "resize",
+/* =========================
+   EXPERT MODE ELEMENTS
+========================= */
+
+const expertToggle =
+    $("expert-toggle");
+
+const expertEditor =
+    $("expert-editor");
+
+const expertSelected =
+    $("expert-selected");
+
+const expertValence =
+    $("expert-valence");
+
+const expertValenceNumber =
+    $("expert-valence-number");
+
+const expertValenceValue =
+    $("expert-valence-value");
+
+const expertArousal =
+    $("expert-arousal");
+
+const expertArousalNumber =
+    $("expert-arousal-number");
+
+const expertArousalValue =
+    $("expert-arousal-value");
+
+const expertReset =
+    $("expert-reset");
+
+const expertStatus =
+    $("expert-status");
+
+
+/* =========================
+   EXPERT MODE TOGGLE
+========================= */
+
+expertToggle.addEventListener(
+    "click",
     () => {
 
-        if(graphFigures)
-            Plotly.Plots.resize($("graph"));
+        expertMode =
+            !expertMode;
+
+        expertToggle.classList
+            .toggle(
+                "active",
+                expertMode
+            );
+
+        expertToggle.setAttribute(
+            "aria-pressed",
+            String(expertMode)
+        );
+
+        expertToggle.textContent =
+            expertMode
+                ? "Expert mode enabled"
+                : "Enable expert mode";
+
+        expertEditor.classList
+            .toggle(
+                "show",
+                expertMode
+            );
+
+        if(!expertMode){
+
+            selectedExpertSegment =
+                null;
+
+            disableExpertControls();
+
+            expertSelected.textContent =
+                "Select a point on the Arc or Path";
+
+            expertStatus.textContent =
+                "No expert editing active.";
+
+            expertStatus.classList
+                .remove("changed");
+
+        }
+        else{
+
+            expertStatus.textContent =
+                "Select a segment on the Arc or Path.";
+
+            expertStatus.classList
+                .remove("changed");
+
+            attachExpertClickHandler();
+
+        }
+
+        paintGraph();
 
     }
 );
 
+
+/* =========================
+   RESIZE
+========================= */
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        if(graphFigures){
+
+            Plotly.Plots.resize(
+                $("graph")
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================
+   GRAPH PAINT
+========================= */
 
 function paintGraph(){
 
     if(
         !graphFigures ||
         !graphFigures[graphView]
-    )
+    ){
+
         return;
 
+    }
 
     Plotly.react(
-
         $("graph"),
-
         graphFigures[graphView].data,
-
         graphFigures[graphView].layout,
-
         graphConfig
+    )
+    .then(
+        () => {
 
+            if(
+                expertMode &&
+                graphView !== "profile"
+            ){
+
+                attachExpertClickHandler();
+
+            }
+
+        }
     );
 
 }
 
 
+/* =========================
+   HIDE GRAPH
+========================= */
+
 function hideGraph(){
 
     $("movement").hidden = true;
 
-
     if(graphFigures)
         Plotly.purge($("graph"));
 
-
     graphFigures = null;
+
+    graphView = "arc";
+
+    expertEdits = {};
+
+    selectedExpertSegment = null;
+
+    disableExpertControls();
+
+    expertEditor.classList
+        .remove("show");
+
+    expertToggle.classList
+        .remove("active");
+
+    expertToggle.setAttribute(
+        "aria-pressed",
+        "false"
+    );
+
+    expertToggle.textContent =
+        "Enable expert mode";
 
     $("graph-caption").textContent = "";
 
 }
 
+
+/* =========================
+   DRAW GRAPH
+========================= */
 
 async function drawGraph(payload, result){
 
@@ -2671,13 +3222,26 @@ async function drawGraph(payload, result){
 
     $("graph-caption").textContent = "";
 
+    /*
+     * Every new analysis starts with a clean
+     * expert correction layer.
+     */
+    expertEdits = {};
+
+    selectedExpertSegment = null;
+
+    disableExpertControls();
+
+    expertStatus.textContent =
+        "No expert corrections applied.";
+
+    expertStatus.classList
+        .remove("changed");
 
     if(graphFigures)
         Plotly.purge($("graph"));
 
-
     graphFigures = null;
-
 
     try{
 
@@ -2685,7 +3249,6 @@ async function drawGraph(payload, result){
             await fetch(
                 "/api/graph",
                 {
-
                     method:"POST",
 
                     headers:{
@@ -2699,7 +3262,19 @@ async function drawGraph(payload, result){
                             ...payload,
 
                             analysis:
-                                result || null
+                                result || null,
+
+                            /*
+                             * The backend can use these later
+                             * to persist expert corrections.
+                             *
+                             * The initial request is empty because
+                             * the expert starts from the model output.
+                             */
+                            expert_edits: {},
+
+                            expert_mode:
+                                expertMode
 
                         })
 
@@ -2707,7 +3282,7 @@ async function drawGraph(payload, result){
             );
 
 
-                const data =
+        const data =
             await readJSON(response);
 
 
@@ -2725,11 +3300,56 @@ async function drawGraph(payload, result){
         }
 
 
-        graphFigures = data.figures;
+        graphFigures =
+            data.figures;
+
 
         graphConfig =
             data.config ||
-            { responsive:true };
+            {
+                responsive:true
+            };
+
+
+        /*
+         * The server may return its own expert payload.
+         * We keep it separate from distribution.
+         */
+        if(
+            Array.isArray(
+                data.expert_edits
+            )
+        ){
+
+            data.expert_edits.forEach(
+                item => {
+
+                    if(
+                        item &&
+                        item.id &&
+                        item.expert_edited
+                    ){
+
+                        expertEdits[item.id] = {
+
+                            valence:
+                                number(
+                                    item.valence
+                                ),
+
+                            arousal:
+                                number(
+                                    item.arousal
+                                )
+
+                        };
+
+                    }
+
+                }
+            );
+
+        }
 
 
         $("graph-status").hidden = true;
@@ -2740,9 +3360,16 @@ async function drawGraph(payload, result){
 
         paintGraph();
 
+        updateExpertStatus();
+
     }
 
     catch(error){
+
+        console.error(
+            "LYRIQ graph error:",
+            error
+        );
 
         $("graph-status").textContent =
             "The movement chart request did not reach the server.";
@@ -2750,6 +3377,935 @@ async function drawGraph(payload, result){
     }
 
 }
+
+
+/* =========================
+   EXPERT CLICK HANDLING
+========================= */
+
+function attachExpertClickHandler(){
+
+    const graph =
+        $("graph");
+
+    if(
+        !graph ||
+        !expertMode ||
+        graphView === "profile"
+    ){
+
+        return;
+
+    }
+
+    /*
+     * Plotly's event listener is attached
+     * directly to the graph element.
+     */
+    if(graph.__lyriqExpertHandler){
+
+        graph.removeListener(
+            "plotly_click",
+            graph.__lyriqExpertHandler
+        );
+
+    }
+
+    const handler =
+        event => {
+
+            if(
+                !event ||
+                !event.points ||
+                !event.points.length
+            ){
+
+                return;
+
+            }
+
+            const point =
+                event.points[0];
+
+            const segment =
+                getSegmentFromPoint(
+                    point
+                );
+
+            if(!segment)
+                return;
+
+            selectExpertSegment(
+                segment
+            );
+
+        };
+
+
+    graph.__lyriqExpertHandler =
+        handler;
+
+
+    graph.on(
+        "plotly_click",
+        handler
+    );
+
+}
+
+
+/* =========================
+   GET SEGMENT FROM PLOTLY POINT
+========================= */
+
+function getSegmentFromPoint(point){
+
+    if(!point)
+        return null;
+
+
+    /*
+     * graph.py sends the segment metadata
+     * through Plotly customdata.
+     */
+    const custom =
+        point.customdata;
+
+
+    if(!custom)
+        return null;
+
+
+    /*
+     * Object form:
+     */
+    if(
+        typeof custom === "object" &&
+        !Array.isArray(custom)
+    ){
+
+        if(custom.id){
+
+            return {
+
+                id:
+                    String(custom.id),
+
+                label:
+                    custom.label ||
+                    custom.section ||
+                    custom.text ||
+                    custom.id,
+
+                model_valence:
+                    number(
+                        custom.model_valence,
+                        number(custom.valence, 0)
+                    ),
+
+                model_arousal:
+                    number(
+                        custom.model_arousal,
+                        number(custom.arousal, 0)
+                    ),
+
+                valence:
+                    number(
+                        custom.valence,
+                        number(custom.model_valence, 0)
+                    ),
+
+                arousal:
+                    number(
+                        custom.arousal,
+                        number(custom.model_arousal, 0)
+                    )
+
+            };
+
+        }
+
+    }
+
+
+    /*
+     * Array form fallback.
+     *
+     * graph.py currently sends:
+     *
+     * [id, model_valence, model_arousal, valence,
+     *  arousal, expert_edited]
+     */
+    if(Array.isArray(custom)){
+
+        const id =
+            custom[0];
+
+        if(!id)
+            return null;
+
+        return {
+
+            id:
+                String(id),
+
+            label:
+                String(id),
+
+            model_valence:
+                number(
+                    custom[1],
+                    0
+                ),
+
+            model_arousal:
+                number(
+                    custom[2],
+                    0
+                ),
+
+            valence:
+                number(
+                    custom[3],
+                    number(custom[1],0)
+                ),
+
+            arousal:
+                number(
+                    custom[4],
+                    number(custom[2],0)
+                )
+
+        };
+
+    }
+
+
+    return null;
+
+}
+
+
+/* =========================
+   SELECT SEGMENT
+========================= */
+
+function selectExpertSegment(segment){
+
+    selectedExpertSegment =
+        segment;
+
+
+    const existing =
+        expertEdits[segment.id];
+
+
+    const valence =
+        existing
+            ? existing.valence
+            : segment.valence;
+
+
+    const arousal =
+        existing
+            ? existing.arousal
+            : segment.arousal;
+
+
+    expertSelected.textContent =
+        segment.label ||
+        segment.id;
+
+
+    enableExpertControls();
+
+
+    setExpertValence(
+        valence,
+        false
+    );
+
+
+    setExpertArousal(
+        arousal,
+        false
+    );
+
+
+    updateExpertStatus();
+
+}
+
+
+/* =========================
+   ENABLE CONTROLS
+========================= */
+
+function enableExpertControls(){
+
+    expertValence.disabled = false;
+
+    expertValenceNumber.disabled = false;
+
+    expertArousal.disabled = false;
+
+    expertArousalNumber.disabled = false;
+
+    expertReset.disabled = false;
+
+}
+
+
+/* =========================
+   DISABLE CONTROLS
+========================= */
+
+function disableExpertControls(){
+
+    expertValence.disabled = true;
+
+    expertValenceNumber.disabled = true;
+
+    expertArousal.disabled = true;
+
+    expertArousalNumber.disabled = true;
+
+    expertReset.disabled = true;
+
+    expertValenceValue.textContent =
+        "—";
+
+    expertArousalValue.textContent =
+        "—";
+
+}
+
+
+/* =========================
+   VALENCE
+========================= */
+
+expertValence.addEventListener(
+    "input",
+    () => {
+
+        setExpertValence(
+            expertValence.value,
+            true
+        );
+
+    }
+);
+
+
+expertValenceNumber.addEventListener(
+    "input",
+    () => {
+
+        setExpertValence(
+            expertValenceNumber.value,
+            true
+        );
+
+    }
+);
+
+
+function setExpertValence(
+    value,
+    updateGraph
+){
+
+    if(!selectedExpertSegment)
+        return;
+
+
+    let v =
+        Number(value);
+
+
+    if(!Number.isFinite(v))
+        v = 0;
+
+
+    v =
+        Math.max(
+            -1,
+            Math.min(
+                1,
+                v
+            )
+        );
+
+
+    v =
+        Number(
+            v.toFixed(2)
+        );
+
+
+    expertValence.value =
+        v;
+
+
+    expertValenceNumber.value =
+        v;
+
+
+    expertValenceValue.textContent =
+        v.toFixed(2);
+
+
+    saveExpertEdit(
+        v,
+        null
+    );
+
+
+    if(updateGraph)
+        updateExpertGraphs();
+
+}
+
+
+/* =========================
+   AROUSAL
+========================= */
+
+expertArousal.addEventListener(
+    "input",
+    () => {
+
+        setExpertArousal(
+            expertArousal.value,
+            true
+        );
+
+    }
+);
+
+
+expertArousalNumber.addEventListener(
+    "input",
+    () => {
+
+        setExpertArousal(
+            expertArousalNumber.value,
+            true
+        );
+
+    }
+);
+
+
+function setExpertArousal(
+    value,
+    updateGraph
+){
+
+    if(!selectedExpertSegment)
+        return;
+
+
+    let a =
+        Number(value);
+
+
+    if(!Number.isFinite(a))
+        a = 0;
+
+
+    a =
+        Math.max(
+            -1,
+            Math.min(
+                1,
+                a
+            )
+        );
+
+
+    a =
+        Number(
+            a.toFixed(2)
+        );
+
+
+    expertArousal.value =
+        a;
+
+
+    expertArousalNumber.value =
+        a;
+
+
+    expertArousalValue.textContent =
+        a.toFixed(2);
+
+
+    saveExpertEdit(
+        null,
+        a
+    );
+
+
+    if(updateGraph)
+        updateExpertGraphs();
+
+}
+
+
+/* =========================
+   SAVE EXPERT EDIT
+========================= */
+
+function saveExpertEdit(
+    valence,
+    arousal
+){
+
+    if(!selectedExpertSegment)
+        return;
+
+
+    const id =
+        selectedExpertSegment.id;
+
+
+    const previous =
+        expertEdits[id] || {
+
+            valence:
+                selectedExpertSegment.valence,
+
+            arousal:
+                selectedExpertSegment.arousal
+
+        };
+
+
+    expertEdits[id] = {
+
+        valence:
+            valence === null
+                ? previous.valence
+                : valence,
+
+        arousal:
+            arousal === null
+                ? previous.arousal
+                : arousal
+
+    };
+
+
+    updateExpertStatus();
+
+}
+
+
+/* =========================
+   RESET SELECTED SEGMENT
+========================= */
+
+expertReset.addEventListener(
+    "click",
+    () => {
+
+        if(!selectedExpertSegment)
+            return;
+
+
+        const id =
+            selectedExpertSegment.id;
+
+
+        delete expertEdits[id];
+
+
+        setExpertValence(
+            selectedExpertSegment.model_valence,
+            false
+        );
+
+
+        setExpertArousal(
+            selectedExpertSegment.model_arousal,
+            false
+        );
+
+
+        updateExpertGraphs();
+
+        updateExpertStatus();
+
+    }
+);
+
+
+/* =========================
+   EXPERT STATUS
+========================= */
+
+function updateExpertStatus(){
+
+    if(!expertStatus)
+        return;
+
+
+    const count =
+        Object.keys(
+            expertEdits
+        ).length;
+
+
+    if(count === 0){
+
+        expertStatus.textContent =
+            expertMode
+                ? "No expert corrections applied."
+                : "No expert editing active.";
+
+        expertStatus.classList
+            .remove("changed");
+
+        return;
+
+    }
+
+
+    expertStatus.textContent =
+        count === 1
+            ? "1 segment manually corrected."
+            : count + " segments manually corrected.";
+
+
+    expertStatus.classList
+        .add("changed");
+
+}
+
+
+/* =========================
+   UPDATE GRAPHS
+========================= */
+
+function updateExpertGraphs(){
+
+    if(
+        !graphFigures ||
+        !selectedExpertSegment
+    ){
+
+        return;
+
+    }
+
+
+    const id =
+        selectedExpertSegment.id;
+
+
+    const edit =
+        expertEdits[id];
+
+
+    if(!edit)
+        return;
+
+
+    /*
+     * Update both views.
+     */
+    updateFigureCoordinates(
+        graphFigures.arc,
+        id,
+        edit.valence,
+        edit.arousal
+    );
+
+
+    updateFigureCoordinates(
+        graphFigures.circumplex,
+        id,
+        edit.valence,
+        edit.arousal
+    );
+
+
+    /*
+     * NEVER modify the profile/weight figure.
+     *
+     * This is deliberate.
+     */
+    paintGraph();
+
+}
+
+
+/* =========================
+   UPDATE FIGURE COORDINATES
+========================= */
+
+function updateFigureCoordinates(
+    figure,
+    segmentId,
+    valence,
+    arousal
+){
+
+    if(
+        !figure ||
+        !Array.isArray(figure.data)
+    ){
+
+        return;
+
+    }
+
+
+    figure.data.forEach(
+        trace => {
+
+            if(
+                !Array.isArray(
+                    trace.customdata
+                )
+            ){
+
+                return;
+
+            }
+
+
+            trace.customdata.forEach(
+                (custom, index) => {
+
+                    let id = null;
+
+
+                    if(
+                        custom &&
+                        typeof custom === "object" &&
+                        !Array.isArray(custom)
+                    ){
+
+                        id =
+                            custom.id;
+
+                    }
+                    else if(
+                        Array.isArray(custom)
+                    ){
+
+                        id =
+                            custom[0];
+
+                    }
+
+
+                    if(
+                        String(id) !==
+                        String(segmentId)
+                    ){
+
+                        return;
+
+                    }
+
+
+                    /*
+                     * Keep metadata synchronized.
+                     */
+                    if(
+                        custom &&
+                        typeof custom === "object" &&
+                        !Array.isArray(custom)
+                    ){
+
+                        custom.valence =
+                            valence;
+
+                        custom.arousal =
+                            arousal;
+
+                        custom.expert_edited =
+                            true;
+
+                    }
+                    else if(
+                        Array.isArray(custom)
+                    ){
+
+                        custom[3] =
+                            valence;
+
+                        custom[4] =
+                            arousal;
+
+                        custom[5] =
+                            true;
+
+                    }
+
+
+                    /*
+                     * IMPORTANT:
+                     *
+                     * Only change x/y when the trace itself
+                     * represents the Valence–Arousal plane.
+                     *
+                     * Weight/profile traces are deliberately
+                     * ignored.
+                     */
+
+                    if(
+                        isCircumplexTrace(
+                            trace
+                        )
+                    ){
+
+                        if(
+                            Array.isArray(
+                                trace.x
+                            )
+                        ){
+
+                            trace.x[index] =
+                                valence;
+
+                        }
+
+
+                        if(
+                            Array.isArray(
+                                trace.y
+                            )
+                        ){
+
+                            trace.y[index] =
+                                arousal;
+
+                        }
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================
+   DETECT CIRCUMPLEX TRACE
+========================= */
+
+function isCircumplexTrace(trace){
+
+    const name =
+        String(
+            trace.name || ""
+        ).toLowerCase();
+
+
+    /*
+     * Explicit metadata from graph.py.
+     */
+    if(
+        trace.meta &&
+        (
+            trace.meta.chart ===
+                "circumplex" ||
+
+            trace.meta.view ===
+                "circumplex"
+        )
+    ){
+
+        return true;
+
+    }
+
+
+    /*
+     * Normal Plotly circumplex traces
+     * generally carry valence/arousal
+     * axis titles.
+     */
+    const xTitle =
+        String(
+            trace.xaxis ||
+            ""
+        ).toLowerCase();
+
+
+    const yTitle =
+        String(
+            trace.yaxis ||
+            ""
+        ).toLowerCase();
+
+
+    if(
+        name.includes("circumplex") ||
+        name.includes("path")
+    ){
+
+        return true;
+
+    }
+
+
+    return false;
+
+}
+
+
+/* =========================
+   OPTIONAL BACKEND PAYLOAD
+========================= */
+
+/*
+ * Returns the current expert correction payload.
+ *
+ * This does NOT alter model distribution.
+ * It is ready for the backend when the
+ * /api/graph endpoint is wired to persist
+ * expert corrections.
+ */
+function getExpertEditPayload(){
+
+    return Object.entries(
+        expertEdits
+    ).map(
+        ([id, edit]) => ({
+
+            id:id,
+
+            valence:
+                Number(
+                    edit.valence
+                ),
+
+            arousal:
+                Number(
+                    edit.arousal
+                )
+
+        })
+    );
+
+}
+
+
+/* =========================
+   CARE RESPONSE
+========================= */
+
+
 
 
 /* =========================
@@ -3445,296 +5001,5 @@ function renderResult(data){
             '<div class="result-section-title">'
             +
             'Lyrical evidence'
-            +
-            '</div>'
-
-            +
-
-            '<ul class="evidence">';
-
-
-        data.evidence.forEach(
-            evidence => {
-
-                html +=
-
-                    '<li>'
-
-                    +
-
-                    '<q>'
-                    +
-                    escapeHTML(
-                        evidence.phrase
-                    )
-                    +
-                    '</q>'
-
-                    +
-
-                    (
-                        evidence.gloss
-                            ?
-
-                            '<span class="gloss">'
-                            +
-                            escapeHTML(
-                                evidence.gloss
-                            )
-                            +
-                            '</span>'
-
-                            :
-
-                            ""
-                    )
-
-                    +
-
-                    (
-                        evidence.why
-                            ?
-
-                            '<div class="why">'
-                            +
-                            escapeHTML(
-                                evidence.why
-                            )
-                            +
-                            '</div>'
-
-                            :
-
-                            ""
-                    )
-
-                    +
-
-                    '</li>';
-
-            }
-        );
-
-
-        html +=
-
-            '</ul>'
-
-            +
-
-            '</div>';
-
-    }
-
-
-    /* Context facts */
-
-    const facts = [];
-
-
-    if(data.language){
-
-        facts.push([
-            "Language",
-            data.language
-        ]);
-
-    }
-
-
-    if(data.tradition){
-
-        facts.push([
-            "Tradition",
-            data.tradition
-            +
-            (
-                data.tradition_is_inferred
-                    ? ", inferred"
-                    : ""
-            )
-        ]);
-
-    }
-
-
-    if(data.parjaay){
-
-        facts.push([
-            "Parjaay",
-            data.parjaay
-        ]);
-
-    }
-
-
-    if(data.raga){
-
-        facts.push([
-            "Raga / scale",
-            data.raga
-        ]);
-
-    }
-
-
-    if(data.taal){
-
-        facts.push([
-            "Taal",
-            data.taal
-        ]);
-
-    }
-
-
-    if(data.laya){
-
-        facts.push([
-            "Laya / tempo",
-            data.laya
-        ]);
-
-    }
-
-
-    if(
-        data.confidence !==
-        undefined
-    ){
-
-        facts.push([
-            "Confidence",
-            number(
-                data.confidence
-            ).toFixed(2)
-        ]);
-
-    }
-
-
-    if(facts.length){
-
-        html +=
-
-            '<div class="result-section">'
-
-            +
-
-            '<div class="result-section-title">'
-            +
-            'Context'
-            +
-            '</div>'
-
-            +
-
-            '<div class="facts">';
-
-
-        facts.forEach(
-            fact => {
-
-                html +=
-
-                    '<div class="fact">'
-
-                    +
-
-                    '<span>'
-                    +
-                    escapeHTML(
-                        fact[0]
-                    )
-                    +
-                    '</span>'
-
-                    +
-
-                    '<b>'
-                    +
-                    escapeHTML(
-                        fact[1]
-                    )
-                    +
-                    '</b>'
-
-                    +
-
-                    '</div>';
-
-            }
-        );
-
-
-        html +=
-
-            '</div>'
-
-            +
-
-            '</div>';
-
-    }
-
-
-    html +=
-
-        '<button '
-        +
-        'id="copy" '
-        +
-        'class="secondary copy" '
-        +
-        'type="button">'
-        +
-        'Copy analysis JSON'
-        +
-        '</button>';
-
-
-    $("body").innerHTML =
-        html;
-
-
-    $("copy").addEventListener(
-        "click",
-        async event => {
-
-            await navigator
-                .clipboard
-                .writeText(
-                    JSON.stringify(
-                        data,
-                        null,
-                        2
-                    )
-                );
-
-
-            event.target.textContent =
-                "Copied";
-
-
-            setTimeout(
-                () => {
-
-                    event.target.textContent =
-                        "Copy analysis JSON";
-
-                },
-                1400
-            );
-
         }
-    );
-
-}
-
-</script>
-
-
-<script src="{{ url_for('static', filename='review.js') }}"></script>
-
-</body>
-</html>
+        }
