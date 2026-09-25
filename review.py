@@ -43,7 +43,7 @@ review = Blueprint("review", __name__, url_prefix="/api/review")
 
 EDITABLE = {
     "primary_emotion", "canonical_emotion", "secondary_emotions", "mixed_emotion",
-    "valence", "arousal", "quadrant", "emotion_indices",
+    "valence", "arousal", "quadrant", "emotion_indices", "sections",
     "rasa", "parjaay", "tradition", "language",
     "summary", "confidence",
     "music_therapy", "music_therapy_context", "recommendation_tags",
@@ -55,6 +55,10 @@ QUADRANTS = {"Q1", "Q2", "Q3", "Q4"}
 # A compound label rarely runs past three or four terms; the cap is only
 # there so a malformed submission cannot fill the column.
 MAX_TERMS = 8
+
+# A song split into more than this many sections is not a shape anyone can
+# read, let alone drag.
+MAX_SECTIONS = 40
 
 # Seconds to wait after a wrong password. Harmless to a person who mistyped,
 # and it turns a script guessing thousands of passwords into a slow one.
@@ -126,6 +130,40 @@ def _quadrant_from(valence, arousal):
     return "Q2" if arousal >= 0 else "Q3"
 
 
+def _sections(value):
+    """The section-by-section shape, tidied.
+
+    A list of {label, valence, arousal}, one per section of the song, as the
+    reviewer dragged it. Stored on the correction rather than in a column of
+    its own, so no migration is needed and an older correction simply has no
+    shape attached.
+    """
+    if not isinstance(value, list):
+        return []
+
+    out = []
+    for item in value[:MAX_SECTIONS]:
+        if not isinstance(item, dict):
+            continue
+        label = str(item.get("label") or "").strip()[:60]
+        if not label:
+            continue
+        row = {"label": label}
+        for key in ("valence", "arousal"):
+            if item.get(key) is None:
+                continue
+            try:
+                number = float(item[key])
+            except (TypeError, ValueError):
+                continue
+            if number != number:
+                continue
+            row[key] = round(max(-1.0, min(1.0, number)), 2)
+        if len(row) > 1:
+            out.append(row)
+    return out
+
+
 def _indices(value):
     """Per-term indices as {term: 0.0-1.0}, tidied.
 
@@ -161,6 +199,12 @@ def clean(submitted, original):
     out["valence"] = _clamp(out.get("valence"), -1.0, 1.0)
     out["arousal"] = _clamp(out.get("arousal"), -1.0, 1.0)
     out["confidence"] = _clamp(out.get("confidence"), 0.0, 1.0)
+
+    sections = _sections(out.get("sections"))
+    if sections:
+        out["sections"] = sections
+    else:
+        out.pop("sections", None)
 
     indices = _indices(out.get("emotion_indices"))
     if indices:

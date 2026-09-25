@@ -47,15 +47,134 @@
         Q4: "Q4 · calm, serene"
     };
 
+    /* --- colour of an expression ---
+
+       The colour belongs to the word, not to any number: heartbreak is dark
+       red whether its index is 20 or 90. Exact names are looked up first,
+       then a keyword scan catches compounds and words nobody listed, so
+       "bakchodi/masti" reads as masti rather than falling back to grey. */
+
     var EMOTION_COLOR = {
-        love: "#c98293", joy: "#d8ad55", devotion: "#8c81c8",
-        longing: "#7e8fd6", sadness: "#668fc0", serenity: "#69a99e",
-        anger: "#c86c69", fear: "#c07a3f", peace: "#69a99e",
-        grief: "#668fc0", nostalgia: "#8c81c8", anxiety: "#c07a3f",
-        hope: "#d8ad55", patriotism: "#c98293", playfulness: "#d8ad55",
-        loneliness: "#668fc0", acceptance: "#69a99e", wonder: "#8c81c8",
-        spiritual_yearning: "#8c81c8"
+        // sorrow and its neighbours
+        heartbreak: "#8e2f3f",
+        betrayal: "#8e2f3f",
+        grief: "#4f6f9e",
+        sadness: "#668fc0",
+        sorrow: "#5c7fae",
+        karuna: "#4f6f9e",
+        loneliness: "#7f8aa3",
+        melancholy: "#6b7fa8",
+
+        // love and desire
+        love: "#f2a7bd",
+        romance: "#f2a7bd",
+        prem: "#f2a7bd",
+        shringara: "#e58ba8",
+        affection: "#f0b3c4",
+        sensual: "#8c2f52",
+        eroticism: "#8c2f52",
+        desire: "#9c3a5e",
+        obsession: "#a83a5b",
+
+        // wanting what is absent
+        longing: "#6f9bd8",
+        viraha: "#6f9bd8",
+        biraha: "#6f9bd8",
+        yearning: "#6f9bd8",
+        spiritual_yearning: "#8c81c8",
+        nostalgia: "#a88fc0",
+
+        // brightness
+        joy: "#d8ad55",
+        happiness: "#d8ad55",
+        masti: "#e2812f",
+        playfulness: "#e2812f",
+        bakchodi: "#ea9a34",
+        mischief: "#ea9a34",
+        celebration: "#e6bd57",
+        hope: "#7fc4a8",
+        wonder: "#9db8e8",
+        adbhuta: "#9db8e8",
+
+        // stillness
+        serenity: "#69a99e",
+        peace: "#69a99e",
+        shanta: "#69a99e",
+        acceptance: "#77b3a4",
+        calm: "#69a99e",
+
+        // heat
+        anger: "#c8452f",
+        raudra: "#c8452f",
+        rage: "#b83a26",
+        fear: "#c07a3f",
+        anxiety: "#c07a3f",
+        bhayanaka: "#c07a3f",
+
+        // the rest
+        devotion: "#8c81c8",
+        bhakti: "#8c81c8",
+        patriotism: "#d98f3d",
+        veera: "#d98f3d",
+        pride: "#d98f3d",
+        empowerment: "#b06fd8",
+        confidence: "#b06fd8"
     };
+
+    // Checked in order, so the more specific word wins: heartbreak before
+    // heart, spiritual before spirit.
+    var COLOUR_KEYWORDS = [
+        ["heartbreak", "#8e2f3f"], ["heart break", "#8e2f3f"],
+        ["breakup", "#8e2f3f"], ["betray", "#8e2f3f"],
+        ["obsess", "#a83a5b"],
+        ["sensual", "#8c2f52"], ["erotic", "#8c2f52"], ["lust", "#8c2f52"],
+        ["desire", "#9c3a5e"], ["seduct", "#9c3a5e"],
+        ["romanc", "#f2a7bd"], ["love", "#f2a7bd"], ["prem", "#f2a7bd"],
+        ["shringar", "#e58ba8"], ["affection", "#f0b3c4"],
+        ["longing", "#6f9bd8"], ["yearn", "#6f9bd8"],
+        ["viraha", "#6f9bd8"], ["biraha", "#6f9bd8"], ["bicched", "#6f9bd8"],
+        ["nostalg", "#a88fc0"], ["memory", "#a88fc0"],
+        ["grief", "#4f6f9e"], ["mourn", "#4f6f9e"], ["karuna", "#4f6f9e"],
+        ["sad", "#668fc0"], ["sorrow", "#5c7fae"], ["melanchol", "#6b7fa8"],
+        ["lonel", "#7f8aa3"], ["alone", "#7f8aa3"],
+        ["bakchod", "#ea9a34"], ["masti", "#e2812f"], ["mischief", "#ea9a34"],
+        ["play", "#e2812f"], ["fun", "#e2812f"], ["flirt", "#e8a9b8"],
+        ["joy", "#d8ad55"], ["happy", "#d8ad55"], ["happiness", "#d8ad55"],
+        ["celebrat", "#e6bd57"], ["festiv", "#e6bd57"], ["euphor", "#e8b84b"],
+        ["devotion", "#8c81c8"], ["bhakti", "#8c81c8"], ["spiritual", "#8c81c8"],
+        ["divine", "#8c81c8"], ["prayer", "#8c81c8"],
+        ["seren", "#69a99e"], ["peace", "#69a99e"], ["shanta", "#69a99e"],
+        ["calm", "#69a99e"], ["accept", "#77b3a4"],
+        ["anger", "#c8452f"], ["rage", "#b83a26"], ["raudra", "#c8452f"],
+        ["fear", "#c07a3f"], ["anxi", "#c07a3f"], ["dread", "#c07a3f"],
+        ["hope", "#7fc4a8"], ["wonder", "#9db8e8"], ["awe", "#9db8e8"],
+        ["patriot", "#d98f3d"], ["pride", "#d98f3d"], ["swadesh", "#d98f3d"],
+        ["baddie", "#b06fd8"], ["independ", "#b06fd8"],
+        ["empower", "#b06fd8"], ["confiden", "#b06fd8"],
+        ["main character", "#b06fd8"]
+    ];
+
+    var COLOUR_FALLBACK = "#d8ad55";
+
+    function colourFor(label) {
+        // a compound takes its colour from the expression it leads with
+        var first = splitTerms(label)[0] || String(label || "");
+        var word = first.toLowerCase().replace(/\s+/g, " ").trim();
+        if (!word) return COLOUR_FALLBACK;
+
+        var exact = EMOTION_COLOR[word] || EMOTION_COLOR[word.replace(/\s+/g, "_")];
+        if (exact) return exact;
+
+        for (var i = 0; i < COLOUR_KEYWORDS.length; i += 1) {
+            if (word.indexOf(COLOUR_KEYWORDS[i][0]) !== -1) {
+                return COLOUR_KEYWORDS[i][1];
+            }
+        }
+        return COLOUR_FALLBACK;
+    }
+
+    // the page's own renderResult uses this, so both agree on every colour
+    window.LYRIQ_COLOR = colourFor;
 
     // A search box only earns its place once the roster is long enough to scroll.
     var SEARCH_FROM = 8;
@@ -123,19 +242,164 @@
         catch (error) { /* private browsing, no matter */ }
     }
 
+    /* --- editor password ---
+       The password is never in this file. The page asks for it, the server
+       checks it, and only what the person typed is kept, in sessionStorage,
+       which belongs to this one tab and is wiped when the tab closes. */
+
+    var KEY_SLOT = "lyriq-editor-key";
+
+    function storedKey() {
+        try { return window.sessionStorage.getItem(KEY_SLOT) || ""; }
+        catch (error) { return ""; }
+    }
+
+    function storeKey(key) {
+        try {
+            if (key) { window.sessionStorage.setItem(KEY_SLOT, key); }
+            else { window.sessionStorage.removeItem(KEY_SLOT); }
+        } catch (error) { /* private browsing: it will simply ask again */ }
+    }
+
     async function api(path, options) {
         var response = await fetch(API + path, options);
         var data = await response.json().catch(function () { return {}; });
-        if (!response.ok) throw new Error(data.error || "The request failed.");
+        if (!response.ok) {
+            var error = new Error(data.error || "The request failed.");
+            error.status = response.status;
+            error.locked = Boolean(data.locked);
+            throw error;
+        }
         return data;
     }
 
-    function post(path, body) {
+    function send(path, body, key) {
         return api(path, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "X-Editor-Key": key || ""
+            },
             body: JSON.stringify(body)
         });
+    }
+
+    // Every write goes through here. With no password yet, or one the server
+    // rejects, it asks once and retries; cancelling the prompt cancels the write.
+    async function post(path, body) {
+        var key = storedKey();
+        if (!key) {
+            key = await askForKey();
+            if (!key) throw new Error("Editing needs the editor password.");
+        }
+        try {
+            return await send(path, body, key);
+        } catch (error) {
+            if (error.status !== 401) throw error;
+            storeKey("");
+            key = await askForKey("That password was not accepted. Try again.");
+            if (!key) throw new Error("Editing needs the editor password.");
+            return send(path, body, key);
+        }
+    }
+
+    async function requireKey() {
+        if (storedKey()) return true;
+        return Boolean(await askForKey());
+    }
+
+    var pendingAsk = null;
+
+    function askForKey(message) {
+        if (pendingAsk) return pendingAsk;
+
+        pendingAsk = new Promise(function (resolve) {
+            var scrim = el("div", "lock-scrim");
+            var card = el("div", "lock-card");
+            card.setAttribute("role", "dialog");
+            card.setAttribute("aria-modal", "true");
+            card.setAttribute("aria-label", "Editor password");
+
+            card.appendChild(el("div", "result-label", "LYRIQ · Editors only"));
+            card.appendChild(el("h3", null, "Enter the editor password"));
+            card.appendChild(el("p", "lock-blurb",
+                "Corrections, standings and the follow setting can only be changed "
+                + "by reviewers with the password. It is checked on the server "
+                + "and is not written anywhere in this page."));
+
+            var input = document.createElement("input");
+            input.type = "password";
+            input.className = "lock-input";
+            input.placeholder = "Password";
+            input.autocomplete = "current-password";
+            card.appendChild(input);
+
+            var errorSlot = el("div", "lock-error", message || "");
+            errorSlot.hidden = !message;
+            card.appendChild(errorSlot);
+
+            var row = el("div", "lock-actions");
+            var unlock = el("button", "primary", "Unlock");
+            unlock.type = "button";
+            var cancel = el("button", "secondary", "Cancel");
+            cancel.type = "button";
+            row.appendChild(unlock);
+            row.appendChild(cancel);
+            card.appendChild(row);
+
+            scrim.appendChild(card);
+            document.body.appendChild(scrim);
+            setTimeout(function () { input.focus(); }, 30);
+
+            function finish(key) {
+                document.removeEventListener("keydown", onKey, true);
+                scrim.remove();
+                pendingAsk = null;
+                resolve(key);
+            }
+
+            // Captured first, so Escape closes this box without also
+            // closing a drawer that may be open beneath it.
+            function onKey(event) {
+                if (event.key !== "Escape") return;
+                event.stopPropagation();
+                finish(null);
+            }
+            document.addEventListener("keydown", onKey, true);
+
+            async function tryUnlock() {
+                var key = input.value;
+                if (!key) { input.focus(); return; }
+                unlock.disabled = true;
+                unlock.textContent = "Checking";
+                try {
+                    await send("/unlock", {}, key);
+                    storeKey(key);
+                    toast("Unlocked. Editing stays open in this tab until you close it.");
+                    finish(key);
+                } catch (error) {
+                    errorSlot.hidden = false;
+                    errorSlot.textContent = error.status === 401
+                        ? "That password is not right."
+                        : error.message;
+                    input.value = "";
+                    input.focus();
+                    unlock.disabled = false;
+                    unlock.textContent = "Unlock";
+                }
+            }
+
+            unlock.addEventListener("click", tryUnlock);
+            input.addEventListener("keydown", function (event) {
+                if (event.key === "Enter") tryUnlock();
+            });
+            cancel.addEventListener("click", function () { finish(null); });
+            scrim.addEventListener("mousedown", function (event) {
+                if (event.target === scrim) finish(null);
+            });
+        });
+
+        return pendingAsk;
     }
 
 
@@ -331,6 +595,131 @@
         };
     }
 
+    /* =========================
+       MODEL PICKER
+
+       Which analyser reads the next song. Chosen per reading rather than
+       stored on the server, because it is a comparison the person is making,
+       not a policy for everyone: two people can sit with the same corrections
+       and read the same song through different models.
+    ========================= */
+
+    var MODEL_SLOT = "lyriq-model";
+
+    function rememberedModel() {
+        try { return window.localStorage.getItem(MODEL_SLOT) || ""; }
+        catch (error) { return ""; }
+    }
+
+    function rememberModel(id) {
+        try { window.localStorage.setItem(MODEL_SLOT, id); }
+        catch (error) { /* private browsing, no matter */ }
+    }
+
+    function buildModelPicker() {
+        var node = el("div", "expert-filter model-filter");
+        node.appendChild(el("span", "filter-label", "Model"));
+
+        var trigger = el("button", "filter-trigger");
+        trigger.type = "button";
+        trigger.setAttribute("aria-haspopup", "true");
+        trigger.setAttribute("aria-expanded", "false");
+
+        var valueText = el("span", "filter-value", "Loading…");
+        trigger.appendChild(valueText);
+        trigger.appendChild(el("span", "picker-caret", "▾"));
+
+        var menu = el("div", "filter-menu");
+        menu.hidden = true;
+
+        var list = el("div", "filter-list");
+        menu.appendChild(list);
+
+        var catalogue = [];
+        var chosen = "";
+
+        function close() {
+            menu.hidden = true;
+            trigger.setAttribute("aria-expanded", "false");
+            document.removeEventListener("mousedown", outside, true);
+        }
+
+        function outside(event) {
+            if (!node.contains(event.target)) close();
+        }
+
+        trigger.addEventListener("click", function () {
+            if (menu.hidden) {
+                menu.hidden = false;
+                trigger.setAttribute("aria-expanded", "true");
+                document.addEventListener("mousedown", outside, true);
+            } else {
+                close();
+            }
+        });
+
+        function pick(id) {
+            chosen = id;
+            window.LYRIQ_MODEL = id;      // read by the page when it analyses
+            rememberModel(id);
+            draw();
+        }
+
+        function draw() {
+            list.innerHTML = "";
+
+            catalogue.forEach(function (entry) {
+                var row = el("button", "picker-option model-option");
+                row.type = "button";
+                row.classList.toggle("on", entry.id === chosen);
+
+                var text = el("span", "model-text");
+                text.appendChild(el("span", "model-name", entry.label));
+                if (entry.note) text.appendChild(el("span", "model-note", entry.note));
+                row.appendChild(text);
+
+                row.addEventListener("click", function () {
+                    pick(entry.id);
+                    close();
+                    toast("Next reading will use " + entry.label + ".");
+                });
+                list.appendChild(row);
+            });
+
+            if (!catalogue.length) {
+                list.appendChild(el("p", "filter-empty",
+                    "No analyser is configured on the server."));
+            }
+
+            var current = catalogue.filter(function (e) { return e.id === chosen; })[0];
+            valueText.textContent = current ? current.label : "None available";
+        }
+
+        node.appendChild(trigger);
+        node.appendChild(menu);
+
+        (async function load() {
+            try {
+                var data = await (await fetch("/api/models")).json();
+                catalogue = data.models || [];
+
+                var remembered = rememberedModel();
+                var known = catalogue.map(function (e) { return e.id; });
+                chosen = known.indexOf(remembered) !== -1
+                    ? remembered
+                    : (data.default || known[0] || "");
+
+                window.LYRIQ_MODEL = chosen;
+                node.hidden = catalogue.length < 2;   // no choice to make with one
+                draw();
+            } catch (error) {
+                node.hidden = true;
+            }
+        })();
+
+        return node;
+    }
+
     function mountControls() {
         var actions = document.querySelector(".actions");
         if (!actions) return;
@@ -358,9 +747,12 @@
                         : "Following " + names.length + " experts: " + names.join(", ") + ".");
             } catch (error) {
                 toast(error.message);
+                refreshExperts();     // put the menu back to what the server holds
             }
         });
         actions.appendChild(followPicker.node);
+
+        actions.appendChild(buildModelPicker());
 
         var logButton = el("button", "review-log-open", "Review log");
         logButton.type = "button";
@@ -378,6 +770,11 @@
                     : "Learned corrections off. Readings come from the model alone.");
             } catch (error) {
                 toast(error.message);
+                // refused, so the switch goes back to where it was
+                box.checked = !box.checked;
+                state.useLearned = box.checked;
+                label.classList.toggle("on", box.checked);
+                followPicker.node.hidden = !box.checked;
             }
         });
 
@@ -480,8 +877,11 @@
         var summary = describe(data.learning);
         if (summary) {
             var badge = el("div", "provenance " + summary.tone);
+            var readBy = data.model && data.model.label && data.model.id
+                ? " Read by " + data.model.label + "."
+                : "";
             badge.innerHTML = "<b>" + (summary.tone === "learned" ? "Learned" : "Default")
-                + "</b><span>" + escapeHTML(summary.text) + "</span>";
+                + "</b><span>" + escapeHTML(summary.text + readBy) + "</span>";
 
             var matches = (data.learning && data.learning.matches) || [];
             if (matches.length) {
@@ -493,9 +893,333 @@
             body.appendChild(badge);
         }
 
+        attachCircumplex(data, body);
+        attachEditButton(body, data);
+    }
+
+
+    /* =========================
+       VALENCE AND AROUSAL MAP
+
+       Russell's circumplex with the reading plotted on it. Drawn as SVG
+       rather than handed to a chart library, because the whole thing is one
+       point and four tinted boxes, and this way the entry animation and the
+       click behaviour stay ours.
+    ========================= */
+
+    var SVG_NS = "http://www.w3.org/2000/svg";
+
+    // the drawing is 320 wide, the axes cross at the middle, and one unit of
+    // valence or arousal is 128 units of drawing
+    var CX_MID = 160;
+    var CX_UNIT = 128;
+
+    function svg(tag, attrs) {
+        var node = document.createElementNS(SVG_NS, tag);
+        Object.keys(attrs || {}).forEach(function (key) {
+            node.setAttribute(key, attrs[key]);
+        });
+        return node;
+    }
+
+    function quadrantOf(valence, arousal) {
+        if (valence >= 0) return arousal >= 0 ? "Q1" : "Q4";
+        return arousal >= 0 ? "Q2" : "Q3";
+    }
+
+    function buildCircumplex(data) {
+        var valence = Math.max(-1, Math.min(1, number(data.valence)));
+        var arousal = Math.max(-1, Math.min(1, number(data.arousal)));
+        var shade = colourFor(data.primary_emotion);
+
+        var wrap = el("div", "circumplex");
+
+        var toggle = el("button", "secondary circumplex-toggle");
+        toggle.type = "button";
+        toggle.appendChild(el("span", null, "Valence and arousal map"));
+        toggle.appendChild(el("span", "picker-caret", "▾"));
+        wrap.appendChild(toggle);
+
+        var panel = el("div", "circumplex-panel");
+        panel.hidden = true;
+        wrap.appendChild(panel);
+
+        var plot = svg("svg", {
+            viewBox: "0 0 320 320",
+            class: "circumplex-svg",
+            role: "img",
+            "aria-label": "Valence and arousal, with this reading plotted"
+        });
+
+        // the four quadrants, tinted the way the result card tints them
+        var quadrants = [
+            { code: "Q1", x: 160, y: 32, fill: "rgba(216,173,85,.07)",
+              label: "Q1 bright, rising", lx: 226, ly: 52 },
+            { code: "Q2", x: 32, y: 32, fill: "rgba(200,108,105,.07)",
+              label: "Q2 tense, agitated", lx: 94, ly: 52 },
+            { code: "Q3", x: 32, y: 160, fill: "rgba(102,143,192,.07)",
+              label: "Q3 subdued, heavy", lx: 94, ly: 276 },
+            { code: "Q4", x: 160, y: 160, fill: "rgba(105,169,158,.07)",
+              label: "Q4 calm, settled", lx: 226, ly: 276 }
+        ];
+
+        quadrants.forEach(function (q) {
+            plot.appendChild(svg("rect", {
+                x: q.x, y: q.y, width: 128, height: 128,
+                fill: q.fill, rx: 4,
+                class: "cx-quad" + (quadrantOf(valence, arousal) === q.code ? " live" : "")
+            }));
+            var text = svg("text", {
+                x: q.lx, y: q.ly, class: "cx-quad-label", "text-anchor": "middle"
+            });
+            text.textContent = q.label;
+            plot.appendChild(text);
+        });
+
+        // gridlines at the half marks
+        [-0.5, 0.5].forEach(function (step) {
+            plot.appendChild(svg("line", {
+                x1: CX_MID + step * CX_UNIT, y1: 32,
+                x2: CX_MID + step * CX_UNIT, y2: 288, class: "cx-grid"
+            }));
+            plot.appendChild(svg("line", {
+                x1: 32, y1: CX_MID - step * CX_UNIT,
+                x2: 288, y2: CX_MID - step * CX_UNIT, class: "cx-grid"
+            }));
+        });
+
+        // the axes
+        plot.appendChild(svg("line", { x1: 26, y1: 160, x2: 294, y2: 160, class: "cx-axis" }));
+        plot.appendChild(svg("line", { x1: 160, y1: 26, x2: 160, y2: 294, class: "cx-axis" }));
+
+        [["valence +1", 292, 152, "end"], ["valence −1", 28, 152, "start"],
+         ["arousal +1", 166, 32, "start"], ["arousal −1", 166, 292, "start"]
+        ].forEach(function (item) {
+            var tag = svg("text", {
+                x: item[1], y: item[2], class: "cx-axis-label", "text-anchor": item[3]
+            });
+            tag.textContent = item[0];
+            plot.appendChild(tag);
+        });
+
+        var x = CX_MID + valence * CX_UNIT;
+        var y = CX_MID - arousal * CX_UNIT;
+
+        // dashed guides from the point down to each axis
+        var guideX = svg("line", { x1: x, y1: y, x2: x, y2: 160, class: "cx-guide" });
+        var guideY = svg("line", { x1: x, y1: y, x2: 160, y2: y, class: "cx-guide" });
+        plot.appendChild(guideX);
+        plot.appendChild(guideY);
+
+        // the reading itself, in a group so it can be moved with a transform
+        var point = svg("g", {
+            class: "cx-point",
+            transform: "translate(" + CX_MID + "," + CX_MID + ")",
+            tabindex: "0",
+            role: "button",
+            "aria-label": "This reading. Drag it, or use the arrow keys, "
+                + "to place it where you think it belongs."
+        });
+        point.appendChild(svg("circle", { r: 15, class: "cx-halo", fill: shade }));
+        point.appendChild(svg("circle", { r: 7.5, class: "cx-dot", fill: shade }));
+        plot.appendChild(point);
+
+        panel.appendChild(plot);
+
+        var readout = el("div", "cx-readout");
+        panel.appendChild(readout);
+
+        // where the reading sits now, which starts as the model's own verdict
+        var here = { valence: valence, arousal: arousal };
+        var moved = false;
+
+        function place() {
+            var px = CX_MID + here.valence * CX_UNIT;
+            var py = CX_MID - here.arousal * CX_UNIT;
+
+            point.setAttribute("transform", "translate(" + px + "," + py + ")");
+
+            guideX.setAttribute("x1", px);
+            guideX.setAttribute("x2", px);
+            guideX.setAttribute("y1", py);
+
+            guideY.setAttribute("y1", py);
+            guideY.setAttribute("y2", py);
+            guideY.setAttribute("x1", px);
+
+            var code = quadrantOf(here.valence, here.arousal);
+            [].forEach.call(plot.querySelectorAll(".cx-quad"), function (rect, index) {
+                rect.classList.toggle("live", quadrants[index].code === code);
+            });
+        }
+
+        function drawReadout() {
+            readout.innerHTML = "";
+
+            var pair = el("span", "cx-pair",
+                "(" + here.valence.toFixed(2) + ", " + here.arousal.toFixed(2) + ")");
+            readout.appendChild(pair);
+
+            var detail = el("span", "cx-detail");
+            detail.textContent = "valence " + here.valence.toFixed(2)
+                + " · arousal " + here.arousal.toFixed(2)
+                + " · " + (QUADRANT_LABELS[quadrantOf(here.valence, here.arousal)] || "");
+            readout.appendChild(detail);
+
+            if (!moved) {
+                readout.appendChild(el("span", "cx-hint",
+                    "Drag the point, or use the arrow keys, to move it."));
+                return;
+            }
+
+            var was = el("span", "cx-detail");
+            was.textContent = "the model said (" + valence.toFixed(2)
+                + ", " + arousal.toFixed(2) + ")";
+            readout.appendChild(was);
+
+            var row = el("div", "cx-actions");
+
+            var save = el("button", "primary cx-save", "Correct the reading to here");
+            save.type = "button";
+            save.addEventListener("click", async function () {
+                if (!(await requireKey())) return;
+                // Hand the editor the moved position. Everything else about
+                // the reading is unchanged, and the drawer still asks who is
+                // correcting it and why, because the reasoning is what teaches.
+                var moved_reading = Object.assign({}, data, {
+                    valence: here.valence,
+                    arousal: here.arousal,
+                    quadrant: quadrantOf(here.valence, here.arousal)
+                });
+                openEditor(moved_reading);
+            });
+
+            var reset = el("button", "secondary cx-reset", "Put it back");
+            reset.type = "button";
+            reset.addEventListener("click", function () {
+                here = { valence: valence, arousal: arousal };
+                moved = false;
+                point.classList.remove("moved");
+                place();
+                drawReadout();
+            });
+
+            row.appendChild(save);
+            row.appendChild(reset);
+            readout.appendChild(row);
+        }
+
+        // --- dragging ---
+
+        // Screen pixels to drawing units, which is not a plain ratio once the
+        // SVG is scaled to the card's width.
+        function toPlot(event) {
+            var ctm = plot.getScreenCTM();
+            if (!ctm) return null;
+            var seat = plot.createSVGPoint();
+            seat.x = event.clientX;
+            seat.y = event.clientY;
+            return seat.matrixTransform(ctm.inverse());
+        }
+
+        function moveTo(px, py) {
+            var v = (px - CX_MID) / CX_UNIT;
+            var a = (CX_MID - py) / CX_UNIT;
+
+            here.valence = Math.round(Math.max(-1, Math.min(1, v)) * 100) / 100;
+            here.arousal = Math.round(Math.max(-1, Math.min(1, a)) * 100) / 100;
+
+            moved = here.valence !== valence || here.arousal !== arousal;
+            point.classList.toggle("moved", moved);
+            place();
+            drawReadout();
+        }
+
+        var dragging = false;
+
+        point.addEventListener("pointerdown", function (event) {
+            event.preventDefault();
+            dragging = true;
+            point.classList.add("dragging");
+            plot.classList.add("dragging");
+            // the point keeps receiving events even when the pointer runs
+            // outside the drawing
+            if (point.setPointerCapture) point.setPointerCapture(event.pointerId);
+        });
+
+        point.addEventListener("pointermove", function (event) {
+            if (!dragging) return;
+            var at = toPlot(event);
+            if (at) moveTo(at.x, at.y);
+        });
+
+        function endDrag(event) {
+            if (!dragging) return;
+            dragging = false;
+            point.classList.remove("dragging");
+            plot.classList.remove("dragging");
+            if (point.releasePointerCapture && event.pointerId !== undefined) {
+                try { point.releasePointerCapture(event.pointerId); } catch (e) { /* gone */ }
+            }
+        }
+
+        point.addEventListener("pointerup", endDrag);
+        point.addEventListener("pointercancel", endDrag);
+
+        // arrow keys for anyone not using a mouse, and for fine adjustment
+        point.addEventListener("keydown", function (event) {
+            var step = event.shiftKey ? 0.01 : 0.05;
+            var dv = 0;
+            var da = 0;
+
+            if (event.key === "ArrowLeft") dv = -step;
+            else if (event.key === "ArrowRight") dv = step;
+            else if (event.key === "ArrowUp") da = step;
+            else if (event.key === "ArrowDown") da = -step;
+            else return;
+
+            event.preventDefault();
+            moveTo(
+                CX_MID + (here.valence + dv) * CX_UNIT,
+                CX_MID - (here.arousal + da) * CX_UNIT
+            );
+        });
+
+        var drawn = false;
+
+        toggle.addEventListener("click", function () {
+            panel.hidden = !panel.hidden;
+            toggle.classList.toggle("open", !panel.hidden);
+
+            if (panel.hidden || drawn) return;
+            drawn = true;
+
+            // let the panel lay out, then move the point from the origin to
+            // its place so the transition has something to animate
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    plot.classList.add("ready");
+                    place();
+                    drawReadout();
+                });
+            });
+        });
+
+        return wrap;
+    }
+
+    function attachCircumplex(data, body) {
+        if (data.valence === undefined || data.valence === null) return;
+        if (data.arousal === undefined || data.arousal === null) return;
+        body.appendChild(buildCircumplex(data));
+    }
+
+    function attachEditButton(body, data) {
         var button = el("button", "secondary edit-output", "Edit this reading");
         button.type = "button";
-        button.addEventListener("click", function () { openEditor(data); });
+        button.addEventListener("click", async function () {
+            if (await requireKey()) openEditor(data);
+        });
         body.appendChild(button);
     }
 
@@ -644,7 +1368,7 @@
             row.type = "button";
             row.dataset.value = option;
 
-            var colour = options.swatch ? EMOTION_COLOR[option.toLowerCase()] : null;
+            var colour = options.swatch ? colourFor(option) : null;
             if (colour) {
                 var dot = el("span", "swatch");
                 dot.style.background = colour;
@@ -673,7 +1397,7 @@
             valueText.textContent = current || "Not specified";
             valueText.classList.toggle("empty", !current);
 
-            var colour = options.swatch ? EMOTION_COLOR[current.toLowerCase()] : null;
+            var colour = options.swatch && current ? colourFor(current) : null;
             swatch.style.background = colour || "transparent";
             swatch.hidden = !colour;
 
@@ -722,6 +1446,242 @@
         refresh();
 
         return { node: node, refresh: refresh };
+    }
+
+
+    /* =========================
+       EXPRESSION BOXES
+
+       The primary emotion is a set of expressions, not a string with
+       slashes in it, so the editor treats it that way: one box per
+       expression, each editable or removable on its own, and an Add
+       expression button offering the list or a typed term.
+
+       A hidden input holds the joined value, so everything downstream
+       still reads primary.value and hears a change event.
+    ========================= */
+
+    function buildTermEditor(parent, id, labelText, value, opts) {
+        opts = opts || {};
+
+        var wrap = el("div", "field");
+        var labelNode = el("label", null, labelText);
+        labelNode.setAttribute("for", id);
+        wrap.appendChild(labelNode);
+
+        var shell = el("div", "term-edit");
+        var list = el("div", "term-edit-list");
+        shell.appendChild(list);
+
+        var add = el("button", "term-add");
+        add.type = "button";
+        add.appendChild(el("span", "term-add-plus", "+"));
+        add.appendChild(el("span", null, "Add expression"));
+        shell.appendChild(add);
+
+        var menu = el("div", "term-add-menu");
+        menu.hidden = true;
+
+        var fromList = ledRow("Choose from the list");
+        var manual = ledRow("Add manually");
+        menu.appendChild(fromList);
+        menu.appendChild(manual);
+
+        var options = el("div", "term-add-options");
+        options.hidden = true;
+        menu.appendChild(options);
+
+        var typed = el("div", "term-add-typed");
+        typed.hidden = true;
+        var typeBox = document.createElement("input");
+        typeBox.type = "text";
+        typeBox.className = "free-input";
+        typeBox.placeholder = opts.placeholder || "e.g. bakchodi";
+        var confirm = el("button", "term-add-ok", "Add");
+        confirm.type = "button";
+        typed.appendChild(typeBox);
+        typed.appendChild(confirm);
+        menu.appendChild(typed);
+
+        shell.appendChild(menu);
+        wrap.appendChild(shell);
+
+        var hidden = document.createElement("input");
+        hidden.type = "hidden";
+        hidden.id = id;
+        wrap.appendChild(hidden);
+
+        if (opts.hint) wrap.appendChild(el("span", "was", opts.hint));
+        if (opts.was !== undefined && asText(opts.was) !== "") {
+            var was = el("span", "was");
+            was.innerHTML = "model said <b>" + escapeHTML(asText(opts.was)) + "</b>";
+            wrap.appendChild(was);
+        }
+
+        var terms = splitTerms(value);
+
+        function commit() {
+            hidden.value = terms.join("/");
+            hidden.dispatchEvent(new Event("change"));
+            draw();
+        }
+
+        function addTerm(term) {
+            term = String(term || "").trim();
+            if (!term) return;
+            if (terms.indexOf(term) === -1) terms.push(term);
+            commit();
+        }
+
+        function rename(position, term) {
+            term = String(term || "").trim();
+            if (!term) { draw(); return; }
+            if (terms.indexOf(term) !== -1 && terms[position] !== term) { draw(); return; }
+            terms[position] = term;
+            commit();
+        }
+
+        function remove(position) {
+            terms.splice(position, 1);
+            commit();
+        }
+
+        function box(term, position) {
+            var node = el("span", "term-edit-box");
+
+            var colour = colourFor(term);
+            if (colour) {
+                var dot = el("span", "swatch");
+                dot.style.background = colour;
+                node.appendChild(dot);
+            }
+
+            var name = el("span", "term-edit-name", pretty(term));
+            node.appendChild(name);
+
+            var pen = el("button", "term-edit-pen", "✎");
+            pen.type = "button";
+            pen.title = "Edit " + term;
+            node.appendChild(pen);
+
+            var cross = el("button", "term-edit-x", "✕");
+            cross.type = "button";
+            cross.title = "Remove " + term;
+            cross.addEventListener("click", function () { remove(position); });
+            node.appendChild(cross);
+
+            pen.addEventListener("click", function () {
+                var field = document.createElement("input");
+                field.type = "text";
+                field.className = "term-edit-input";
+                field.value = term;
+
+                node.replaceChild(field, name);
+                pen.hidden = true;
+                field.focus();
+                field.select();
+
+                var done = false;
+                function finish() {
+                    if (done) return;
+                    done = true;
+                    rename(position, field.value);
+                }
+                field.addEventListener("blur", finish);
+                field.addEventListener("keydown", function (event) {
+                    if (event.key === "Enter") { event.preventDefault(); finish(); }
+                    if (event.key === "Escape") { event.stopPropagation(); done = true; draw(); }
+                });
+            });
+
+            return node;
+        }
+
+        function draw() {
+            list.innerHTML = "";
+            if (!terms.length) {
+                list.appendChild(el("span", "term-edit-empty",
+                    "No expression yet. Add one below."));
+            }
+            terms.forEach(function (term, position) {
+                list.appendChild(box(term, position));
+            });
+        }
+
+        function closeMenu() {
+            menu.hidden = true;
+            options.hidden = true;
+            typed.hidden = true;
+            fromList.classList.remove("on");
+            manual.classList.remove("on");
+            add.setAttribute("aria-expanded", "false");
+            document.removeEventListener("mousedown", awayFromMenu, true);
+        }
+
+        function awayFromMenu(event) {
+            if (!shell.contains(event.target)) closeMenu();
+        }
+
+        add.addEventListener("click", function () {
+            if (menu.hidden) {
+                menu.hidden = false;
+                add.setAttribute("aria-expanded", "true");
+                document.addEventListener("mousedown", awayFromMenu, true);
+            } else {
+                closeMenu();
+            }
+        });
+
+        fromList.addEventListener("click", function () {
+            blink(fromList);
+            fromList.classList.add("on");
+            manual.classList.remove("on");
+            typed.hidden = true;
+            options.hidden = false;
+        });
+
+        manual.addEventListener("click", function () {
+            blink(manual);
+            manual.classList.add("on");
+            fromList.classList.remove("on");
+            options.hidden = true;
+            typed.hidden = false;
+            setTimeout(function () { typeBox.focus(); }, 30);
+        });
+
+        (opts.list || []).forEach(function (option) {
+            if (!option) return;
+            var row = el("button", "picker-option");
+            row.type = "button";
+            var colour = colourFor(option);
+            if (colour) {
+                var dot = el("span", "swatch");
+                dot.style.background = colour;
+                row.appendChild(dot);
+            }
+            row.appendChild(el("span", null, option));
+            row.addEventListener("click", function () {
+                addTerm(option);
+                closeMenu();
+            });
+            options.appendChild(row);
+        });
+
+        function addTyped() {
+            addTerm(typeBox.value);
+            typeBox.value = "";
+            closeMenu();
+        }
+
+        confirm.addEventListener("click", addTyped);
+        typeBox.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") { event.preventDefault(); addTyped(); }
+        });
+
+        hidden.value = terms.join("/");
+        draw();
+        parent.appendChild(wrap);
+        return hidden;
     }
 
 
@@ -787,7 +1747,10 @@
         return input;
     }
 
-    function sliderField(parent, id, label, value, low, high, was) {
+    function sliderField(parent, id, label, value, low, high, was, opts) {
+        opts = opts || {};
+        var digits = opts.digits === undefined ? 2 : opts.digits;
+
         var wrap = el("div", "field");
         wrap.appendChild(el("label", null, label)).setAttribute("for", id);
 
@@ -797,14 +1760,18 @@
         input.id = id;
         input.min = low;
         input.max = high;
-        input.step = 0.01;
+        input.step = opts.step || 0.01;
         input.value = number(value);
 
         var readout = document.createElement("output");
-        readout.textContent = number(value).toFixed(2);
+        readout.textContent = number(value).toFixed(digits);
+
+        // kept on the element so a linked slider can move this one from code
+        input._readout = readout;
+        input._digits = digits;
 
         input.addEventListener("input", function () {
-            readout.textContent = number(input.value).toFixed(2);
+            readout.textContent = number(input.value).toFixed(digits);
             syncQuadrant();
         });
 
@@ -812,13 +1779,56 @@
         row.appendChild(readout);
         wrap.appendChild(row);
 
+        if (opts.hint) wrap.appendChild(el("span", "was", opts.hint));
+
         if (was !== undefined && was !== null) {
             var note = el("span", "was");
-            note.innerHTML = "model said <b>" + number(was).toFixed(2) + "</b>";
+            note.innerHTML = "model said <b>" + number(was).toFixed(digits) + "</b>";
             wrap.appendChild(note);
         }
         parent.appendChild(wrap);
         return input;
+    }
+
+    // Move a slider from code and keep its number readout in step.
+    function setSlider(input, value) {
+        input.value = value;
+        if (input._readout) {
+            input._readout.textContent = number(value).toFixed(input._digits);
+        }
+    }
+
+    // The expression index on the result card is valence rescaled to 0-100.
+    function indexFromValence(valence) {
+        return Math.round((number(valence) + 1) / 2 * 100);
+    }
+
+    function valenceFromIndex(index) {
+        return Math.round((number(index) / 100 * 2 - 1) * 100) / 100;
+    }
+
+    function pretty(value) {
+        return String(value === null || value === undefined ? "" : value)
+            .replace(/_/g, " ");
+    }
+
+    // A primary emotion may be a compound: masti/romance/sensual. Each term
+    // carries its own index, so they are split out wherever they are needed.
+    function splitTerms(label) {
+        return String(label || "")
+            .split(/[\/,]/)
+            .map(function (part) { return part.trim(); })
+            .filter(function (part) { return part.length > 0; });
+    }
+
+    // Terms already scored come first, then any the label mentions but the
+    // model did not score, so an edited label still gets sliders.
+    function termsOf(data) {
+        var terms = Object.keys((data && data.emotion_indices) || {});
+        splitTerms(data && data.primary_emotion).forEach(function (term) {
+            if (terms.indexOf(term) === -1) terms.push(term);
+        });
+        return terms;
     }
 
     function syncQuadrant() {
@@ -826,7 +1836,6 @@
         var arousal = document.getElementById("edit-arousal");
         var quadrant = document.getElementById("edit-quadrant");
         if (!valence || !arousal || !quadrant) return;
-        if (quadrant.dataset.touched === "1") return;
         quadrant.value = quadrantFrom(number(valence.value), number(arousal.value));
         if (quadrant._refresh) quadrant._refresh();
     }
@@ -851,11 +1860,12 @@
 
         group(body, "Verdict");
 
-        var primary = textField(body, "edit-primary", "Primary emotion",
+        var primary = buildTermEditor(body, "edit-primary", "Primary emotion",
             data.primary_emotion, {
                 list: LABELS.slice(),
-                swatch: true,
-                hint: "your own words, joined with / when one will not do"
+                was: data.primary_emotion,
+                placeholder: "e.g. bakchodi",
+                hint: "one box per expression; each gets its own index below"
             });
 
         var canonical = textField(body, "edit-canonical", "Canonical emotion",
@@ -884,16 +1894,194 @@
 
         var valence = sliderField(body, "edit-valence", "Valence",
             data.valence, -1, 1, data.valence);
+
+        // The same judgement as valence, on the 0-100 scale the result card
+        // shows. Saving stores valence; the index is always derived from it,
+        // so an edit made here teaches the model exactly as a valence edit does.
+        var expressionIndex = sliderField(body, "edit-index", "Expression index",
+            indexFromValence(data.valence), 0, 100, indexFromValence(data.valence), {
+                step: 1,
+                digits: 0,
+                hint: "valence on a 0 to 100 scale; moving either one moves the other"
+            });
+
+        valence.addEventListener("input", function () {
+            setSlider(expressionIndex, indexFromValence(valence.value));
+        });
+
+        expressionIndex.addEventListener("input", function () {
+            setSlider(valence, valenceFromIndex(expressionIndex.value));
+            syncQuadrant();
+        });
+
         var arousal = sliderField(body, "edit-arousal", "Arousal",
             data.arousal, -1, 1, data.arousal);
+
+        var arousalIndex = sliderField(body, "edit-arousal-index",
+            "Arousal expression index",
+            indexFromValence(data.arousal), 0, 100, indexFromValence(data.arousal), {
+                step: 1,
+                digits: 0,
+                hint: "arousal on a 0 to 100 scale; moving either one moves the other"
+            });
+
+        arousal.addEventListener("input", function () {
+            setSlider(arousalIndex, indexFromValence(arousal.value));
+        });
+
+        arousalIndex.addEventListener("input", function () {
+            setSlider(arousal, valenceFromIndex(arousalIndex.value));
+            syncQuadrant();
+        });
+
+        // Romance is its own reading, not a rescaling of the two above: a song
+        // can be warm and energetic without being romantic at all. The model
+        // returns it as 0 to 1; this slider is that number as 0 to 100.
+        // One slider per term in the primary emotion. A compound like
+        // masti/romance/sensual gets three, each scored on its own, because
+        // a song can be heavy on masti and light on sensual.
+        //
+        // They are rebuilt whenever the label changes, so renaming masti to
+        // obsession leaves a slider called obsession, and nothing is saved
+        // under a term the label no longer mentions.
+        var termsWrap = el("div", "term-fields");
+        body.appendChild(termsWrap);
+
+        var termSliders = [];
+
+        // What each term is worth, 0-100. Seeded with the model's own indices;
+        // a term the reviewer adds is absent here until the model scores it.
+        var termScores = {};
+        Object.keys(data.emotion_indices || {}).forEach(function (term) {
+            var value = data.emotion_indices[term];
+            if (value !== undefined && value !== null) {
+                termScores[term] = Math.round(number(value) * 100);
+            }
+        });
+
+        // Terms the reviewer has dragged themselves, which no scoring overwrites.
+        var termTouched = {};
+
+        function renderTermSliders() {
+            termsWrap.innerHTML = "";
+            termSliders = [];
+
+            var pending = [];
+
+            splitTerms(primary.value).forEach(function (term, position) {
+                var known = termScores[term];
+                var unscored = known === undefined;
+
+                var slider = sliderField(termsWrap, "edit-term-" + position,
+                    pretty(term) + " index",
+                    unscored ? 50 : known, 0, 100,
+                    (data.emotion_indices || {})[term] === undefined
+                        ? null
+                        : Math.round(number(data.emotion_indices[term]) * 100), {
+                        step: 1,
+                        digits: 0,
+                        hint: position === 0
+                            ? "how strongly the song expresses this term, judged on its own"
+                            : undefined
+                    });
+
+                var wrap = slider.parentNode.parentNode;
+                var status = el("span", "was term-status");
+                status.hidden = true;
+                wrap.appendChild(status);
+
+                slider.addEventListener("input", function () {
+                    termTouched[term] = true;
+                    termScores[term] = Math.round(number(slider.value));
+                    status.hidden = true;
+                });
+
+                termSliders.push({ term: term, slider: slider, status: status });
+
+                if (unscored && !termTouched[term]) pending.push(term);
+            });
+
+            if (pending.length) scorePending(pending);
+        }
+
+        // A term the reviewer typed has never been scored by anything, so it
+        // is sent to the model with the lyrics rather than given a placeholder.
+        async function scorePending(terms) {
+            var waiting = termSliders.filter(function (item) {
+                return terms.indexOf(item.term) !== -1;
+            });
+
+            waiting.forEach(function (item) {
+                item.slider.disabled = true;
+                item.status.hidden = false;
+                item.status.textContent = "reading the song for this expression…";
+            });
+
+            try {
+                var result = await post("/score-terms", {
+                    analysis_id: data.analysis_id,
+                    terms: terms
+                });
+                var scores = result.scores || {};
+
+                waiting.forEach(function (item) {
+                    item.slider.disabled = false;
+                    if (termTouched[item.term]) { item.status.hidden = true; return; }
+
+                    var score = scores[item.term];
+                    if (score === undefined || score === null) {
+                        item.status.textContent =
+                            "the model would not score this one; set it yourself";
+                        return;
+                    }
+
+                    var value = Math.round(number(score) * 100);
+                    termScores[item.term] = value;
+                    setSlider(item.slider, value);
+                    item.status.textContent = "scored by the model for this song";
+                });
+            } catch (error) {
+                waiting.forEach(function (item) {
+                    item.slider.disabled = false;
+                    item.status.textContent = "could not score this one; set it yourself";
+                });
+            }
+        }
+
+        renderTermSliders();
+
+        // change covers both the picker and finishing a typed label; blur
+        // catches the case of clicking straight from the box to Save.
+        primary.addEventListener("change", renderTermSliders);
+        primary.addEventListener("blur", renderTermSliders);
 
         var quadrant = textField(body, "edit-quadrant", "Quadrant", data.quadrant, {
             list: ["Q1", "Q2", "Q3", "Q4"],
             strict: true,
-            hint: "follows valence and arousal until you choose one yourself"
+            hint: "tied to valence and arousal: change either side and the other follows"
         });
+        // Picking a quadrant moves the two sliders into it, keeping the
+        // strength of each and changing only the signs, so the point on the
+        // map lands in the quadrant chosen instead of contradicting it.
         quadrant.addEventListener("change", function () {
-            quadrant.dataset.touched = "1";
+            var code = String(quadrant.value || "").toUpperCase();
+            if (!/^Q[1-4]$/.test(code)) return;
+
+            var wantValence = (code === "Q1" || code === "Q4") ? 1 : -1;
+            var wantArousal = (code === "Q1" || code === "Q2") ? 1 : -1;
+
+            // a reading sitting on zero has no strength to keep, so it is
+            // placed mid-quadrant rather than left on the axis
+            var strengthV = Math.abs(number(valence.value)) || 0.5;
+            var strengthA = Math.abs(number(arousal.value)) || 0.5;
+
+            var newValence = Math.round(strengthV * wantValence * 100) / 100;
+            var newArousal = Math.round(strengthA * wantArousal * 100) / 100;
+
+            setSlider(valence, newValence);
+            setSlider(arousal, newArousal);
+            setSlider(expressionIndex, indexFromValence(newValence));
+            setSlider(arousalIndex, indexFromValence(newArousal));
         });
 
         var confidence = sliderField(body, "edit-confidence", "Confidence",
@@ -962,6 +2150,9 @@
             save.disabled = true;
             save.textContent = "Saving";
 
+            // catches a rename made without leaving the label box
+            renderTermSliders();
+
             var corrected = {
                 primary_emotion: primary.value.trim(),
                 canonical_emotion: canonical.value.trim(),
@@ -969,6 +2160,10 @@
                 mixed_emotion: mixed.checked,
                 valence: number(valence.value),
                 arousal: number(arousal.value),
+                emotion_indices: termSliders.reduce(function (out, item) {
+                    out[item.term] = Math.round(number(item.slider.value)) / 100;
+                    return out;
+                }, {}),
                 quadrant: quadrant.value,
                 confidence: number(confidence.value),
                 rasa: rasa.value.trim() || null,
@@ -1177,6 +2372,80 @@
 
 
     /* =========================
+       CORRECTIONS BY EXPERT
+
+       Tick one or more names to see only their corrections; tick "Every
+       expert", or untick everyone, to see them all. Purely a view: nothing
+       here changes what the model follows, which is the Follow menu's job.
+    ========================= */
+
+    function logFilterBlock(experts, entries) {
+        var wrap = el("div", "log-filter");
+        wrap.appendChild(el("div", "group-title", "Corrections by expert"));
+
+        var grid = el("div", "log-filter-grid");
+        var count = el("p", "log-filter-count");
+        var picked = [];          // empty means every expert
+
+        function tickRow(text, meta, isOn, onClick) {
+            var button = el("button", "picker-option filter-option");
+            button.type = "button";
+            button.appendChild(el("span", "tick-box"));
+            button.appendChild(el("span", "filter-name", text));
+            if (meta) button.appendChild(el("span", "filter-meta", meta));
+            button.classList.toggle("ticked", isOn);
+            button.setAttribute("aria-pressed", String(isOn));
+            button.addEventListener("click", onClick);
+            return button;
+        }
+
+        function apply() {
+            var shown = 0;
+            entries.forEach(function (entry) {
+                var visible = !picked.length || picked.indexOf(entry.editor) !== -1;
+                entry.node.hidden = !visible;
+                if (visible) shown += 1;
+            });
+            count.textContent = picked.length
+                ? "Showing " + shown + " of " + entries.length + " corrections, from "
+                    + picked.join(", ") + "."
+                : "Showing all " + entries.length + " corrections, from every expert.";
+        }
+
+        function draw() {
+            grid.innerHTML = "";
+
+            grid.appendChild(tickRow(
+                "Every expert",
+                entries.length + (entries.length === 1 ? " edit" : " edits"),
+                !picked.length,
+                function () { picked = []; draw(); }
+            ));
+
+            experts.forEach(function (expert) {
+                grid.appendChild(tickRow(
+                    expert.name,
+                    expert.corrections + (expert.corrections === 1 ? " edit" : " edits"),
+                    picked.indexOf(expert.name) !== -1,
+                    function () {
+                        var at = picked.indexOf(expert.name);
+                        if (at === -1) { picked.push(expert.name); } else { picked.splice(at, 1); }
+                        draw();
+                    }
+                ));
+            });
+
+            apply();
+        }
+
+        wrap.appendChild(grid);
+        wrap.appendChild(count);
+        draw();
+        return wrap;
+    }
+
+
+    /* =========================
        REVIEW LOG
     ========================= */
 
@@ -1190,7 +2459,7 @@
         shell.body.appendChild(el("p", "log-empty", "Loading…"));
 
         try {
-            var data = await api("/corrections?limit=100");
+            var data = await api("/corrections?limit=500");
             shell.body.innerHTML = "";
 
             state.experts = data.experts || [];
@@ -1206,14 +2475,19 @@
                 : "No corrections yet. Read a song, then edit what the model got wrong.";
             shell.body.appendChild(summary);
 
+            // Build every row once; the expert filter only shows and hides them.
+            var entries = (data.corrections || []).map(function (correction) {
+                return { editor: correction.editor, node: logRow(correction) };
+            });
+
             if (state.experts.length) {
                 shell.body.appendChild(rankingBlock(state.experts, state.ranking));
-                shell.body.appendChild(el("div", "group-title", "Every correction"));
+                shell.body.appendChild(logFilterBlock(state.experts, entries));
             }
 
-            (data.corrections || []).forEach(function (correction) {
-                shell.body.appendChild(logRow(correction));
-            });
+            var listing = el("div", "log-listing");
+            entries.forEach(function (entry) { listing.appendChild(entry.node); });
+            shell.body.appendChild(listing);
 
             var people = stats.experts || state.experts.length;
             var tally = el("div", "log-tally");
@@ -1231,6 +2505,18 @@
         } catch (error) {
             shell.body.innerHTML = "";
             shell.body.appendChild(el("div", "drawer-error", error.message));
+        }
+
+        // Forget the password in this tab, for a shared or borrowed computer.
+        if (storedKey()) {
+            var lock = el("button", "secondary", "Lock editing");
+            lock.type = "button";
+            lock.addEventListener("click", function () {
+                storeKey("");
+                lock.remove();
+                toast("Locked. The password will be asked for before the next edit.");
+            });
+            shell.foot.appendChild(lock);
         }
 
         var done = el("button", "secondary", "Close");
@@ -1295,11 +2581,62 @@
 
 
     /* =========================
+       TERM BOXES ON THE RESULT CARD
+
+       Each term of the primary emotion sits in its own box. Clicking one
+       rolls a panel down from under it with that term's index; the big
+       number stays the overall expression index. Bound once, by delegation,
+       so it survives the card being rewritten on every reading.
+    ========================= */
+
+    function mountIndexSwitch() {
+        var body = document.getElementById("body");
+        if (!body) return;
+
+        function closeAll(except) {
+            [].forEach.call(body.querySelectorAll(".term-box"), function (box) {
+                if (box === except) return;
+                box.classList.remove("open");
+                var pop = box.querySelector(".term-pop");
+                if (pop) pop.hidden = true;
+                var opener = box.querySelector(".term-open");
+                if (opener) opener.setAttribute("aria-expanded", "false");
+            });
+        }
+
+        body.addEventListener("click", function (event) {
+            var opener = event.target && event.target.closest
+                ? event.target.closest(".term-open")
+                : null;
+            if (!opener || !body.contains(opener)) return;
+
+            var box = opener.closest(".term-box");
+            var pop = box.querySelector(".term-pop");
+            if (!pop) return;
+
+            var wasOpen = !pop.hidden;
+            closeAll(box);
+            pop.hidden = wasOpen;
+            box.classList.toggle("open", !wasOpen);
+            opener.setAttribute("aria-expanded", String(!wasOpen));
+        });
+
+        // clicking anywhere else closes whichever panel is open
+        document.addEventListener("mousedown", function (event) {
+            if (event.target && event.target.closest
+                && event.target.closest(".term-box")) return;
+            closeAll(null);
+        }, true);
+    }
+
+
+    /* =========================
        MOUNT
     ========================= */
 
     function start() {
         mountControls();
+        mountIndexSwitch();
 
         // renderResult is a top-level function declaration in the page's own
         // script, so it lives on the global object and can be wrapped here.

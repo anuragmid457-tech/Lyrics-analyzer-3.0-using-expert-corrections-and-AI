@@ -1225,6 +1225,387 @@
 
 
     /* =========================
+       THE SHAPE OF THE SONG
+
+       The Movement chart is drawn by Plotly, which cannot drag a data point,
+       so the editable version is its own SVG: one column per section, a
+       valence track and an arousal track, each point draggable up and down.
+       The x positions are fixed, because the order of the sections is the
+       song's, not the reviewer's.
+    ========================= */
+
+    // drawing box, in the same 0-100 style the rest of the SVG uses
+    var SH_LEFT = 46;
+    var SH_RIGHT = 20;
+    var SH_TOP = 24;
+    var SH_HEIGHT = 200;
+
+    var SHAPE_TRACKS = [
+        { key: "valence", label: "Valence", colour: "#d8ad55" },
+        { key: "arousal", label: "Arousal", colour: "#69a99e" }
+    ];
+
+    // Reads the sections out of whatever the graph route returned. Trace
+    // names are matched loosely, then by position, so this keeps working if
+    // graph.py renames them.
+    function sectionsFromFigures(payload) {
+        if (!payload || !payload.figures) return [];
+
+        if (Array.isArray(payload.sections) && payload.sections.length) {
+            return payload.sections.map(function (row, index) {
+                return {
+                    label: String(row.label || row.name || ("Section " + (index + 1))),
+                    valence: number(row.valence),
+                    arousal: number(row.arousal)
+                };
+            });
+        }
+
+        var figure = payload.figures.arc
+            || payload.figures[Object.keys(payload.figures)[0]];
+        if (!figure || !Array.isArray(figure.data)) return [];
+
+        var traces = figure.data.filter(function (trace) {
+            return Array.isArray(trace.y) && trace.y.length;
+        });
+        if (!traces.length) return [];
+
+        function pick(word, fallbackIndex) {
+            var named = traces.filter(function (trace) {
+                return String(trace.name || "").toLowerCase().indexOf(word) !== -1;
+            })[0];
+            return named || traces[fallbackIndex] || null;
+        }
+
+        var valenceTrace = pick("valence", 0);
+        var arousalTrace = pick("arousal", 1);
+        var labels = (valenceTrace && valenceTrace.x) || (arousalTrace && arousalTrace.x) || [];
+
+        var count = Math.max(
+            valenceTrace ? valenceTrace.y.length : 0,
+            arousalTrace ? arousalTrace.y.length : 0
+        );
+
+        var out = [];
+        for (var i = 0; i < count; i += 1) {
+            out.push({
+                label: String(labels[i] === undefined ? "Section " + (i + 1) : labels[i]),
+                valence: valenceTrace ? number(valenceTrace.y[i]) : 0,
+                arousal: arousalTrace ? number(arousalTrace.y[i]) : 0
+            });
+        }
+        return out;
+    }
+
+    function buildShapeEditor(sections, onSave) {
+        var width = Math.max(320, SH_LEFT + SH_RIGHT + sections.length * 64);
+        var innerWidth = width - SH_LEFT - SH_RIGHT;
+        var midY = SH_TOP + SH_HEIGHT / 2;
+
+        // the reviewer's copy, so Put it back always has the original
+        var here = sections.map(function (row) {
+            return { label: row.label, valence: row.valence, arousal: row.arousal };
+        });
+        var moved = false;
+
+        var wrap = el("div", "shape");
+
+        var head = el("div", "shape-head");
+        head.appendChild(el("div", "shape-title", "Drag the shape"));
+        var legend = el("div", "shape-legend");
+        SHAPE_TRACKS.forEach(function (track) {
+            var tag = el("span", "shape-key");
+            var dot = el("span", "shape-dot");
+            dot.style.background = track.colour;
+            tag.appendChild(dot);
+            tag.appendChild(el("span", null, track.label));
+            legend.appendChild(tag);
+        });
+        head.appendChild(legend);
+        wrap.appendChild(head);
+
+        var scroller = el("div", "shape-scroll");
+        var plot = svg("svg", {
+            viewBox: "0 0 " + width + " " + (SH_TOP + SH_HEIGHT + 46),
+            class: "shape-svg",
+            width: width
+        });
+        scroller.appendChild(plot);
+        wrap.appendChild(scroller);
+
+        function xOf(index) {
+            if (here.length === 1) return SH_LEFT + innerWidth / 2;
+            return SH_LEFT + (innerWidth * index) / (here.length - 1);
+        }
+
+        function yOf(value) {
+            return midY - (Math.max(-1, Math.min(1, value)) * SH_HEIGHT) / 2;
+        }
+
+        function valueOf(y) {
+            var raw = ((midY - y) * 2) / SH_HEIGHT;
+            return Math.round(Math.max(-1, Math.min(1, raw)) * 100) / 100;
+        }
+
+        // --- fixed furniture ---
+
+        [1, 0.5, 0, -0.5, -1].forEach(function (mark) {
+            var y = yOf(mark);
+            plot.appendChild(svg("line", {
+                x1: SH_LEFT - 6, y1: y, x2: width - SH_RIGHT, y2: y,
+                class: mark === 0 ? "shape-axis" : "shape-grid"
+            }));
+            var tag = svg("text", {
+                x: SH_LEFT - 11, y: y + 3.5,
+                class: "shape-tick", "text-anchor": "end"
+            });
+            tag.textContent = mark.toFixed(1);
+            plot.appendChild(tag);
+        });
+
+        here.forEach(function (row, index) {
+            var x = xOf(index);
+            plot.appendChild(svg("line", {
+                x1: x, y1: SH_TOP, x2: x, y2: SH_TOP + SH_HEIGHT,
+                class: "shape-column"
+            }));
+
+            var name = svg("text", {
+                x: x, y: SH_TOP + SH_HEIGHT + 22,
+                class: "shape-label", "text-anchor": "middle"
+            });
+            name.textContent = row.label.length > 12
+                ? row.label.slice(0, 11) + "…"
+                : row.label;
+            var full = svg("title");
+            full.textContent = row.label;
+            name.appendChild(full);
+            plot.appendChild(name);
+        });
+
+        // --- the two tracks ---
+
+        var lines = {};
+        var dots = {};
+
+        SHAPE_TRACKS.forEach(function (track) {
+            lines[track.key] = svg("polyline", {
+                class: "shape-line",
+                fill: "none",
+                stroke: track.colour
+            });
+            plot.appendChild(lines[track.key]);
+            dots[track.key] = [];
+        });
+
+        var readout = el("div", "shape-readout");
+
+        function refresh() {
+            SHAPE_TRACKS.forEach(function (track) {
+                lines[track.key].setAttribute("points", here.map(function (row, index) {
+                    return xOf(index) + "," + yOf(row[track.key]);
+                }).join(" "));
+
+                dots[track.key].forEach(function (dot, index) {
+                    dot.setAttribute("transform",
+                        "translate(" + xOf(index) + "," + yOf(here[index][track.key]) + ")");
+                });
+            });
+        }
+
+        function drawReadout() {
+            readout.innerHTML = "";
+
+            if (!moved) {
+                readout.appendChild(el("span", "shape-hint",
+                    "Drag any point up or down. Arrow keys nudge the one in focus."));
+                return;
+            }
+
+            var changed = here.filter(function (row, index) {
+                return row.valence !== sections[index].valence
+                    || row.arousal !== sections[index].arousal;
+            });
+
+            readout.appendChild(el("span", "shape-count",
+                changed.length + (changed.length === 1
+                    ? " section moved" : " sections moved")));
+
+            var detail = el("span", "shape-detail");
+            detail.textContent = changed.slice(0, 4).map(function (row) {
+                return row.label + " (" + row.valence.toFixed(2)
+                    + ", " + row.arousal.toFixed(2) + ")";
+            }).join("  ·  ") + (changed.length > 4 ? "  ·  …" : "");
+            readout.appendChild(detail);
+
+            var row = el("div", "shape-actions");
+
+            var save = el("button", "primary shape-save", "Correct the shape to this");
+            save.type = "button";
+            save.addEventListener("click", function () {
+                onSave(here.map(function (item) {
+                    return {
+                        label: item.label,
+                        valence: item.valence,
+                        arousal: item.arousal
+                    };
+                }));
+            });
+
+            var reset = el("button", "secondary shape-reset", "Put it back");
+            reset.type = "button";
+            reset.addEventListener("click", function () {
+                here = sections.map(function (item) {
+                    return { label: item.label, valence: item.valence, arousal: item.arousal };
+                });
+                moved = false;
+                plot.classList.remove("moved");
+                refresh();
+                drawReadout();
+            });
+
+            row.appendChild(save);
+            row.appendChild(reset);
+            readout.appendChild(row);
+        }
+
+        function toPlot(event) {
+            var ctm = plot.getScreenCTM();
+            if (!ctm) return null;
+            var seat = plot.createSVGPoint();
+            seat.x = event.clientX;
+            seat.y = event.clientY;
+            return seat.matrixTransform(ctm.inverse());
+        }
+
+        function setValue(trackKey, index, value) {
+            here[index][trackKey] = value;
+            moved = here.some(function (row, at) {
+                return row.valence !== sections[at].valence
+                    || row.arousal !== sections[at].arousal;
+            });
+            plot.classList.toggle("moved", moved);
+            refresh();
+            drawReadout();
+        }
+
+        SHAPE_TRACKS.forEach(function (track) {
+            here.forEach(function (row, index) {
+                var dot = svg("g", {
+                    class: "shape-point",
+                    tabindex: "0",
+                    role: "button",
+                    "aria-label": track.label + " of " + row.label
+                        + ". Drag or use the arrow keys."
+                });
+                dot.appendChild(svg("circle", { r: 11, class: "shape-grab" }));
+                dot.appendChild(svg("circle", {
+                    r: 5.5, class: "shape-dot-in", fill: track.colour
+                }));
+                plot.appendChild(dot);
+                dots[track.key].push(dot);
+
+                var dragging = false;
+
+                dot.addEventListener("pointerdown", function (event) {
+                    event.preventDefault();
+                    dragging = true;
+                    dot.classList.add("dragging");
+                    plot.classList.add("dragging");
+                    if (dot.setPointerCapture) dot.setPointerCapture(event.pointerId);
+                });
+
+                dot.addEventListener("pointermove", function (event) {
+                    if (!dragging) return;
+                    var at = toPlot(event);
+                    if (at) setValue(track.key, index, valueOf(at.y));
+                });
+
+                function endDrag(event) {
+                    if (!dragging) return;
+                    dragging = false;
+                    dot.classList.remove("dragging");
+                    plot.classList.remove("dragging");
+                    if (dot.releasePointerCapture && event.pointerId !== undefined) {
+                        try { dot.releasePointerCapture(event.pointerId); }
+                        catch (e) { /* already gone */ }
+                    }
+                }
+
+                dot.addEventListener("pointerup", endDrag);
+                dot.addEventListener("pointercancel", endDrag);
+
+                dot.addEventListener("keydown", function (event) {
+                    var step = event.shiftKey ? 0.01 : 0.05;
+                    if (event.key === "ArrowUp") {
+                        event.preventDefault();
+                        setValue(track.key, index,
+                            Math.round(Math.min(1, here[index][track.key] + step) * 100) / 100);
+                    } else if (event.key === "ArrowDown") {
+                        event.preventDefault();
+                        setValue(track.key, index,
+                            Math.round(Math.max(-1, here[index][track.key] - step) * 100) / 100);
+                    }
+                });
+            });
+        });
+
+        wrap.appendChild(readout);
+        refresh();
+        drawReadout();
+
+        return wrap;
+    }
+
+    // Mounted under the Movement chart once the page has drawn one.
+    function mountShapeEditor() {
+        var movement = document.getElementById("movement");
+        if (!movement) return;
+
+        var host = el("div", "shape-host");
+        host.hidden = true;
+        movement.appendChild(host);
+
+        var toggle = el("button", "secondary shape-toggle");
+        toggle.type = "button";
+        toggle.appendChild(el("span", null, "Edit this shape"));
+        toggle.appendChild(el("span", "picker-caret", "▾"));
+        toggle.hidden = true;
+
+        var caption = document.getElementById("graph-caption");
+        if (caption && caption.parentNode) {
+            caption.parentNode.insertBefore(toggle, caption);
+        } else {
+            movement.appendChild(toggle);
+        }
+
+        toggle.addEventListener("click", function () {
+            host.hidden = !host.hidden;
+            toggle.classList.toggle("open", !host.hidden);
+        });
+
+        // the page hands us each new chart as it arrives
+        window.LYRIQ_ON_GRAPH = function (payload) {
+            var sections = sectionsFromFigures(payload);
+            host.innerHTML = "";
+
+            if (sections.length < 2 || !state.current) {
+                toggle.hidden = true;
+                host.hidden = true;
+                return;
+            }
+
+            toggle.hidden = false;
+            host.appendChild(buildShapeEditor(sections, async function (shape) {
+                if (!(await requireKey())) return;
+                // The shape travels with the reading it belongs to, so the
+                // drawer still asks who is correcting it and why.
+                openEditor(Object.assign({}, state.current, { sections: shape }));
+            }));
+        };
+    }
+
+    /* =========================
        DRAWER SHELL
     ========================= */
 
@@ -2164,6 +2545,8 @@
                     out[item.term] = Math.round(number(item.slider.value)) / 100;
                     return out;
                 }, {}),
+                // present only when the reviewer dragged the Movement shape
+                sections: Array.isArray(data.sections) ? data.sections : undefined,
                 quadrant: quadrant.value,
                 confidence: number(confidence.value),
                 rasa: rasa.value.trim() || null,
@@ -2637,6 +3020,7 @@
     function start() {
         mountControls();
         mountIndexSwitch();
+        mountShapeEditor();
 
         // renderResult is a top-level function declaration in the page's own
         // script, so it lives on the global object and can be wrapped here.
