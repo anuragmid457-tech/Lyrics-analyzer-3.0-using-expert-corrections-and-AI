@@ -983,14 +983,16 @@ textarea{
 
 /* the title writes itself in */
 
-.result.show .result-title span{
+.result.show .title-box{
 
-    animation:letter-in .6s cubic-bezier(.16,.84,.3,1) both;
-
-    animation-delay:.18s;
-
-    display:inline-block;
+    animation:letter-in .55s cubic-bezier(.16,.84,.3,1) both;
 }
+
+.result.show .title-box:nth-child(1){ animation-delay:.16s; }
+.result.show .title-box:nth-child(2){ animation-delay:.24s; }
+.result.show .title-box:nth-child(3){ animation-delay:.32s; }
+.result.show .title-box:nth-child(4){ animation-delay:.40s; }
+.result.show .title-box:nth-child(n+5){ animation-delay:.46s; }
 
 @keyframes letter-in{
 
@@ -1060,6 +1062,83 @@ textarea{
     overflow-wrap:anywhere;
 
     hyphens:auto;
+}
+
+/* one box per expression, all the same surface; only the word is coloured */
+
+.title-terms{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:8px;
+
+    margin:12px 0 7px;
+}
+
+.title-box{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:9px;
+
+    padding:9px 15px 9px 13px;
+
+    border:1px solid var(--line);
+
+    border-radius:12px;
+
+    background:
+        linear-gradient(180deg,rgba(62,242,163,.05),rgba(0,0,0,.18)),
+        var(--surface2);
+
+    box-shadow:
+        inset 0 1px 2px rgba(0,0,0,.35),
+        0 0 0 1px rgba(62,242,163,.04);
+
+    transition:.22s;
+}
+
+.title-box:hover{
+
+    border-color:rgba(62,242,163,.4);
+
+    box-shadow:
+        inset 0 1px 2px rgba(0,0,0,.35),
+        0 0 22px rgba(62,242,163,.09);
+
+    transform:translateY(-1px);
+}
+
+.title-dot{
+
+    width:8px;
+
+    height:8px;
+
+    border-radius:50%;
+
+    flex:none;
+
+    box-shadow:0 0 12px currentColor;
+}
+
+.title-word{
+
+    font-family:Newsreader,Georgia,serif;
+
+    font-size:clamp(21px,2.6vw,25px);
+
+    line-height:1.1;
+
+    /* the expressions read as names, so they are set in capitals; the
+       tracking is opened slightly because capitals sit tight otherwise */
+    text-transform:uppercase;
+
+    letter-spacing:.055em;
 }
 
 .canonical{
@@ -2719,8 +2798,19 @@ function escapeHTML(value){
 
 function pretty(value){
 
-    return String(value ?? "")
-        .replace(/_/g," ");
+    const text =
+        String(value ?? "")
+            .replace(/_/g," ")
+            .trim();
+
+
+    /* Expressions are shown with a capital first letter. toUpperCase leaves
+       Bengali and Devanagari untouched, so a Bangla label passes through
+       exactly as the reviewer typed it. */
+
+    return text
+        ? text.charAt(0).toUpperCase() + text.slice(1)
+        : text;
 
 }
 
@@ -2991,6 +3081,51 @@ updateContextLabel();
 
 
 /* =========================
+   BRING THE READING INTO VIEW
+
+   The reading lands in the panel beside the lyrics, which on a long page or
+   a narrow screen can be well above where you were typing. So the page
+   carries you to it rather than leaving you to hunt for it.
+========================= */
+
+function showTheReading(){
+
+    const card =
+        document.querySelector(".result-card");
+
+
+    if(!card)
+        return;
+
+
+    const still =
+        window.matchMedia
+        &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+
+    /* a little headroom, so the card does not sit flush against the top */
+
+    const top =
+        card.getBoundingClientRect().top
+        +
+        window.pageYOffset
+        -
+        18;
+
+
+    window.scrollTo({
+
+        top: Math.max(0, top),
+
+        behavior: still ? "auto" : "smooth"
+
+    });
+
+}
+
+
+/* =========================
    ERROR
 ========================= */
 
@@ -3179,6 +3314,8 @@ async function analyze(){
 
             renderCare(data);
 
+            showTheReading();
+
             hideGraph();
 
         }
@@ -3186,6 +3323,8 @@ async function analyze(){
         else{
 
             renderResult(data);
+
+            showTheReading();
 
             drawGraph(
                 payload,
@@ -3293,6 +3432,9 @@ $("file").addEventListener(
             renderRaw(
                 data.raw_text
             );
+
+
+            showTheReading();
 
 
             hideGraph();
@@ -3527,6 +3669,39 @@ async function drawGraph(payload, result){
 
 
 /* =========================
+   BRING THE READING INTO VIEW
+========================= */
+
+function bringIntoView(){
+
+    const card =
+        document.querySelector(".result-card");
+
+
+    if(!card)
+        return;
+
+
+    /* anyone who has asked for less motion gets the jump, not the glide */
+
+    const gentle =
+        !window.matchMedia
+        ||
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+
+    card.scrollIntoView({
+
+        behavior: gentle ? "smooth" : "auto",
+
+        block: "start"
+
+    });
+
+}
+
+
+/* =========================
    CARE RESPONSE
 ========================= */
 
@@ -3553,6 +3728,9 @@ function renderCare(data){
         escapeHTML(data.message)
         +
         '</div>';
+
+
+    bringIntoView();
 
 }
 
@@ -3584,6 +3762,9 @@ function renderRaw(text){
         escapeHTML(text)
         +
         '</pre>';
+
+
+    bringIntoView();
 
 }
 
@@ -3669,24 +3850,42 @@ function renderResult(data){
         splitTerms(data.primary_emotion);
 
 
+    /* One box per expression, built like the rows in the expert menus.
+       The box is the same dark green-grey everywhere; only the word inside
+       carries the emotion's own colour. */
+
     html +=
 
-        '<div class="result-title">'
+        '<div class="result-title title-terms">'
         +
         (
             titleTerms.length
 
                 ? titleTerms
-                    .map(term =>
-                        '<span style="color:'
-                        + shadeOf(term, color)
-                        + '">'
-                        + escapeHTML(pretty(term))
-                        + '</span>'
-                    )
-                    .join('<span class="title-slash">/</span>')
+                    .map(term => {
 
-                : '<span style="color:' + color + '">Reading</span>'
+                        const shade =
+                            shadeOf(term, color);
+
+                        return '<span class="title-box">'
+                            + '<span class="title-dot" style="background:'
+                            + shade
+                            + '"></span>'
+                            + '<span class="title-word" style="color:'
+                            + shade
+                            + '">'
+                            + escapeHTML(pretty(term))
+                            + '</span>'
+                            + '</span>';
+
+                    })
+                    .join("")
+
+                : '<span class="title-box">'
+                    + '<span class="title-word" style="color:' + color + '">'
+                    + 'Reading'
+                    + '</span>'
+                    + '</span>'
         )
         +
         '</div>';
@@ -3807,7 +4006,10 @@ function renderResult(data){
 
                 '<span class="term-pop" hidden>'
                 + '<span class="term-pop-label">'
-                + 'Expression index for ' + escapeHTML(pretty(term))
+                + 'Expression index for '
+                + '<span class="term-name">'
+                + escapeHTML(pretty(term))
+                + '</span>'
                 + '</span>'
                 + '<span class="term-pop-value" style="color:' + shade + '">'
                 + score
@@ -4469,6 +4671,12 @@ function renderResult(data){
 
     $("body").innerHTML =
         html;
+
+
+    /* A reading is worth nothing off the bottom of the screen, so the card
+       is brought into view wherever the person happens to be standing. */
+
+    bringIntoView();
 
 
     $("copy").addEventListener(

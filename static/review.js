@@ -2189,8 +2189,13 @@
     }
 
     function pretty(value) {
-        return String(value === null || value === undefined ? "" : value)
-            .replace(/_/g, " ");
+        var text = String(value === null || value === undefined ? "" : value)
+            .replace(/_/g, " ")
+            .trim();
+
+        // Capital first letter on every expression. toUpperCase is a no-op on
+        // Bengali and Devanagari, so those labels are left exactly as typed.
+        return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
     }
 
     // A primary emotion may be a compound: masti/romance/sensual. Each term
