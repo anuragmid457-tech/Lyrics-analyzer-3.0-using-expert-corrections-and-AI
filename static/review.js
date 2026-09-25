@@ -1017,7 +1017,8 @@
             transform: "translate(" + CX_MID + "," + CX_MID + ")",
             tabindex: "0",
             role: "button",
-            "aria-label": "This reading. Click for its coordinates."
+            "aria-label": "This reading. Drag it, or use the arrow keys, "
+                + "to place it where you think it belongs."
         });
         point.appendChild(svg("circle", { r: 15, class: "cx-halo", fill: shade }));
         point.appendChild(svg("circle", { r: 7.5, class: "cx-dot", fill: shade }));
@@ -1026,31 +1027,162 @@
         panel.appendChild(plot);
 
         var readout = el("div", "cx-readout");
-        readout.appendChild(el("span", "cx-hint", "Click the point for its coordinates"));
         panel.appendChild(readout);
 
-        function showCoordinates() {
+        // where the reading sits now, which starts as the model's own verdict
+        var here = { valence: valence, arousal: arousal };
+        var moved = false;
+
+        function place() {
+            var px = CX_MID + here.valence * CX_UNIT;
+            var py = CX_MID - here.arousal * CX_UNIT;
+
+            point.setAttribute("transform", "translate(" + px + "," + py + ")");
+
+            guideX.setAttribute("x1", px);
+            guideX.setAttribute("x2", px);
+            guideX.setAttribute("y1", py);
+
+            guideY.setAttribute("y1", py);
+            guideY.setAttribute("y2", py);
+            guideY.setAttribute("x1", px);
+
+            var code = quadrantOf(here.valence, here.arousal);
+            [].forEach.call(plot.querySelectorAll(".cx-quad"), function (rect, index) {
+                rect.classList.toggle("live", quadrants[index].code === code);
+            });
+        }
+
+        function drawReadout() {
             readout.innerHTML = "";
-            var pair = el("span", "cx-pair");
-            pair.appendChild(el("b", null, "(" + valence.toFixed(2)
-                + ", " + arousal.toFixed(2) + ")"));
+
+            var pair = el("span", "cx-pair",
+                "(" + here.valence.toFixed(2) + ", " + here.arousal.toFixed(2) + ")");
             readout.appendChild(pair);
 
             var detail = el("span", "cx-detail");
-            detail.textContent = "valence " + valence.toFixed(2)
-                + " · arousal " + arousal.toFixed(2)
-                + " · " + (QUADRANT_LABELS[quadrantOf(valence, arousal)] || "");
+            detail.textContent = "valence " + here.valence.toFixed(2)
+                + " · arousal " + here.arousal.toFixed(2)
+                + " · " + (QUADRANT_LABELS[quadrantOf(here.valence, here.arousal)] || "");
             readout.appendChild(detail);
 
-            point.classList.add("picked");
+            if (!moved) {
+                readout.appendChild(el("span", "cx-hint",
+                    "Drag the point, or use the arrow keys, to move it."));
+                return;
+            }
+
+            var was = el("span", "cx-detail");
+            was.textContent = "the model said (" + valence.toFixed(2)
+                + ", " + arousal.toFixed(2) + ")";
+            readout.appendChild(was);
+
+            var row = el("div", "cx-actions");
+
+            var save = el("button", "primary cx-save", "Correct the reading to here");
+            save.type = "button";
+            save.addEventListener("click", async function () {
+                if (!(await requireKey())) return;
+                // Hand the editor the moved position. Everything else about
+                // the reading is unchanged, and the drawer still asks who is
+                // correcting it and why, because the reasoning is what teaches.
+                var moved_reading = Object.assign({}, data, {
+                    valence: here.valence,
+                    arousal: here.arousal,
+                    quadrant: quadrantOf(here.valence, here.arousal)
+                });
+                openEditor(moved_reading);
+            });
+
+            var reset = el("button", "secondary cx-reset", "Put it back");
+            reset.type = "button";
+            reset.addEventListener("click", function () {
+                here = { valence: valence, arousal: arousal };
+                moved = false;
+                point.classList.remove("moved");
+                place();
+                drawReadout();
+            });
+
+            row.appendChild(save);
+            row.appendChild(reset);
+            readout.appendChild(row);
         }
 
-        point.addEventListener("click", showCoordinates);
-        point.addEventListener("keydown", function (event) {
-            if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                showCoordinates();
+        // --- dragging ---
+
+        // Screen pixels to drawing units, which is not a plain ratio once the
+        // SVG is scaled to the card's width.
+        function toPlot(event) {
+            var ctm = plot.getScreenCTM();
+            if (!ctm) return null;
+            var seat = plot.createSVGPoint();
+            seat.x = event.clientX;
+            seat.y = event.clientY;
+            return seat.matrixTransform(ctm.inverse());
+        }
+
+        function moveTo(px, py) {
+            var v = (px - CX_MID) / CX_UNIT;
+            var a = (CX_MID - py) / CX_UNIT;
+
+            here.valence = Math.round(Math.max(-1, Math.min(1, v)) * 100) / 100;
+            here.arousal = Math.round(Math.max(-1, Math.min(1, a)) * 100) / 100;
+
+            moved = here.valence !== valence || here.arousal !== arousal;
+            point.classList.toggle("moved", moved);
+            place();
+            drawReadout();
+        }
+
+        var dragging = false;
+
+        point.addEventListener("pointerdown", function (event) {
+            event.preventDefault();
+            dragging = true;
+            point.classList.add("dragging");
+            plot.classList.add("dragging");
+            // the point keeps receiving events even when the pointer runs
+            // outside the drawing
+            if (point.setPointerCapture) point.setPointerCapture(event.pointerId);
+        });
+
+        point.addEventListener("pointermove", function (event) {
+            if (!dragging) return;
+            var at = toPlot(event);
+            if (at) moveTo(at.x, at.y);
+        });
+
+        function endDrag(event) {
+            if (!dragging) return;
+            dragging = false;
+            point.classList.remove("dragging");
+            plot.classList.remove("dragging");
+            if (point.releasePointerCapture && event.pointerId !== undefined) {
+                try { point.releasePointerCapture(event.pointerId); } catch (e) { /* gone */ }
             }
+        }
+
+        point.addEventListener("pointerup", endDrag);
+        point.addEventListener("pointercancel", endDrag);
+
+        // arrow keys for anyone not using a mouse, and for fine adjustment
+        point.addEventListener("keydown", function (event) {
+            var step = event.shiftKey ? 0.01 : 0.05;
+            var dv = 0;
+            var da = 0;
+
+            if (event.key === "ArrowLeft") dv = -step;
+            else if (event.key === "ArrowRight") dv = step;
+            else if (event.key === "ArrowUp") da = step;
+            else if (event.key === "ArrowDown") da = -step;
+            else return;
+
+            event.preventDefault();
+            moveTo(
+                CX_MID + (here.valence + dv) * CX_UNIT,
+                CX_MID - (here.arousal + da) * CX_UNIT
+            );
         });
 
         var drawn = false;
@@ -1067,7 +1199,8 @@
             requestAnimationFrame(function () {
                 requestAnimationFrame(function () {
                     plot.classList.add("ready");
-                    point.setAttribute("transform", "translate(" + x + "," + y + ")");
+                    place();
+                    drawReadout();
                 });
             });
         });

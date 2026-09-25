@@ -2602,7 +2602,7 @@
 
 .cx-point{
 
-    cursor:pointer;
+    cursor:grab;
 
     transition:transform .65s cubic-bezier(.22,1.1,.36,1);
 }
@@ -2684,6 +2684,78 @@
     font-size:11px;
 }
 
+.cx-detail{
+
+    display:block;
+
+    margin-top:4px;
+
+    color:var(--muted);
+
+    font-size:11px;
+
+    line-height:1.5;
+}
+
+/* --- dragging the reading --- */
+
+.cx-point.dragging{
+    cursor:grabbing;
+}
+
+/* no slide animation while a finger or mouse is holding it */
+
+.circumplex-svg.dragging .cx-point{
+    transition:none;
+}
+
+.circumplex-svg.dragging .cx-guide{
+    transition:none;
+}
+
+.cx-point:focus-visible .cx-dot{
+
+    stroke:var(--gold);
+
+    stroke-width:2.5;
+}
+
+.cx-point.moved .cx-dot{
+
+    stroke:var(--gold);
+
+    stroke-width:2.5;
+}
+
+.cx-actions{
+
+    display:flex;
+
+    gap:9px;
+
+    margin-top:12px;
+
+    flex-wrap:wrap;
+}
+
+.cx-save{
+
+    flex:1;
+
+    min-width:180px;
+
+    padding:10px 16px;
+
+    font-size:12px;
+}
+
+.cx-reset{
+
+    padding:10px 14px;
+
+    font-size:12px;
+}
+
 .cx-pair{
 
     display:block;
@@ -2697,19 +2769,6 @@
     color:var(--gold);
 
     font-variant-numeric:tabular-nums;
-}
-
-.cx-detail{
-
-    display:block;
-
-    margin-top:4px;
-
-    color:var(--muted);
-
-    font-size:11px;
-
-    line-height:1.5;
 }
 
 /* =========================
@@ -2779,22 +2838,5 @@
 
         gap:12px;
     }
-
-    .title-slash{
-
-    color:var(--muted);
-
-    padding:0 6px;
-
-    font-size:.62em;
-
-    vertical-align:middle;
-}
-
-.term-word{
-    font-weight:600;
-}
-
-
 
 }
