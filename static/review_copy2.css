@@ -1714,6 +1714,1377 @@
 }
 
 /* =========================
+   CORRECTIONS BY EXPERT
+   Reuses the tick rows from the Follow menu so both read the same way.
+========================= */
+
+.log-filter{
+    margin-bottom:6px;
+}
+
+.log-filter-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+
+    gap:2px 6px;
+}
+
+.log-filter-count{
+
+    margin:12px 0 6px;
+
+    padding:9px 12px;
+
+    border-left:2px solid var(--gold);
+
+    background:rgba(216,173,85,.05);
+
+    border-radius:0 8px 8px 0;
+
+    color:var(--soft);
+
+    font-size:12px;
+
+    line-height:1.5;
+}
+
+.log-row[hidden]{
+    display:none;
+}
+
+/* =========================
+   EDITOR PASSWORD
+   Sits above everything, including an open drawer.
+========================= */
+
+.lock-scrim{
+
+    position:fixed;
+
+    inset:0;
+
+    z-index:60;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:20px;
+
+    background:rgba(4,6,10,.78);
+
+    backdrop-filter:blur(3px);
+}
+
+.lock-card{
+
+    width:min(400px,100%);
+
+    padding:24px 24px 20px;
+
+    background:var(--surface);
+
+    border:1px solid var(--line);
+
+    border-radius:16px;
+
+    box-shadow:
+        0 30px 80px rgba(0,0,0,.65),
+        inset 0 1px 0 rgba(255,255,255,.04);
+
+    animation:picker-in .16s ease;
+}
+
+.lock-card h3{
+
+    font-family:Newsreader,Georgia,serif;
+
+    font-size:25px;
+
+    font-weight:400;
+
+    margin:8px 0 6px;
+}
+
+.lock-blurb{
+
+    color:var(--muted);
+
+    font-size:12px;
+
+    line-height:1.55;
+
+    margin:0 0 18px;
+}
+
+.lock-input{
+
+    width:100%;
+
+    padding:12px 14px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.022),transparent),
+        #0b0e14;
+
+    border:1px solid var(--line);
+
+    border-radius:11px;
+
+    color:var(--text);
+
+    font-size:14px;
+
+    letter-spacing:.12em;
+}
+
+.lock-input:focus{
+
+    outline:none;
+
+    border-color:rgba(216,173,85,.65);
+
+    box-shadow:
+        0 0 0 3px rgba(216,173,85,.08),
+        0 0 22px rgba(216,173,85,.07);
+}
+
+.lock-error{
+
+    margin-top:11px;
+
+    border-left:2px solid var(--red);
+
+    padding-left:11px;
+
+    color:#e7b8b5;
+
+    font-size:12px;
+
+    line-height:1.5;
+}
+
+.lock-error[hidden]{
+    display:none;
+}
+
+.lock-actions{
+
+    display:flex;
+
+    gap:10px;
+
+    margin-top:18px;
+}
+
+.lock-actions .primary{
+    flex:1;
+}
+
+/* =========================
+   INDEX AND TERM BOXES
+   The big number is the overall expression index. Each term of the primary
+   emotion sits in its own box, built like the rows in the expert menus, and
+   clicking one rolls its index down from underneath.
+========================= */
+
+.index-row{
+
+    display:grid;
+
+    grid-template-columns:auto minmax(0,1fr);
+
+    gap:14px;
+
+    align-items:start;
+
+    margin:27px 0 24px;
+}
+
+.index-card{
+
+    padding:15px 17px 14px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.022),transparent),
+        var(--surface2);
+
+    border:1px solid var(--line);
+
+    border-radius:12px;
+
+    min-width:104px;
+}
+
+.index-value{
+
+    font-family:Newsreader,Georgia,serif;
+
+    font-size:46px;
+
+    line-height:.88;
+
+    font-variant-numeric:tabular-nums;
+}
+
+.index-label{
+
+    margin-top:9px;
+
+    color:var(--muted);
+
+    font-size:9.5px;
+
+    font-weight:600;
+
+    letter-spacing:.14em;
+
+    text-transform:uppercase;
+
+    line-height:1.5;
+}
+
+.index-terms{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:7px;
+
+    padding-top:3px;
+}
+
+.term-box{
+    position:relative;
+}
+
+.term-open{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:9px;
+
+    padding:11px 14px;
+
+    border:1px solid var(--line);
+
+    border-radius:10px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.028),rgba(0,0,0,.2));
+
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
+
+    color:var(--soft);
+
+    font-size:11px;
+
+    font-weight:500;
+
+    letter-spacing:.09em;
+
+    text-transform:uppercase;
+
+    transition:.18s;
+}
+
+.term-open:hover{
+
+    border-color:#596273;
+
+    color:var(--text);
+}
+
+.term-box.open .term-open{
+
+    border-color:rgba(216,173,85,.45);
+
+    color:var(--gold);
+
+    box-shadow:
+        inset 0 1px 2px rgba(0,0,0,.35),
+        0 0 18px rgba(216,173,85,.09);
+}
+
+.term-open .dot{
+
+    width:7px;
+
+    height:7px;
+
+    border-radius:50%;
+
+    flex:none;
+}
+
+.term-open .caret{
+
+    color:var(--muted);
+
+    font-size:9px;
+
+    transition:transform .22s ease,color .2s;
+}
+
+.term-box.open .term-open .caret{
+
+    transform:rotate(180deg);
+
+    color:var(--gold);
+}
+
+/* the panel that rolls down from under the box */
+
+.term-pop{
+
+    position:absolute;
+
+    left:0;
+
+    top:calc(100% + 7px);
+
+    z-index:25;
+
+    min-width:210px;
+
+    padding:13px 15px 14px;
+
+    background:var(--surface3);
+
+    border:1px solid var(--line);
+
+    border-radius:12px;
+
+    box-shadow:
+        0 24px 58px rgba(0,0,0,.6),
+        inset 0 1px 0 rgba(255,255,255,.04);
+
+    animation:term-roll .18s ease;
+}
+
+.term-pop[hidden]{
+    display:none;
+}
+
+@keyframes term-roll{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(-8px);
+    }
+}
+
+.term-pop-label{
+
+    color:var(--muted);
+
+    font-size:9.5px;
+
+    font-weight:600;
+
+    letter-spacing:.14em;
+
+    text-transform:uppercase;
+
+    line-height:1.5;
+}
+
+.term-pop-value{
+
+    font-family:Newsreader,Georgia,serif;
+
+    font-size:34px;
+
+    line-height:1;
+
+    margin-top:7px;
+
+    font-variant-numeric:tabular-nums;
+}
+
+.term-pop-bar{
+
+    height:5px;
+
+    margin-top:11px;
+
+    border-radius:99px;
+
+    background:#202631;
+
+    overflow:hidden;
+}
+
+.term-pop-fill{
+
+    display:block;
+
+    height:100%;
+
+    border-radius:99px;
+}
+
+.term-fields{
+    display:block;
+}
+
+/* =========================
+   EXPRESSION BOXES IN THE EDITOR
+   One box per expression, plus the add flow. Built from the same parts as
+   the expert menus so the editor reads the same way.
+========================= */
+
+.term-edit{
+
+    position:relative;
+
+    padding:11px;
+
+    border:1px solid var(--line);
+
+    border-radius:11px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.022),transparent),
+        #0b0e14;
+}
+
+.term-edit-list{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:7px;
+}
+
+.term-edit-box{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    padding:8px 9px 8px 12px;
+
+    border:1px solid var(--line);
+
+    border-radius:999px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.2));
+
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
+
+    color:var(--soft);
+
+    font-size:12px;
+}
+
+.term-edit-name{
+    white-space:nowrap;
+}
+
+.term-edit-input{
+
+    width:130px;
+
+    padding:2px 7px;
+
+    border:1px solid rgba(216,173,85,.6);
+
+    border-radius:7px;
+
+    background:#0b0e14;
+
+    color:var(--text);
+
+    font-size:12px;
+}
+
+.term-edit-input:focus{
+
+    outline:none;
+
+    box-shadow:0 0 0 3px rgba(216,173,85,.09);
+}
+
+.term-edit-pen,
+.term-edit-x{
+
+    background:none;
+
+    border:0;
+
+    padding:0 2px;
+
+    color:var(--muted);
+
+    font-size:11px;
+
+    line-height:1;
+
+    transition:.16s;
+}
+
+.term-edit-pen:hover{
+    color:var(--gold);
+}
+
+.term-edit-x:hover{
+    color:var(--red);
+}
+
+.term-edit-empty{
+
+    color:var(--muted);
+
+    font-size:12px;
+}
+
+.term-add{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    margin-top:11px;
+
+    padding:9px 14px;
+
+    border:1px dashed var(--line);
+
+    border-radius:10px;
+
+    background:none;
+
+    color:var(--muted);
+
+    font-size:9.5px;
+
+    font-weight:600;
+
+    letter-spacing:.16em;
+
+    text-transform:uppercase;
+
+    transition:.18s;
+}
+
+.term-add:hover{
+
+    border-color:rgba(216,173,85,.45);
+
+    color:var(--gold);
+}
+
+.term-add-plus{
+
+    font-size:13px;
+
+    line-height:1;
+}
+
+.term-add-menu{
+
+    position:absolute;
+
+    left:11px;
+
+    right:11px;
+
+    top:calc(100% - 4px);
+
+    z-index:26;
+
+    padding:6px;
+
+    background:var(--surface3);
+
+    border:1px solid var(--line);
+
+    border-radius:13px;
+
+    box-shadow:
+        0 24px 58px rgba(0,0,0,.6),
+        inset 0 1px 0 rgba(255,255,255,.04);
+
+    animation:term-roll .18s ease;
+}
+
+.term-add-menu[hidden],
+.term-add-options[hidden],
+.term-add-typed[hidden]{
+    display:none;
+}
+
+.term-add-menu .mode-row + .mode-row{
+    margin-top:4px;
+}
+
+.term-add-options{
+
+    max-height:210px;
+
+    overflow-y:auto;
+
+    margin-top:6px;
+
+    padding-top:6px;
+
+    border-top:1px solid var(--line);
+}
+
+.term-add-options::-webkit-scrollbar{
+    width:8px;
+}
+
+.term-add-options::-webkit-scrollbar-thumb{
+
+    background:var(--line);
+
+    border-radius:99px;
+}
+
+.term-add-typed{
+
+    display:flex;
+
+    gap:7px;
+
+    margin-top:6px;
+
+    padding-top:6px;
+
+    border-top:1px solid var(--line);
+}
+
+.term-add-typed .free-input{
+    padding:10px 12px;
+}
+
+.term-add-ok{
+
+    flex:none;
+
+    padding:0 15px;
+
+    border:1px solid rgba(216,173,85,.45);
+
+    border-radius:11px;
+
+    background:linear-gradient(180deg,rgba(216,173,85,.16),rgba(216,173,85,.05));
+
+    color:var(--gold);
+
+    font-size:10px;
+
+    font-weight:600;
+
+    letter-spacing:.14em;
+
+    text-transform:uppercase;
+}
+
+.term-add-ok:hover{
+    border-color:rgba(216,173,85,.8);
+}
+
+.term-status{
+
+    color:var(--gold);
+
+    font-size:10.5px;
+
+    letter-spacing:.02em;
+}
+
+.term-status[hidden]{
+    display:none;
+}
+
+.slider-row input[type=range]:disabled{
+
+    opacity:.45;
+
+    cursor:progress;
+}
+
+/* --- model picker --- */
+
+.model-filter .filter-trigger{
+    min-width:186px;
+}
+
+.model-option{
+    align-items:flex-start;
+}
+
+.model-text{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:3px;
+}
+
+.model-name{
+    line-height:1.3;
+}
+
+.model-note{
+
+    color:var(--muted);
+
+    font-size:10.5px;
+
+    line-height:1.45;
+}
+
+.model-option.on .model-note{
+    color:var(--soft);
+}
+
+/* =========================
+   VALENCE AND AROUSAL MAP
+========================= */
+
+.circumplex{
+    margin-top:10px;
+}
+
+.circumplex-toggle{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:10px;
+
+    width:100%;
+}
+
+.circumplex-toggle .picker-caret{
+    transition:transform .22s ease,color .2s;
+}
+
+.circumplex-toggle.open{
+
+    color:var(--gold);
+
+    border-color:rgba(216,173,85,.4);
+}
+
+.circumplex-toggle.open .picker-caret{
+
+    transform:rotate(180deg);
+
+    color:var(--gold);
+}
+
+.circumplex-panel{
+
+    margin-top:11px;
+
+    padding:14px 14px 12px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.02),transparent),
+        var(--surface2);
+
+    border:1px solid var(--line);
+
+    border-radius:13px;
+
+    animation:term-roll .22s ease;
+}
+
+.circumplex-panel[hidden]{
+    display:none;
+}
+
+.circumplex-svg{
+
+    display:block;
+
+    width:100%;
+
+    height:auto;
+
+    overflow:visible;
+}
+
+/* --- the plot --- */
+
+.cx-quad{
+    transition:fill .3s;
+}
+
+.circumplex-svg.ready .cx-quad.live{
+    filter:brightness(1.9);
+}
+
+.cx-quad-label{
+
+    fill:var(--muted);
+
+    font-family:"DM Sans",system-ui,sans-serif;
+
+    font-size:8.5px;
+
+    letter-spacing:.09em;
+
+    text-transform:uppercase;
+}
+
+.cx-grid{
+
+    stroke:rgba(137,146,161,.13);
+
+    stroke-width:1;
+
+    stroke-dasharray:3 5;
+}
+
+.cx-axis{
+
+    stroke:rgba(137,146,161,.4);
+
+    stroke-width:1;
+}
+
+.cx-axis-label{
+
+    fill:var(--muted);
+
+    font-family:"DM Sans",system-ui,sans-serif;
+
+    font-size:8.5px;
+
+    letter-spacing:.06em;
+}
+
+/* --- guides from the point to each axis --- */
+
+.cx-guide{
+
+    stroke:rgba(216,173,85,.45);
+
+    stroke-width:1;
+
+    stroke-dasharray:3 4;
+
+    opacity:0;
+
+    transition:opacity .35s ease .45s;
+}
+
+.circumplex-svg.ready .cx-guide{
+    opacity:1;
+}
+
+/* --- the reading --- */
+
+.cx-point{
+
+    cursor:grab;
+
+    transition:transform .65s cubic-bezier(.22,1.1,.36,1);
+}
+
+.cx-point:focus{
+    outline:none;
+}
+
+.cx-dot{
+
+    stroke:#080a0f;
+
+    stroke-width:2;
+}
+
+.cx-halo{
+
+    opacity:.2;
+
+    transform-box:fill-box;
+
+    transform-origin:center;
+}
+
+.circumplex-svg.ready .cx-halo{
+    animation:cx-pulse 2.4s ease-out infinite;
+}
+
+.cx-point:hover .cx-halo,
+.cx-point:focus-visible .cx-halo{
+    opacity:.34;
+}
+
+.cx-point.picked .cx-dot{
+    stroke:var(--gold);
+}
+
+@keyframes cx-pulse{
+
+    0%{
+
+        transform:scale(.7);
+
+        opacity:.34;
+    }
+
+    70%{
+
+        transform:scale(1.5);
+
+        opacity:0;
+    }
+
+    100%{
+
+        transform:scale(1.5);
+
+        opacity:0;
+    }
+}
+
+/* --- the readout below --- */
+
+.cx-readout{
+
+    margin-top:10px;
+
+    padding-top:10px;
+
+    border-top:1px solid var(--line);
+
+    min-height:40px;
+}
+
+.cx-hint{
+
+    color:var(--muted);
+
+    font-size:11px;
+}
+
+.cx-detail{
+
+    display:block;
+
+    margin-top:4px;
+
+    color:var(--muted);
+
+    font-size:11px;
+
+    line-height:1.5;
+}
+
+/* --- dragging the reading --- */
+
+.cx-point.dragging{
+    cursor:grabbing;
+}
+
+/* no slide animation while a finger or mouse is holding it */
+
+.circumplex-svg.dragging .cx-point{
+    transition:none;
+}
+
+.circumplex-svg.dragging .cx-guide{
+    transition:none;
+}
+
+.cx-point:focus-visible .cx-dot{
+
+    stroke:var(--gold);
+
+    stroke-width:2.5;
+}
+
+.cx-point.moved .cx-dot{
+
+    stroke:var(--gold);
+
+    stroke-width:2.5;
+}
+
+.cx-actions{
+
+    display:flex;
+
+    gap:9px;
+
+    margin-top:12px;
+
+    flex-wrap:wrap;
+}
+
+.cx-save{
+
+    flex:1;
+
+    min-width:180px;
+
+    padding:10px 16px;
+
+    font-size:12px;
+}
+
+.cx-reset{
+
+    padding:10px 14px;
+
+    font-size:12px;
+}
+
+.cx-pair{
+
+    display:block;
+
+    font-family:Newsreader,Georgia,serif;
+
+    font-size:26px;
+
+    line-height:1.1;
+
+    color:var(--gold);
+
+    font-variant-numeric:tabular-nums;
+}
+
+/* =========================
+   THE SHAPE OF THE SONG
+   The editable version of the Movement chart.
+========================= */
+
+.shape-toggle{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:10px;
+
+    margin-top:20px;
+
+    width:100%;
+
+    max-width:300px;
+}
+
+.shape-toggle[hidden]{
+    display:none;
+}
+
+.shape-toggle .picker-caret{
+    transition:transform .22s ease,color .2s;
+}
+
+.shape-toggle.open{
+
+    color:var(--gold);
+
+    border-color:rgba(216,173,85,.4);
+}
+
+.shape-toggle.open .picker-caret{
+
+    transform:rotate(180deg);
+
+    color:var(--gold);
+}
+
+.shape-host{
+
+    margin-top:14px;
+}
+
+.shape-host[hidden]{
+    display:none;
+}
+
+.shape{
+
+    padding:16px 16px 14px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.02),transparent),
+        var(--surface2);
+
+    border:1px solid var(--line);
+
+    border-radius:14px;
+
+    animation:term-roll .22s ease;
+}
+
+.shape-head{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:14px;
+
+    flex-wrap:wrap;
+
+    margin-bottom:12px;
+}
+
+.shape-title{
+
+    color:var(--muted);
+
+    font-size:9.5px;
+
+    font-weight:600;
+
+    letter-spacing:.16em;
+
+    text-transform:uppercase;
+}
+
+.shape-legend{
+
+    display:flex;
+
+    gap:14px;
+}
+
+.shape-key{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:7px;
+
+    color:var(--muted);
+
+    font-size:11px;
+}
+
+.shape-dot{
+
+    width:8px;
+
+    height:8px;
+
+    border-radius:50%;
+}
+
+.shape-scroll{
+
+    overflow-x:auto;
+
+    overflow-y:hidden;
+
+    padding-bottom:4px;
+}
+
+.shape-scroll::-webkit-scrollbar{
+    height:8px;
+}
+
+.shape-scroll::-webkit-scrollbar-thumb{
+
+    background:var(--line);
+
+    border-radius:99px;
+}
+
+.shape-svg{
+
+    display:block;
+
+    height:auto;
+
+    max-width:none;
+}
+
+.shape-grid{
+
+    stroke:rgba(137,146,161,.12);
+
+    stroke-width:1;
+
+    stroke-dasharray:3 5;
+}
+
+.shape-axis{
+
+    stroke:rgba(137,146,161,.4);
+
+    stroke-width:1;
+}
+
+.shape-column{
+
+    stroke:rgba(137,146,161,.09);
+
+    stroke-width:1;
+}
+
+.shape-tick,
+.shape-label{
+
+    fill:var(--muted);
+
+    font-family:"DM Sans",system-ui,sans-serif;
+
+    font-size:9px;
+}
+
+.shape-line{
+
+    stroke-width:2;
+
+    stroke-linejoin:round;
+
+    stroke-linecap:round;
+
+    opacity:.85;
+}
+
+/* --- the draggable points --- */
+
+.shape-point{
+    cursor:grab;
+}
+
+.shape-point.dragging{
+    cursor:grabbing;
+}
+
+.shape-grab{
+
+    fill:transparent;
+}
+
+.shape-dot-in{
+
+    stroke:#080a0f;
+
+    stroke-width:2;
+
+    transition:r .15s;
+}
+
+.shape-point:hover .shape-dot-in,
+.shape-point:focus-visible .shape-dot-in{
+
+    stroke:var(--gold);
+
+    stroke-width:2.5;
+}
+
+.shape-point:focus{
+    outline:none;
+}
+
+.shape-svg.dragging .shape-line{
+    transition:none;
+}
+
+/* --- the line under it --- */
+
+.shape-readout{
+
+    margin-top:12px;
+
+    padding-top:11px;
+
+    border-top:1px solid var(--line);
+}
+
+.shape-hint{
+
+    color:var(--muted);
+
+    font-size:11.5px;
+}
+
+.shape-count{
+
+    display:block;
+
+    color:var(--gold);
+
+    font-size:12px;
+
+    font-weight:600;
+
+    letter-spacing:.04em;
+}
+
+.shape-detail{
+
+    display:block;
+
+    margin-top:5px;
+
+    color:var(--muted);
+
+    font-size:11px;
+
+    line-height:1.5;
+
+    overflow-wrap:anywhere;
+}
+
+.shape-actions{
+
+    display:flex;
+
+    gap:9px;
+
+    margin-top:12px;
+
+    flex-wrap:wrap;
+}
+
+.shape-save{
+
+    flex:1;
+
+    min-width:190px;
+
+    padding:10px 16px;
+
+    font-size:12px;
+}
+
+.shape-reset{
+
+    padding:10px 14px;
+
+    font-size:12px;
+}
+
+/* =========================
    MOTION AND MOBILE
 ========================= */
 
@@ -1729,8 +3100,17 @@
     }
 
     .picker-menu,
-    .filter-menu{
+    .filter-menu,
+    .circumplex-panel{
         animation:none;
+    }
+
+    .circumplex-svg.ready .cx-halo{
+        animation:none;
+    }
+
+    .cx-point{
+        transition:none;
     }
 
 }
@@ -1763,6 +3143,13 @@
         width:100%;
 
         max-width:none;
+    }
+
+    .index-row{
+
+        grid-template-columns:1fr;
+
+        gap:12px;
     }
 
 }

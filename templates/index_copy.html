@@ -16,25 +16,18 @@
 <style>
 
 :root{
-    --bg:#06090c;
-    --surface:#0d1317;
-    --surface2:#121a1f;
-    --surface3:#18232a;
+    --bg:#080a0f;
+    --surface:#10141b;
+    --surface2:#151a22;
+    --surface3:#1c222c;
 
-    --line:#23323a;
+    --line:#272e39;
 
-    /* cream, so nothing on the page is pure white */
-    --text:#f2ebdc;
-    --soft:#cfd3c9;
-    --muted:#8c998f;
+    --text:#eeeae2;
+    --soft:#c6cad1;
+    --muted:#8992a1;
 
-    /* the accent: one bright green, used everywhere gold used to be */
-    --gold:#3ef2a3;
-    --green:#3ef2a3;
-    --green-deep:#18c47c;
-    --glow:rgba(62,242,163,.55);
-    --glow-soft:rgba(62,242,163,.12);
-
+    --gold:#d8ad55;
     --teal:#69a99e;
     --violet:#8c81c8;
     --blue:#668fc0;
@@ -58,17 +51,15 @@ body{
     background:
         radial-gradient(
             circle at 80% 5%,
-            rgba(62,242,163,.09),
-            transparent 32rem
+            rgba(216,173,85,.08),
+            transparent 30rem
         ),
         radial-gradient(
             circle at 5% 40%,
-            rgba(24,196,124,.06),
-            transparent 26rem
+            rgba(105,169,158,.05),
+            transparent 25rem
         ),
         var(--bg);
-
-    background-attachment:fixed;
 
     color:var(--text);
 
@@ -358,10 +349,10 @@ textarea:focus,
 input:focus,
 select:focus{
 
-    border-color:rgba(62,242,163,.7);
+    border-color:rgba(216,173,85,.7);
 
     box-shadow:
-        0 0 0 3px rgba(62,242,163,.08);
+        0 0 0 3px rgba(216,173,85,.08);
 
 }
 
@@ -472,14 +463,9 @@ textarea{
 
 .primary{
 
-    position:relative;
+    background:var(--gold);
 
-    overflow:hidden;
-
-    background:
-        linear-gradient(135deg,var(--green),var(--green-deep));
-
-    color:#04120c;
+    color:#171208;
 
     border:0;
 
@@ -488,69 +474,10 @@ textarea{
     padding:12px 20px;
 
     font-weight:600;
-
-    letter-spacing:.01em;
-
-    box-shadow:
-        0 0 0 1px rgba(62,242,163,.35),
-        0 6px 26px rgba(62,242,163,.22);
-
-    transition:.22s;
-}
-
-/* a light passes across it, the way an instrument sweeps */
-
-.primary::after{
-
-    content:"";
-
-    position:absolute;
-
-    inset:0;
-
-    background:
-        linear-gradient(
-            110deg,
-            transparent 32%,
-            rgba(255,255,255,.55) 50%,
-            transparent 68%
-        );
-
-    transform:translateX(-120%);
-
-    animation:sweep 4.5s ease-in-out infinite;
-}
-
-@keyframes sweep{
-
-    0%,70%{
-        transform:translateX(-120%);
-    }
-
-    100%{
-        transform:translateX(120%);
-    }
-
 }
 
 .primary:hover{
-
-    transform:translateY(-1px);
-
-    box-shadow:
-        0 0 0 1px rgba(62,242,163,.6),
-        0 10px 34px rgba(62,242,163,.32);
-}
-
-.primary:active{
-    transform:translateY(0);
-}
-
-.primary:disabled{
-
-    opacity:.75;
-
-    transform:none;
+    filter:brightness(1.08);
 }
 
 .secondary{
@@ -588,8 +515,6 @@ textarea{
 ========================= */
 
 .result-card{
-
-    position:relative;
 
     min-height:620px;
 
@@ -631,8 +556,6 @@ textarea{
     position:relative;
 
     margin-bottom:30px;
-
-    transition:.4s;
 }
 
 .orbit::before{
@@ -657,7 +580,7 @@ textarea{
     width:7px;
     height:7px;
 
-    background:var(--green);
+    background:var(--gold);
 
     border-radius:50%;
 
@@ -666,114 +589,8 @@ textarea{
 
     transform:translate(-50%,-50%);
 
-    box-shadow:0 0 40px var(--glow);
-}
-
-/* --- reading --- */
-
-.result-card.thinking .orbit{
-
-    border-color:rgba(62,242,163,.16);
-
-    border-top-color:var(--green);
-
-    border-right-color:rgba(62,242,163,.5);
-
     box-shadow:
-        0 0 70px rgba(62,242,163,.16),
-        inset 0 0 50px rgba(62,242,163,.05);
-
-    animation:orbit-spin 1.5s cubic-bezier(.6,.1,.4,.9) infinite;
-}
-
-.result-card.thinking .orbit::before{
-
-    border-color:rgba(62,242,163,.12);
-
-    border-bottom-color:var(--green-deep);
-
-    animation:orbit-spin 2.4s linear infinite reverse;
-}
-
-.result-card.thinking .orbit::after{
-
-    animation:core-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes orbit-spin{
-
-    to{
-        transform:rotate(360deg);
-    }
-
-}
-
-@keyframes core-pulse{
-
-    0%,100%{
-
-        transform:translate(-50%,-50%) scale(1);
-
-        box-shadow:0 0 40px var(--glow);
-    }
-
-    50%{
-
-        transform:translate(-50%,-50%) scale(2.2);
-
-        box-shadow:0 0 70px var(--glow);
-    }
-
-}
-
-/* the sweep of light that crosses the card while it waits */
-
-.result-card.thinking::before{
-
-    content:"";
-
-    position:absolute;
-
-    left:0;
-    right:0;
-
-    height:1px;
-
-    top:0;
-
-    background:
-        linear-gradient(
-            90deg,
-            transparent,
-            var(--green),
-            transparent
-        );
-
-    animation:scan 2.6s ease-in-out infinite;
-
-    z-index:2;
-}
-
-@keyframes scan{
-
-    0%{
-        top:0;
-        opacity:0;
-    }
-
-    12%{
-        opacity:.85;
-    }
-
-    88%{
-        opacity:.85;
-    }
-
-    100%{
-        top:100%;
-        opacity:0;
-    }
-
+        0 0 40px rgba(216,173,85,.4);
 }
 
 .empty-result h3{
@@ -804,104 +621,6 @@ textarea{
 
 .result.show{
     display:block;
-}
-
-/* Every block of the reading rises in turn, so the card assembles itself
-   rather than appearing all at once. The delays are short on purpose: this
-   should read as quick, not as a slideshow. */
-
-.result.show > *{
-
-    animation:rise .52s cubic-bezier(.16,.84,.3,1) both;
-}
-
-@keyframes rise{
-
-    from{
-
-        opacity:0;
-
-        transform:translateY(16px);
-
-        filter:blur(3px);
-    }
-
-    to{
-
-        opacity:1;
-
-        transform:none;
-
-        filter:blur(0);
-    }
-
-}
-
-.result.show > *:nth-child(1){ animation-delay:.02s; }
-.result.show > *:nth-child(2){ animation-delay:.07s; }
-.result.show > *:nth-child(3){ animation-delay:.12s; }
-.result.show > *:nth-child(4){ animation-delay:.17s; }
-.result.show > *:nth-child(5){ animation-delay:.22s; }
-.result.show > *:nth-child(6){ animation-delay:.27s; }
-.result.show > *:nth-child(7){ animation-delay:.32s; }
-.result.show > *:nth-child(8){ animation-delay:.37s; }
-.result.show > *:nth-child(9){ animation-delay:.42s; }
-.result.show > *:nth-child(10){ animation-delay:.47s; }
-.result.show > *:nth-child(n+11){ animation-delay:.52s; }
-
-/* the title writes itself in */
-
-.result.show .result-title span{
-
-    animation:letter-in .6s cubic-bezier(.16,.84,.3,1) both;
-
-    animation-delay:.18s;
-
-    display:inline-block;
-}
-
-@keyframes letter-in{
-
-    from{
-
-        opacity:0;
-
-        transform:translateY(8px) scale(.96);
-    }
-
-    to{
-
-        opacity:1;
-
-        transform:none;
-    }
-
-}
-
-/* the bars fill from nothing every time a reading lands */
-
-.result.show .fill{
-
-    animation:fill-in .9s cubic-bezier(.16,.84,.3,1) both;
-
-    animation-delay:.35s;
-}
-
-@keyframes fill-in{
-
-    from{
-        transform:scaleX(0);
-    }
-
-    to{
-        transform:scaleX(1);
-    }
-
-}
-
-.fill{
-
-    transform-origin:left center;
 }
 
 .result-label{
@@ -976,7 +695,7 @@ textarea{
 
     color:var(--gold);
 
-    border-color:rgba(62,242,163,.4);
+    border-color:rgba(216,173,85,.4);
 }
 
 /* =========================
@@ -1261,7 +980,7 @@ pre{
 
     color:var(--gold);
 
-    border-color:rgba(62,242,163,.4);
+    border-color:rgba(216,173,85,.4);
 }
 
 .graph-tab:focus-visible{
@@ -1432,9 +1151,9 @@ pre{
     width:12px;
     height:12px;
 
-    border:2px solid rgba(4,18,12,.25);
+    border:2px solid rgba(23,18,8,.25);
 
-    border-top-color:#04120c;
+    border-top-color:#171208;
 
     border-radius:50%;
 
@@ -1449,182 +1168,6 @@ pre{
 
     to{
         transform:rotate(360deg);
-    }
-
-}
-
-/* =========================
-   MECHANISED DETAIL
-========================= */
-
-/* the mark in the corner turns slowly, like something idling */
-
-.logo-mark{
-
-    animation:orbit-spin 14s linear infinite;
-}
-
-.logo-mark::after{
-
-    animation:core-pulse 3.2s ease-in-out infinite;
-}
-
-.logo{
-
-    background:linear-gradient(120deg,var(--text),var(--green));
-
-    -webkit-background-clip:text;
-
-    background-clip:text;
-
-    -webkit-text-fill-color:transparent;
-}
-
-/* the accent word in the headline holds a faint glow */
-
-.hero h1 span{
-
-    color:var(--green);
-
-    text-shadow:0 0 44px rgba(62,242,163,.28);
-}
-
-.eyebrow{
-
-    position:relative;
-
-    padding-left:16px;
-}
-
-.eyebrow::before{
-
-    content:"";
-
-    position:absolute;
-
-    left:0;
-
-    top:50%;
-
-    width:7px;
-    height:7px;
-
-    margin-top:-3.5px;
-
-    border-radius:50%;
-
-    background:var(--green);
-
-    box-shadow:0 0 12px var(--glow);
-
-    animation:core-pulse 2.6s ease-in-out infinite;
-}
-
-/* cards lift very slightly under the pointer */
-
-.card{
-
-    transition:border-color .25s,box-shadow .25s,transform .25s;
-}
-
-.card:hover{
-
-    border-color:#2f4a41;
-}
-
-.tradition-card{
-
-    transition:.25s;
-}
-
-.tradition-card:hover{
-
-    border-color:rgba(62,242,163,.35);
-
-    transform:translateY(-3px);
-
-    box-shadow:0 14px 40px rgba(62,242,163,.07);
-}
-
-.tag{
-
-    transition:.2s;
-}
-
-.tag:hover{
-
-    border-color:rgba(62,242,163,.4);
-
-    color:var(--text);
-}
-
-/* fields answer when focused */
-
-textarea:focus,
-input:focus,
-select:focus{
-
-    border-color:rgba(62,242,163,.75);
-
-    box-shadow:
-        0 0 0 3px rgba(62,242,163,.1),
-        0 0 26px rgba(62,242,163,.08);
-}
-
-.secondary{
-
-    transition:.2s;
-}
-
-.secondary:hover{
-
-    border-color:rgba(62,242,163,.45);
-
-    color:var(--text);
-
-    box-shadow:0 0 22px rgba(62,242,163,.07);
-}
-
-.graph-tab.on{
-
-    box-shadow:0 0 20px rgba(62,242,163,.09);
-}
-
-/* the section numbers read like panel markings */
-
-.section-number{
-
-    color:var(--green);
-
-    opacity:.75;
-}
-
-.result-label{
-
-    position:relative;
-}
-
-/* the whole page fades up on load */
-
-.shell{
-
-    animation:page-in .7s cubic-bezier(.16,.84,.3,1) both;
-}
-
-@keyframes page-in{
-
-    from{
-
-        opacity:0;
-
-        transform:translateY(10px);
-    }
-
-    to{
-
-        opacity:1;
-
-        transform:none;
     }
 
 }
@@ -2519,7 +2062,7 @@ const COLORS = {
 
     love:"#f2a7bd",
 
-    joy:"var(--green)",
+    joy:"#d8ad55",
 
     devotion:"#8c81c8",
 
@@ -2538,7 +2081,7 @@ const COLORS = {
 
 const QUADRANT_COLORS = {
 
-    Q1:"var(--green)",
+    Q1:"#d8ad55",
 
     Q2:"#c86c69",
 
@@ -2620,7 +2163,7 @@ function shadeOf(term, fallback){
         String(term ?? "")
             .toLowerCase()
             .replace(/\s+/g,"_")
-    ] || fallback || "var(--green)";
+    ] || fallback || "#d8ad55";
 
 }
 
@@ -2744,30 +2287,6 @@ function setLoading(active){
 
         button.innerHTML =
             "Read the expression →";
-
-    }
-
-
-    /* the result panel turns its ring while the model reads */
-
-    const card =
-        document.querySelector(".result-card");
-
-
-    if(card)
-        card.classList.toggle("thinking", active);
-
-
-    const heading =
-        document.querySelector("#empty h3");
-
-
-    if(heading){
-
-        heading.textContent =
-            active
-                ? "Reading the expression…"
-                : "Your expression map will appear here.";
 
     }
 
