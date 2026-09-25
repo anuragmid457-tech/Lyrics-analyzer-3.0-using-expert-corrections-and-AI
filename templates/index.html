@@ -1665,6 +1665,83 @@ pre{
 }
 
 /* =========================
+   SCROLLBARS
+
+   The browser's own bar is white on Windows, which cuts straight through a
+   dark page. These are drawn to match the panels instead, and turn green
+   under the pointer like everything else here.
+========================= */
+
+*{
+
+    scrollbar-width:thin;
+
+    scrollbar-color:#2c4039 transparent;
+}
+
+::-webkit-scrollbar{
+
+    width:11px;
+
+    height:11px;
+}
+
+::-webkit-scrollbar-track{
+
+    background:transparent;
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:
+        linear-gradient(180deg,#31463f,#243330);
+
+    border:3px solid transparent;
+
+    background-clip:padding-box;
+
+    border-radius:99px;
+}
+
+::-webkit-scrollbar-thumb:hover{
+
+    background:
+        linear-gradient(180deg,var(--green-deep),#1d7a55);
+
+    background-clip:padding-box;
+
+    box-shadow:0 0 14px rgba(62,242,163,.35);
+}
+
+::-webkit-scrollbar-thumb:active{
+
+    background:var(--green);
+
+    background-clip:padding-box;
+}
+
+::-webkit-scrollbar-corner{
+
+    background:transparent;
+}
+
+/* the lyrics box and the notation box, which are the ones people scroll */
+
+#lyrics::-webkit-scrollbar-thumb,
+#notation::-webkit-scrollbar-thumb{
+
+    background:
+        linear-gradient(180deg,#35514a,#243330);
+
+    background-clip:padding-box;
+}
+
+textarea{
+
+    scrollbar-color:#35514a transparent;
+}
+
+/* =========================
    MECHANISED DETAIL
 ========================= */
 
