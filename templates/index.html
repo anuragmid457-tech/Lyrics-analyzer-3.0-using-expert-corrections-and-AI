@@ -2108,7 +2108,7 @@ textarea{
         grid-template-columns:1fr;
     }
 
-    
+    .mode-bars,
 
 }
 
@@ -4381,6 +4381,44 @@ function buildSearchRows(entry){
         SEARCH_ROWS.filter(
             row => row.kind !== "film" || entry.has_film
         );
+
+
+    /* The field sets and the result panel are real elements that have been
+       moved into the rows. Rewriting the rows below would destroy them, and
+       the second visit to this screen would find nothing to move back. So
+       they are lifted out first and held on the panel itself. */
+
+    const attic = $("find-mode");
+
+
+    SEARCH_ROWS.forEach(
+        row => {
+
+            const node = $(row.fields);
+
+
+            if(node){
+
+                node.hidden = true;
+
+                attic.appendChild(node);
+
+            }
+
+        }
+    );
+
+
+    const results = $("find-result");
+
+
+    if(results){
+
+        results.innerHTML = "";
+
+        attic.appendChild(results);
+
+    }
 
 
     $("search-rows").innerHTML =
