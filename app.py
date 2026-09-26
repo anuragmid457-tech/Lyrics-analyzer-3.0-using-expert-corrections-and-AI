@@ -151,11 +151,15 @@ def api_lookup():
         return jsonify({"error": "Type the name of a song to look it up."}), 400
 
     artist = (payload.get("artist") or "").strip()
+    film = (payload.get("film") or "").strip()
+    repertoire = (payload.get("repertoire") or "").strip()
     model_id = chosen_model(payload)
 
     try:
         chat = models.get_model(model_id) if model_id else None
-        return jsonify(lookup.lookup(title, artist, chat=chat))
+        return jsonify(lookup.lookup(
+            title, artist, chat=chat, repertoire=repertoire, film=film
+        ))
     except Exception as exc:  # noqa: BLE001
         return jsonify({
             "error": f"{type(exc).__name__}: {exc}"

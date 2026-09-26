@@ -42,6 +42,46 @@ USER_AGENT = os.getenv(
 TIMEOUT = 12
 MAX_CANDIDATES = 5
 
+# What to ask about, per repertoire. A Bollywood song is identified by its
+# film, a Rabindrasangeet by its parjaay, and a Hollywood song by neither, so
+# asking the same questions of all three wastes the model's attention and
+# invites it to invent a parjaay for a film song.
+REPERTOIRES = {
+    "bollywood": {
+        "label": "Bollywood",
+        "lead": "This is a Hindi film song. Identify the film it belongs to, "
+                "its music director and lyricist, and the playback singers. "
+                "Parjaay does not apply: return null for it. Raga applies only "
+                "where the song is genuinely raga based, which many are not.",
+        "fields": ["film", "composer", "lyricist", "performers", "year",
+                   "language", "raga", "taal", "laya"],
+    },
+    "rabindrasangeet": {
+        "label": "Rabindrasangeet",
+        "lead": "This is a Tagore song. The composer is Rabindranath Tagore "
+                "unless you have reason to say otherwise. Give its parjaay "
+                "from Puja, Prem, Prakriti, Swadesh, Anushthanik, Bichitro or "
+                "Nrityanatya, and its raga and taal, which are usually "
+                "documented in Swarabitan. There is no film: return null.",
+        "fields": ["composer", "parjaay", "raga", "taal", "laya", "year",
+                   "performers", "language"],
+    },
+    "hollywood": {
+        "label": "Hollywood and Western popular",
+        "lead": "This is a Western popular song. Identify the artist or band, "
+                "the writers, the album, and the film if it was written for "
+                "one. Parjaay, raga and taal do not apply: return null for "
+                "each rather than inventing an equivalent.",
+        "fields": ["composer", "lyricist", "performers", "album", "film",
+                   "year", "language"],
+    },
+}
+
+
+def repertoire_of(name):
+    return REPERTOIRES.get(str(name or "").strip().lower())
+
+
 CONTEXT_PROMPT = """You supply factual context about a song so a researcher can \
 fill in metadata fields. You handle Bengali and South Asian repertoire as first \
 class cases: Rabindrasangeet, Baul sangeet, Lalan geeti, Nazrul geeti, Shyama \
@@ -61,7 +101,10 @@ all, return every field as null and say so in the note.
 Fields:
   title       the song's name as usually written, in roman transliteration
   original    the title in its own script, if it has one, else null
-  composer    composer or lyricist
+  film        the film the song belongs to, else null
+  album       the album it appears on, else null
+  composer    composer or music director
+  lyricist    lyricist or songwriter, else null
   performers  up to three well known performers, as a list, else []
   tradition   e.g. Rabindrasangeet, Baul sangeet, Bengali film song
   language    the language of the lyrics
@@ -80,8 +123,13 @@ and no lyrics anywhere in it."""
 
 # --- lyrics, from a real source -----------------------------------------
 
-def find_lyrics(title, artist=""):
-    """Search LRCLIB. Returns a list of candidates, possibly empty."""
+def find_lyrics(title, artist="", film=""):
+    """Search LRCLIB. Returns a list of candidates, possibly empty.
+
+    A Hindi film song is catalogued under its soundtrack, so the film name is
+    sent as the album: it is usually the difference between finding the song
+    and finding nothing.
+    """
     import requests
 
     title = (title or "").strip()
@@ -91,6 +139,8 @@ def find_lyrics(title, artist=""):
     params = {"track_name": title}
     if (artist or "").strip():
         params["artist_name"] = artist.strip()
+    if (film or "").strip():
+        params["album_name"] = film.strip()
 
     try:
         response = requests.get(
@@ -168,7 +218,7 @@ FORBIDDEN = {"lyrics", "lyric", "text", "words", "verse", "refrain",
              "sthayi", "antara", "first_line", "opening"}
 
 
-def describe_song(title, artist="", chat=None):
+def describe_song(title, artist="", chat=None, repertoire="", film=""):
     """Context about the song from the model. Never lyrics."""
     from langchain_core.messages import HumanMessage, SystemMessage
 
@@ -180,12 +230,19 @@ def describe_song(title, artist="", chat=None):
         import models
         chat = models.get_model(models.default_id())
 
+    prompt = CONTEXT_PROMPT
+    kind = repertoire_of(repertoire)
+    if kind:
+        prompt += "\n\nThis song comes from a known repertoire. " + kind["lead"]
+
     asked = f"Song: {title}"
+    if (film or "").strip():
+        asked += f"\nFilm: {film.strip()}"
     if (artist or "").strip():
-        asked += f"\nArtist or composer: {artist.strip()}"
+        asked += f"\nArtist, composer or singer: {artist.strip()}"
 
     raw = chat.invoke([
-        SystemMessage(content=CONTEXT_PROMPT),
+        SystemMessage(content=prompt),
         HumanMessage(content=asked),
     ]).content
 
@@ -219,7 +276,10 @@ def describe_song(title, artist="", chat=None):
     return {
         "title": _clean_text(parsed.get("title")) or title,
         "original": _clean_text(parsed.get("original")),
+        "film": _clean_text(parsed.get("film")) or (_clean_text(film) or None),
+        "album": _clean_text(parsed.get("album")),
         "composer": _clean_text(parsed.get("composer")),
+        "lyricist": _clean_text(parsed.get("lyricist")),
         "performers": [_clean_text(p, 60) for p in performers[:3] if _clean_text(p, 60)],
         "tradition": _clean_text(parsed.get("tradition"), 60),
         "language": _clean_text(parsed.get("language"), 40),
@@ -230,18 +290,26 @@ def describe_song(title, artist="", chat=None):
         "year": year,
         "confidence": round(max(0.0, min(1.0, confidence)), 2),
         "note": _clean_text(parsed.get("note"), 300) or "",
+        "repertoire": (kind or {}).get("label", ""),
         "verified": False,   # nothing here has been checked against a source
     }
 
 
 # --- what the browser asks for ------------------------------------------
 
-def lookup(title, artist="", chat=None):
+def lookup(title, artist="", chat=None, repertoire="", film=""):
     """Both halves, plus a plain account of what was and was not found."""
-    candidates = find_lyrics(title, artist)
+    candidates = find_lyrics(title, artist, film)
+
+    # A film name that does not match the catalogue's spelling excludes
+    # everything, so a fruitless search is tried again without it.
+    if not candidates and (film or "").strip():
+        candidates = find_lyrics(title, artist)
 
     try:
-        context = describe_song(title, artist, chat=chat)
+        context = describe_song(
+            title, artist, chat=chat, repertoire=repertoire, film=film
+        )
     except Exception as exc:  # noqa: BLE001 - context is optional, lyrics are not
         context = {"error": f"{type(exc).__name__}: {exc}"}
 
@@ -253,16 +321,34 @@ def lookup(title, artist="", chat=None):
             "expression: the catalogue is crowdsourced and a version can be "
             "partial or misattributed."
         )
+    elif repertoire_of(repertoire) and repertoire.lower() == "rabindrasangeet":
+        notice = (
+            "No lyrics found, which is the usual outcome for Rabindrasangeet: "
+            "LRCLIB is crowdsourced from music players and carries very little "
+            "Bengali repertoire. Paste the lyrics instead; the context below "
+            "may still save you typing the parjaay, raga and taal."
+        )
+    elif repertoire_of(repertoire) and repertoire.lower() == "bollywood":
+        notice = (
+            "No lyrics found. Try the song's exact catalogue spelling, or drop "
+            "the film name, which has to match the soundtrack title in the "
+            "catalogue rather than the film as commonly written."
+        )
     else:
         notice = (
-            "No lyrics found. LRCLIB is crowdsourced from music players and "
-            "carries little Bengali or South Asian repertoire, so this is "
-            "expected for Rabindrasangeet, Baul and Lalan. Paste the lyrics "
-            "instead; the context below may still save you some typing."
+            "No lyrics found. Check the spelling, or paste the lyrics instead; "
+            "the context below may still save you some typing."
         )
 
+    kind = repertoire_of(repertoire)
+
     return {
-        "query": {"title": title, "artist": artist},
+        "query": {
+            "title": title,
+            "artist": artist,
+            "film": film,
+            "repertoire": (kind or {}).get("label", ""),
+        },
         "candidates": candidates,
         "context": context,
         "notice": notice,

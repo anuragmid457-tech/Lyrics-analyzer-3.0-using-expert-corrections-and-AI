@@ -1823,6 +1823,81 @@ textarea{
     animation:rise .4s cubic-bezier(.16,.84,.3,1) both;
 }
 
+.repertoire-bars{
+
+    display:flex;
+
+    gap:6px;
+
+    margin-bottom:18px;
+}
+
+.repertoire-bar{
+
+    flex:1;
+
+    padding:10px 12px;
+
+    border:1px solid var(--line);
+
+    border-radius:999px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.18));
+
+    color:var(--muted);
+
+    font-size:10px;
+
+    font-weight:600;
+
+    letter-spacing:.1em;
+
+    text-transform:uppercase;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    transition:.2s;
+}
+
+.repertoire-bar:hover{
+
+    border-color:#2f4a41;
+
+    color:var(--text);
+}
+
+.repertoire-bar.on{
+
+    color:var(--green);
+
+    border-color:rgba(62,242,163,.45);
+
+    background:rgba(62,242,163,.07);
+
+    box-shadow:0 0 18px rgba(62,242,163,.08);
+}
+
+.repertoire-bar:focus-visible{
+
+    outline:1px solid var(--green);
+
+    outline-offset:2px;
+}
+
+#find-film-row[hidden]{
+    display:none;
+}
+
+#find-film-row{
+
+    animation:rise .35s cubic-bezier(.16,.84,.3,1) both;
+}
+
 .find-row{
 
     display:grid;
@@ -2082,7 +2157,8 @@ textarea{
         grid-template-columns:1fr;
     }
 
-    .mode-bars{
+    .mode-bars,
+    .repertoire-bars{
         flex-direction:column;
     }
 
@@ -2544,6 +2620,60 @@ select:focus{
 
     <div id="find-mode" class="find-mode" hidden>
 
+        <div
+            class="repertoire-bars"
+            role="tablist"
+            aria-label="Which repertoire"
+        >
+
+            <button
+                type="button"
+                class="repertoire-bar on"
+                role="tab"
+                aria-selected="true"
+                data-repertoire="bollywood"
+            >
+                Bollywood
+            </button>
+
+            <button
+                type="button"
+                class="repertoire-bar"
+                role="tab"
+                aria-selected="false"
+                data-repertoire="rabindrasangeet"
+            >
+                Rabindrasangeet
+            </button>
+
+            <button
+                type="button"
+                class="repertoire-bar"
+                role="tab"
+                aria-selected="false"
+                data-repertoire="hollywood"
+            >
+                Hollywood
+            </button>
+
+        </div>
+
+
+        <div id="find-film-row" class="field">
+
+            <label for="find-film">
+                Film
+            </label>
+
+            <input
+                id="find-film"
+                type="text"
+                placeholder="The film the song belongs to"
+            >
+
+        </div>
+
+
         <div class="find-row">
 
             <div>
@@ -2564,7 +2694,9 @@ select:focus{
             <div>
 
                 <label for="find-artist">
-                    Artist or composer
+                    <span id="find-artist-label">
+                        Singer or music director
+                    </span>
                 </label>
 
                 <input
@@ -3709,6 +3841,96 @@ function showMode(wanted){
 
 
 /* =========================
+   WHICH REPERTOIRE
+
+   A Bollywood song is found by its film, a Tagore song by its parjaay, a
+   Hollywood song by neither. The choice changes what is asked for here and
+   what the model is asked about on the server.
+========================= */
+
+let repertoire = "bollywood";
+
+
+const REPERTOIRE_FORM = {
+
+    bollywood: {
+        film: true,
+        artist: "Singer or music director",
+        song: "e.g. Balam pichkari"
+    },
+
+    rabindrasangeet: {
+        film: false,
+        artist: "Performer",
+        song: "e.g. Khacar bhitor ochin pakhi"
+    },
+
+    hollywood: {
+        film: false,
+        artist: "Artist or band",
+        song: "e.g. Bohemian Rhapsody"
+    }
+
+};
+
+
+const repertoireBars = [
+    ...document.querySelectorAll(".repertoire-bar")
+];
+
+
+repertoireBars.forEach(
+    bar =>
+        bar.addEventListener(
+            "click",
+            () => {
+
+                repertoire =
+                    bar.dataset.repertoire;
+
+
+                repertoireBars.forEach(
+                    other => {
+
+                        const on =
+                            other === bar;
+
+                        other.classList.toggle("on", on);
+
+                        other.setAttribute(
+                            "aria-selected",
+                            String(on)
+                        );
+
+                    }
+                );
+
+
+                const shape =
+                    REPERTOIRE_FORM[repertoire]
+                    ||
+                    REPERTOIRE_FORM.bollywood;
+
+
+                $("find-film-row").hidden = !shape.film;
+
+                $("find-artist-label").textContent = shape.artist;
+
+                $("find-title").placeholder = shape.song;
+
+
+                /* a film name left behind from another repertoire would
+                   silently narrow the next search to nothing */
+
+                if(!shape.film)
+                    $("find-film").value = "";
+
+            }
+        )
+);
+
+
+/* =========================
    LOOK UP A SONG BY NAME
 ========================= */
 
@@ -3786,6 +4008,10 @@ async function findSong(){
 
                             artist: $("find-artist").value.trim(),
 
+                            film: $("find-film").value.trim(),
+
+                            repertoire: repertoire,
+
                             model: window.LYRIQ_MODEL || ""
 
                         })
@@ -3849,7 +4075,10 @@ function renderLookup(data){
     if(Object.keys(context).length && !context.error){
 
         const rows = [
+            ["Film", context.film],
+            ["Album", context.album],
             ["Composer", context.composer],
+            ["Lyricist", context.lyricist],
             ["Tradition", context.tradition],
             ["Language", context.language],
             ["Parjaay", context.parjaay],
@@ -4005,7 +4234,7 @@ function useCandidate(index){
 
     fill("title", candidate.title || context.title);
 
-    fill("composer", context.composer);
+    fill("composer", context.composer || context.lyricist);
 
     fill("tradition", context.tradition);
 
@@ -4031,8 +4260,12 @@ function useCandidate(index){
 
 
     fill("notes",
-        "Lyrics from " + (candidate.source || "a lyrics catalogue")
-        + ". Context unverified."
+        [
+            context.film ? "From the film " + context.film + "." : "",
+            context.repertoire ? context.repertoire + "." : "",
+            "Lyrics from " + (candidate.source || "a lyrics catalogue")
+                + ", context unverified."
+        ].filter(Boolean).join(" ")
     );
 
 
