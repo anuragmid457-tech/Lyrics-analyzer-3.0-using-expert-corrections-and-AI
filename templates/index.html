@@ -1869,6 +1869,18 @@ textarea{
     margin-top:18px;
 }
 
+/* inside an open search row, the results are separated from the button
+   above them rather than floating loose at the bottom of the panel */
+
+.search-row-body .find-result:not(:empty){
+
+    margin-top:18px;
+
+    padding-top:16px;
+
+    border-top:1px solid var(--line);
+}
+
 .find-status{
 
     color:var(--muted);
@@ -2096,7 +2108,7 @@ textarea{
         grid-template-columns:1fr;
     }
 
-    
+    .mode-bars,
 
 }
 
@@ -4447,6 +4459,9 @@ function openRow(kind){
     findKind = kind;
 
 
+    let open = null;
+
+
     [...$("search-rows").querySelectorAll(".search-row")].forEach(
         node => {
 
@@ -4458,8 +4473,21 @@ function openRow(kind){
 
             node.querySelector(".search-row-body").hidden = !on;
 
+
+            if(on)
+                open = node;
+
         }
     );
+
+
+    /* The results belong under the question that asked for them. The panel
+       is one element, moved into whichever row is open, so a film's songs
+       never appear below the composer row. */
+
+    if(open)
+        open.querySelector(".search-row-body")
+            .appendChild($("find-result"));
 
 
     $("find-result").innerHTML = "";
@@ -4567,9 +4595,20 @@ async function runLookup(body, status){
         + '</p>';
 
 
-    /* a lookup started from a song row happens far down the page */
+    /* a lookup started from a song row happens far down the page, so the
+       row being searched is brought to the top */
 
-    $("step-search").scrollIntoView({ behavior:"smooth", block:"start" });
+    const openRowNode =
+        $("search-rows").querySelector(".search-row.open");
+
+
+    (openRowNode || $("step-search")).scrollIntoView({
+
+        behavior:"smooth",
+
+        block:"start"
+
+    });
 
 
     try{
