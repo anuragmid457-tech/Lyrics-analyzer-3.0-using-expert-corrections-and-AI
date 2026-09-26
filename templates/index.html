@@ -4228,7 +4228,7 @@ function setKind(kind){
 
 /* --- the lookup itself --- */
 
-$("find-go").addEventListener("click", runLookup);
+$("find-go").addEventListener("click", () => runLookup());
 
 
 ["find-title", "find-film-only", "find-person"].forEach(
