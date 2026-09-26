@@ -1742,6 +1742,353 @@ textarea{
 }
 
 /* =========================
+   TWO WAYS IN
+========================= */
+
+.mode-bars{
+
+    display:flex;
+
+    gap:6px;
+
+    margin-bottom:22px;
+
+    padding:5px;
+
+    border:1px solid var(--line);
+
+    border-radius:13px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.2));
+
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
+}
+
+.mode-bar{
+
+    flex:1;
+
+    padding:11px 14px;
+
+    border:1px solid transparent;
+
+    border-radius:9px;
+
+    background:transparent;
+
+    color:var(--muted);
+
+    font-size:10px;
+
+    font-weight:600;
+
+    letter-spacing:.11em;
+
+    text-transform:uppercase;
+
+    transition:.22s;
+}
+
+.mode-bar:hover{
+    color:var(--text);
+}
+
+.mode-bar.on{
+
+    color:var(--green);
+
+    border-color:rgba(62,242,163,.35);
+
+    background:
+        linear-gradient(180deg,rgba(62,242,163,.09),rgba(62,242,163,.02));
+
+    box-shadow:0 0 20px rgba(62,242,163,.08);
+}
+
+.mode-bar:focus-visible{
+
+    outline:1px solid var(--green);
+
+    outline-offset:2px;
+}
+
+#find-mode[hidden],
+#paste-mode[hidden]{
+    display:none;
+}
+
+.find-mode{
+
+    animation:rise .4s cubic-bezier(.16,.84,.3,1) both;
+}
+
+.find-row{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:14px;
+}
+
+.find-go{
+
+    width:100%;
+
+    margin-top:16px;
+}
+
+.find-help{
+
+    color:var(--muted);
+
+    font-size:11.5px;
+
+    line-height:1.6;
+
+    margin:14px 0 0;
+}
+
+.find-result{
+
+    margin-top:18px;
+}
+
+.find-status{
+
+    color:var(--muted);
+
+    font-size:12px;
+
+    margin:0;
+}
+
+.find-notice{
+
+    border-left:2px solid var(--green);
+
+    padding-left:13px;
+
+    color:var(--soft);
+
+    font-size:12px;
+
+    line-height:1.6;
+
+    margin:0 0 18px;
+}
+
+/* --- what the model believes --- */
+
+.find-context{
+
+    padding:15px;
+
+    margin-bottom:16px;
+
+    border:1px solid var(--line);
+
+    border-radius:12px;
+
+    background:var(--surface2);
+}
+
+.find-context-head{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:12px;
+
+    flex-wrap:wrap;
+
+    color:var(--muted);
+
+    font-size:9.5px;
+
+    font-weight:600;
+
+    letter-spacing:.14em;
+
+    text-transform:uppercase;
+
+    margin-bottom:13px;
+}
+
+.find-confidence{
+
+    color:var(--green);
+
+    letter-spacing:.06em;
+
+    font-variant-numeric:tabular-nums;
+}
+
+.find-facts{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:9px;
+}
+
+.find-fact{
+
+    padding:9px 11px;
+
+    background:#0b1014;
+
+    border-radius:9px;
+}
+
+.find-fact span{
+
+    display:block;
+
+    color:var(--muted);
+
+    font-size:9px;
+
+    letter-spacing:.09em;
+
+    text-transform:uppercase;
+}
+
+.find-fact b{
+
+    font-size:12.5px;
+
+    font-weight:500;
+}
+
+.find-note{
+
+    color:var(--muted);
+
+    font-size:11.5px;
+
+    line-height:1.55;
+
+    margin:12px 0 0;
+}
+
+/* --- a lyric candidate --- */
+
+.find-card{
+
+    border:1px solid var(--line);
+
+    border-radius:12px;
+
+    padding:15px;
+
+    margin-bottom:12px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.015),transparent);
+
+    transition:.22s;
+}
+
+.find-card:hover{
+    border-color:rgba(62,242,163,.3);
+}
+
+.find-card-head{
+
+    display:flex;
+
+    align-items:baseline;
+
+    justify-content:space-between;
+
+    gap:12px;
+
+    margin-bottom:11px;
+}
+
+.find-card-head b{
+
+    font-family:Newsreader,Georgia,serif;
+
+    font-size:19px;
+
+    font-weight:400;
+}
+
+.find-card-sub{
+
+    display:block;
+
+    color:var(--muted);
+
+    font-size:11px;
+
+    margin-top:2px;
+}
+
+.find-lines{
+
+    color:var(--green);
+
+    font-size:10px;
+
+    letter-spacing:.1em;
+
+    text-transform:uppercase;
+
+    white-space:nowrap;
+
+    font-variant-numeric:tabular-nums;
+}
+
+.find-lyrics{
+
+    max-height:230px;
+
+    overflow-y:auto;
+
+    margin:0 0 12px;
+
+    padding:12px;
+
+    background:#0b1014;
+
+    border-radius:9px;
+
+    color:var(--soft);
+
+    font-family:"Noto Sans Bengali","DM Sans",sans-serif;
+
+    font-size:12.5px;
+
+    line-height:1.7;
+}
+
+.find-use{
+
+    width:100%;
+}
+
+@media(max-width:650px){
+
+    .find-row,
+    .find-facts{
+        grid-template-columns:1fr;
+    }
+
+    .mode-bars{
+        flex-direction:column;
+    }
+
+}
+
+/* =========================
    MECHANISED DETAIL
 ========================= */
 
@@ -2168,6 +2515,94 @@ select:focus{
     </p>
 
 
+    <div class="mode-bars" role="tablist" aria-label="How to bring in a song">
+
+        <button
+            type="button"
+            class="mode-bar on"
+            role="tab"
+            aria-selected="true"
+            data-mode="paste"
+        >
+            Paste the lyrics
+        </button>
+
+        <button
+            type="button"
+            class="mode-bar"
+            role="tab"
+            aria-selected="false"
+            data-mode="find"
+        >
+            Type the name of the song
+        </button>
+
+    </div>
+
+
+    <!-- FIND BY NAME -->
+
+    <div id="find-mode" class="find-mode" hidden>
+
+        <div class="find-row">
+
+            <div>
+
+                <label for="find-title">
+                    Song
+                    <span class="required">· required</span>
+                </label>
+
+                <input
+                    id="find-title"
+                    type="text"
+                    placeholder="e.g. Khacar bhitor ochin pakhi"
+                >
+
+            </div>
+
+            <div>
+
+                <label for="find-artist">
+                    Artist or composer
+                </label>
+
+                <input
+                    id="find-artist"
+                    type="text"
+                    placeholder="Optional, but it narrows the search"
+                >
+
+            </div>
+
+        </div>
+
+
+        <button
+            id="find-go"
+            class="primary find-go"
+            type="button"
+        >
+            Look it up →
+        </button>
+
+
+        <p class="find-help">
+            Lyrics are fetched from LRCLIB, a crowdsourced catalogue. It carries
+            little Bengali or South Asian repertoire, so Rabindrasangeet, Baul
+            and Lalan often will not be there. The context below the lyrics comes
+            from the model and is unverified: check it before reading.
+        </p>
+
+
+        <div id="find-result" class="find-result"></div>
+
+    </div>
+
+
+    <div id="paste-mode">
+
+
     <label for="lyrics">
 
         Lyrics
@@ -2206,6 +2641,9 @@ select:focus{
         </label>
 
     </div>
+
+    </div>
+    <!-- end of paste mode -->
 
 
     <!-- CONTEXT -->
@@ -3197,6 +3635,416 @@ function showTheReading(){
 
         behavior: still ? "auto" : "smooth"
 
+    });
+
+}
+
+
+/* =========================
+   TWO WAYS IN
+
+   Paste the lyrics, or name the song and let the app find them. The find
+   path never analyses anything directly: it fills the paste form, so the
+   words are on screen and editable before the model reads them.
+========================= */
+
+const modeBars = [
+    ...document.querySelectorAll(".mode-bar")
+];
+
+
+modeBars.forEach(
+    bar =>
+        bar.addEventListener(
+            "click",
+            () => {
+
+                const wanted =
+                    bar.dataset.mode;
+
+
+                modeBars.forEach(
+                    other => {
+
+                        const on =
+                            other === bar;
+
+                        other.classList.toggle("on", on);
+
+                        other.setAttribute(
+                            "aria-selected",
+                            String(on)
+                        );
+
+                    }
+                );
+
+
+                $("paste-mode").hidden = wanted !== "paste";
+
+                $("find-mode").hidden = wanted !== "find";
+
+
+                if(wanted === "find")
+                    $("find-title").focus();
+
+                else
+                    $("lyrics").focus();
+
+            }
+        )
+);
+
+
+function showMode(wanted){
+
+    const bar =
+        modeBars.filter(b => b.dataset.mode === wanted)[0];
+
+
+    if(bar)
+        bar.click();
+
+}
+
+
+/* =========================
+   LOOK UP A SONG BY NAME
+========================= */
+
+$("find-go").addEventListener(
+    "click",
+    findSong
+);
+
+
+$("find-title").addEventListener(
+    "keydown",
+    event => {
+
+        if(event.key === "Enter")
+            findSong();
+
+    }
+);
+
+
+let foundCandidates = [];
+
+let foundContext = null;
+
+
+async function findSong(){
+
+    const title =
+        $("find-title").value.trim();
+
+
+    $("err").innerHTML = "";
+
+
+    if(!title){
+
+        showError("Type the name of a song first.");
+
+        $("find-title").focus();
+
+        return;
+
+    }
+
+
+    const button = $("find-go");
+
+    button.disabled = true;
+
+    button.innerHTML =
+        '<span class="spinner"></span>Looking';
+
+
+    $("find-result").innerHTML =
+        '<p class="find-status">Searching LRCLIB, and asking the model what it knows…</p>';
+
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/lookup",
+                {
+
+                    method:"POST",
+
+                    headers:{
+                        "Content-Type":"application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            title: title,
+
+                            artist: $("find-artist").value.trim(),
+
+                            model: window.LYRIQ_MODEL || ""
+
+                        })
+
+                }
+            );
+
+
+        const data =
+            await readJSON(response);
+
+
+        if(!response.ok)
+            throw new Error(data.error || "The lookup failed.");
+
+
+        foundCandidates = data.candidates || [];
+
+        foundContext = data.context || null;
+
+
+        renderLookup(data);
+
+    }
+
+    catch(error){
+
+        $("find-result").innerHTML = "";
+
+        showError(error.message);
+
+    }
+
+    finally{
+
+        button.disabled = false;
+
+        button.innerHTML = "Look it up →";
+
+    }
+
+}
+
+
+function renderLookup(data){
+
+    let html = "";
+
+
+    html +=
+        '<p class="find-notice">'
+        + escapeHTML(data.notice || "")
+        + '</p>';
+
+
+    /* what the model thinks it knows, marked as unchecked */
+
+    const context = data.context || {};
+
+
+    if(Object.keys(context).length && !context.error){
+
+        const rows = [
+            ["Composer", context.composer],
+            ["Tradition", context.tradition],
+            ["Language", context.language],
+            ["Parjaay", context.parjaay],
+            ["Raga", context.raga],
+            ["Taal", context.taal],
+            ["Laya", context.laya],
+            ["Year", context.year],
+            ["Performers", (context.performers || []).join(", ")]
+        ].filter(row => row[1]);
+
+
+        html +=
+            '<div class="find-context">'
+            + '<div class="find-context-head">'
+            + 'What the model believes, unverified'
+            + '<span class="find-confidence">confidence '
+            + (context.confidence ?? 0).toFixed(2)
+            + '</span>'
+            + '</div>';
+
+
+        if(rows.length){
+
+            html += '<div class="find-facts">';
+
+            rows.forEach(row => {
+
+                html +=
+                    '<div class="find-fact">'
+                    + '<span>' + escapeHTML(row[0]) + '</span>'
+                    + '<b>' + escapeHTML(String(row[1])) + '</b>'
+                    + '</div>';
+
+            });
+
+            html += '</div>';
+
+        }
+
+        else{
+
+            html +=
+                '<p class="find-status">'
+                + 'The model does not recognise this song, so nothing is filled in.'
+                + '</p>';
+
+        }
+
+
+        if(context.note){
+
+            html +=
+                '<p class="find-note">'
+                + escapeHTML(context.note)
+                + '</p>';
+
+        }
+
+
+        html += '</div>';
+
+    }
+
+
+    /* the lyrics themselves, in full, before anything is read */
+
+    if(foundCandidates.length){
+
+        foundCandidates.forEach((candidate, index) => {
+
+            html +=
+                '<div class="find-card">'
+
+                + '<div class="find-card-head">'
+                + '<div>'
+                + '<b>' + escapeHTML(candidate.title || "Untitled") + '</b>'
+                + '<span class="find-card-sub">'
+                + escapeHTML(
+                    [candidate.artist, candidate.album]
+                        .filter(Boolean).join(" · ")
+                  )
+                + '</span>'
+                + '</div>'
+                + '<span class="find-lines">'
+                + candidate.lines + ' lines'
+                + '</span>'
+                + '</div>'
+
+                + '<pre class="find-lyrics">'
+                + escapeHTML(candidate.lyrics)
+                + '</pre>'
+
+                + '<button type="button" class="secondary find-use" '
+                + 'data-index="' + index + '">'
+                + 'Use these lyrics'
+                + '</button>'
+
+                + '</div>';
+
+        });
+
+    }
+
+
+    $("find-result").innerHTML = html;
+
+
+    [...$("find-result").querySelectorAll(".find-use")].forEach(
+        button =>
+            button.addEventListener(
+                "click",
+                () => useCandidate(Number(button.dataset.index))
+            )
+    );
+
+}
+
+
+/* Fills the paste form and switches to it, so the reviewer sees exactly what
+   will be read and can edit it first. Nothing is analysed here. */
+
+function useCandidate(index){
+
+    const candidate =
+        foundCandidates[index];
+
+
+    if(!candidate)
+        return;
+
+
+    $("lyrics").value = candidate.lyrics;
+
+
+    $("lyrics").dispatchEvent(
+        new Event("input")
+    );
+
+
+    const context =
+        foundContext || {};
+
+
+    const fill = (field, value) => {
+
+        const element = $(field);
+
+        if(element && value && !element.value.trim())
+            element.value = String(value);
+
+    };
+
+
+    fill("title", candidate.title || context.title);
+
+    fill("composer", context.composer);
+
+    fill("tradition", context.tradition);
+
+    fill("language", context.language);
+
+    fill("raga", context.raga);
+
+    fill("taal", context.taal);
+
+    fill("laya", context.laya);
+
+
+    if(context.parjaay){
+
+        const parjaay = $("parjaay");
+
+        const options = [...parjaay.options].map(o => o.value);
+
+        if(options.includes(context.parjaay))
+            parjaay.value = context.parjaay;
+
+    }
+
+
+    fill("notes",
+        "Lyrics from " + (candidate.source || "a lyrics catalogue")
+        + ". Context unverified."
+    );
+
+
+    showMode("paste");
+
+
+    updateContextLabel();
+
+
+    $("lyrics").scrollIntoView({
+        behavior:"smooth",
+        block:"center"
     });
 
 }
