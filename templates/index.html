@@ -1823,73 +1823,10 @@ textarea{
     animation:rise .4s cubic-bezier(.16,.84,.3,1) both;
 }
 
-.rep-bar{
 
-    display:flex;
 
-    flex-wrap:wrap;
 
-    gap:6px;
 
-    margin-bottom:18px;
-}
-
-.rep-tab{
-
-    flex:1;
-
-    padding:10px 12px;
-
-    border:1px solid var(--line);
-
-    border-radius:999px;
-
-    background:
-        linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.18));
-
-    color:var(--muted);
-
-    font-size:10px;
-
-    font-weight:600;
-
-    letter-spacing:.1em;
-
-    text-transform:uppercase;
-
-    white-space:nowrap;
-
-    overflow:hidden;
-
-    text-overflow:ellipsis;
-
-    transition:.2s;
-}
-
-.rep-tab:hover{
-
-    border-color:#2f4a41;
-
-    color:var(--text);
-}
-
-.rep-tab.on{
-
-    color:var(--green);
-
-    border-color:rgba(62,242,163,.45);
-
-    background:rgba(62,242,163,.07);
-
-    box-shadow:0 0 18px rgba(62,242,163,.08);
-}
-
-.rep-tab:focus-visible{
-
-    outline:1px solid var(--green);
-
-    outline-offset:2px;
-}
 
 #find-film-row[hidden]{
     display:none;
@@ -2159,83 +2096,13 @@ textarea{
         grid-template-columns:1fr;
     }
 
-    .mode-bars,
-    .rep-bar{
-        flex-direction:column;
-    }
+    
 
 }
 
 /* --- search by song, film or person --- */
 
-.find-kinds{
 
-    display:flex;
-
-    gap:6px;
-
-    margin:0 0 16px;
-}
-
-.find-kind{
-
-    flex:1;
-
-    padding:9px 10px;
-
-    border:1px solid var(--line);
-
-    border-radius:9px;
-
-    background:transparent;
-
-    color:var(--muted);
-
-    font-size:9.5px;
-
-    font-weight:600;
-
-    letter-spacing:.1em;
-
-    text-transform:uppercase;
-
-    white-space:nowrap;
-
-    overflow:hidden;
-
-    text-overflow:ellipsis;
-
-    transition:.2s;
-}
-
-.find-kind[hidden]{
-    display:none;
-}
-
-.find-kind:hover{
-
-    border-color:#2f4a41;
-
-    color:var(--text);
-}
-
-.find-kind.on{
-
-    color:var(--green);
-
-    border-color:rgba(62,242,163,.4);
-
-    background:rgba(62,242,163,.06);
-}
-
-.find-fields[hidden]{
-    display:none;
-}
-
-.find-fields{
-
-    animation:rise .35s cubic-bezier(.16,.84,.3,1) both;
-}
 
 .find-row.single{
 
@@ -2358,8 +2225,306 @@ textarea{
 
 @media(max-width:650px){
 
-    .find-kinds{
-        flex-direction:column;
+
+}
+
+/* =========================
+   FINDING A SONG, ONE STEP AT A TIME
+========================= */
+
+.find-step{
+
+    animation:rise .4s cubic-bezier(.16,.84,.3,1) both;
+}
+
+.find-step[hidden]{
+    display:none;
+}
+
+.step-lead{
+
+    color:var(--muted);
+
+    font-size:11.5px;
+
+    letter-spacing:.06em;
+
+    margin:0 0 14px;
+}
+
+/* --- step one: the four repertoires --- */
+
+.rep-grid{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:10px;
+}
+
+.rep-card{
+
+    display:block;
+
+    padding:16px 16px 15px;
+
+    border:1px solid var(--line);
+
+    border-radius:13px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.022),rgba(0,0,0,.14));
+
+    text-align:left;
+
+    transition:.22s;
+}
+
+.rep-card:hover{
+
+    border-color:rgba(62,242,163,.45);
+
+    transform:translateY(-2px);
+
+    box-shadow:0 12px 34px rgba(62,242,163,.08);
+}
+
+.rep-card b{
+
+    display:block;
+
+    font-family:Newsreader,Georgia,serif;
+
+    font-size:21px;
+
+    font-weight:400;
+
+    color:var(--text);
+
+    margin-bottom:6px;
+}
+
+.rep-card:hover b{
+    color:var(--green);
+}
+
+.rep-card span{
+
+    display:block;
+
+    color:var(--muted);
+
+    font-size:11px;
+
+    line-height:1.55;
+}
+
+/* --- step two --- */
+
+.find-back{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:9px;
+
+    padding:8px 14px 8px 11px;
+
+    margin-bottom:16px;
+
+    border:1px solid var(--line);
+
+    border-radius:999px;
+
+    background:transparent;
+
+    color:var(--muted);
+
+    font-size:10px;
+
+    font-weight:600;
+
+    letter-spacing:.12em;
+
+    text-transform:uppercase;
+
+    transition:.2s;
+}
+
+.find-back:hover{
+
+    border-color:rgba(62,242,163,.45);
+
+    color:var(--green);
+}
+
+.back-arrow{
+
+    font-size:13px;
+
+    transition:transform .2s;
+}
+
+.find-back:hover .back-arrow{
+
+    transform:translateX(-3px);
+}
+
+.step-head{
+
+    margin-bottom:18px;
+}
+
+.step-head h3{
+
+    font-family:Newsreader,Georgia,serif;
+
+    font-size:27px;
+
+    font-weight:400;
+
+    margin:0 0 5px;
+
+    color:var(--green);
+}
+
+.step-hint{
+
+    color:var(--muted);
+
+    font-size:11.5px;
+
+    line-height:1.6;
+
+    margin:0;
+
+    max-width:62ch;
+}
+
+/* --- the three ways to search, one open at a time --- */
+
+.search-rows{
+
+    display:grid;
+
+    gap:8px;
+}
+
+.search-row{
+
+    border:1px solid var(--line);
+
+    border-radius:12px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.015),transparent);
+
+    overflow:hidden;
+
+    transition:.22s;
+}
+
+.search-row:hover{
+    border-color:#2f4a41;
+}
+
+.search-row.open{
+
+    border-color:rgba(62,242,163,.4);
+
+    background:
+        linear-gradient(180deg,rgba(62,242,163,.045),transparent);
+}
+
+.search-row-head{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:12px;
+
+    width:100%;
+
+    padding:14px 16px;
+
+    background:transparent;
+
+    border:0;
+
+    text-align:left;
+}
+
+.search-row-main b{
+
+    display:block;
+
+    color:var(--soft);
+
+    font-size:13px;
+
+    font-weight:600;
+
+    letter-spacing:.02em;
+}
+
+.search-row.open .search-row-main b{
+    color:var(--green);
+}
+
+.search-row-main span{
+
+    display:block;
+
+    color:var(--muted);
+
+    font-size:11px;
+
+    margin-top:3px;
+}
+
+.search-row-head .picker-caret{
+
+    transition:transform .24s ease,color .2s;
+}
+
+.search-row.open .search-row-head .picker-caret{
+
+    transform:rotate(180deg);
+
+    color:var(--green);
+}
+
+.search-row-body{
+
+    padding:4px 16px 16px;
+
+    animation:context-open .32s cubic-bezier(.16,.84,.3,1) both;
+}
+
+.search-row-body[hidden]{
+    display:none;
+}
+
+.search-row-body .find-go{
+
+    width:100%;
+
+    margin-top:16px;
+}
+
+.field-set[hidden]{
+    display:none;
+}
+
+@media(max-width:650px){
+
+    .rep-grid{
+        grid-template-columns:1fr;
     }
 
 }
@@ -2820,38 +2985,42 @@ select:focus{
 
     <div id="find-mode" class="find-mode" hidden>
 
-        <!-- which repertoire -->
 
-        <div class="rep-bar" id="rep-bar" role="tablist" aria-label="Repertoire"></div>
+        <!-- STEP ONE: which repertoire -->
 
-        <p class="find-help" id="rep-hint"></p>
+        <div id="step-repertoire" class="find-step">
 
+            <p class="step-lead">Which kind of song is it?</p>
 
-        <!-- what to search by -->
-
-        <div class="find-kinds" role="tablist" aria-label="Search by">
-
-            <button type="button" class="find-kind on" role="tab"
-                    aria-selected="true" data-kind="song">
-                By song
-            </button>
-
-            <button type="button" class="find-kind" role="tab"
-                    aria-selected="false" data-kind="film">
-                By film
-            </button>
-
-            <button type="button" class="find-kind" role="tab"
-                    aria-selected="false" data-kind="person">
-                By composer or singer
-            </button>
+            <div class="rep-grid" id="rep-grid"></div>
 
         </div>
 
 
-        <!-- by song -->
+        <!-- STEP TWO: how to search, and the search itself -->
 
-        <div id="kind-song" class="find-fields">
+        <div id="step-search" class="find-step" hidden>
+
+            <button id="find-back" class="find-back" type="button">
+                <span class="back-arrow">←</span>
+                <span>All repertoires</span>
+            </button>
+
+            <div class="step-head">
+                <h3 id="step-title">Bollywood</h3>
+                <p id="step-hint" class="step-hint"></p>
+            </div>
+
+            <div class="search-rows" id="search-rows"></div>
+
+            <div id="find-result" class="find-result"></div>
+
+        </div>
+
+
+        <!-- the three sets of fields, moved into whichever row is open -->
+
+        <div id="fields-song" class="field-set" hidden>
 
             <div class="find-row">
 
@@ -2884,9 +3053,7 @@ select:focus{
         </div>
 
 
-        <!-- by film -->
-
-        <div id="kind-film" class="find-fields" hidden>
+        <div id="fields-film" class="field-set" hidden>
 
             <div class="find-row single">
 
@@ -2903,9 +3070,7 @@ select:focus{
         </div>
 
 
-        <!-- by person -->
-
-        <div id="kind-person" class="find-fields" hidden>
+        <div id="fields-person" class="field-set" hidden>
 
             <div class="find-row single">
 
@@ -2920,21 +3085,6 @@ select:focus{
             </div>
 
         </div>
-
-
-        <button id="find-go" class="primary find-go" type="button">
-            Look it up →
-        </button>
-
-
-        <p class="find-help">
-            Lyrics come from LRCLIB, a crowdsourced catalogue. Song lists and
-            context come from the model and are marked unverified: a title it
-            suggests may not exist, so check before you read.
-        </p>
-
-
-        <div id="find-result" class="find-result"></div>
 
     </div>
 
@@ -4053,15 +4203,14 @@ function showMode(wanted){
 /* =========================
    LOOK UP A SONG
 
-   Three ways in: the song itself, a film, or a person. A film or a person
-   returns a list of titles; choosing one looks up that song's lyrics. Nothing
-   is analysed here. The lyrics land in the paste form, where they can be read
-   and edited before the model sees them.
+   Two steps, because showing every choice at once is how a form starts to
+   feel like a control panel. First: which repertoire. Then: how to search,
+   with one set of fields open at a time and a way back.
 ========================= */
 
 let repertoires = [];
 
-let repertoire = "bollywood";
+let repertoire = null;
 
 let findKind = "song";
 
@@ -4070,7 +4219,29 @@ let foundCandidates = [];
 let foundContext = null;
 
 
-/* --- the repertoire bar --- */
+const SEARCH_ROWS = [
+    {
+        kind: "song",
+        label: "By song",
+        blurb: "You know the name of the song.",
+        fields: "fields-song"
+    },
+    {
+        kind: "film",
+        label: "By film",
+        blurb: "List everything in a film, then pick one.",
+        fields: "fields-film"
+    },
+    {
+        kind: "person",
+        label: "By composer or singer",
+        blurb: "List their songs, then pick one.",
+        fields: "fields-person"
+    }
+];
+
+
+/* --- step one --- */
 
 (async function loadRepertoires(){
 
@@ -4090,67 +4261,67 @@ let foundContext = null;
     }
 
 
-    if(!repertoires.length)
+    if(!repertoires.length){
+
+        $("rep-grid").innerHTML =
+            '<p class="find-status">The lookup is unavailable just now. '
+            + 'Paste the lyrics instead.</p>';
+
         return;
 
+    }
 
-    $("rep-bar").innerHTML =
+
+    $("rep-grid").innerHTML =
         repertoires
             .map(entry =>
-                '<button type="button" class="rep-tab'
-                + (entry.id === repertoire ? " on" : "")
-                + '" role="tab" data-rep="' + entry.id + '">'
-                + escapeHTML(entry.label)
+                '<button type="button" class="rep-card" data-rep="'
+                + entry.id + '">'
+                + '<b>' + escapeHTML(entry.label) + '</b>'
+                + '<span>' + escapeHTML(entry.hint || "") + '</span>'
                 + '</button>'
             )
             .join("");
 
 
-    [...$("rep-bar").querySelectorAll(".rep-tab")].forEach(
+    [...$("rep-grid").querySelectorAll(".rep-card")].forEach(
         button =>
             button.addEventListener(
                 "click",
-                () => setRepertoire(button.dataset.rep)
+                () => chooseRepertoire(button.dataset.rep)
             )
     );
-
-
-    setRepertoire(repertoire);
 
 })();
 
 
-function setRepertoire(id){
+function currentRepertoire(){
+
+    return repertoires.filter(r => r.id === repertoire)[0] || null;
+
+}
+
+
+function chooseRepertoire(id){
 
     repertoire = id;
 
 
     const entry =
-        repertoires.filter(r => r.id === id)[0];
-
-
-    [...$("rep-bar").querySelectorAll(".rep-tab")].forEach(
-        button => {
-
-            const on =
-                button.dataset.rep === id;
-
-            button.classList.toggle("on", on);
-
-            button.setAttribute("aria-selected", String(on));
-
-        }
-    );
+        currentRepertoire();
 
 
     if(!entry)
         return;
 
 
-    $("rep-hint").textContent = entry.hint || "";
+    $("step-title").textContent = entry.label;
+
+    $("step-hint").textContent = entry.hint || "";
 
 
-    /* Rabindrasangeet has no film, so those inputs go away entirely */
+    /* Rabindrasangeet has no film, so the film row and the film field on the
+       song form both go away rather than sitting there unused. */
 
     const label =
         entry.film_label || "Film";
@@ -4161,75 +4332,142 @@ function setRepertoire(id){
     $("find-film-only-label").innerHTML =
         escapeHTML(label) + ' <span class="required">· required</span>';
 
-
     $("find-film-row").hidden = !entry.has_film;
 
 
-    [...document.querySelectorAll('.find-kind[data-kind="film"]')].forEach(
-        button => {
+    buildSearchRows(entry);
 
-            button.hidden = !entry.has_film;
 
-            button.textContent = "By " + label.toLowerCase();
+    $("step-repertoire").hidden = true;
+
+    $("step-search").hidden = false;
+
+    $("find-result").innerHTML = "";
+
+}
+
+
+$("find-back").addEventListener(
+    "click",
+    () => {
+
+        $("step-search").hidden = true;
+
+        $("step-repertoire").hidden = false;
+
+        $("find-result").innerHTML = "";
+
+    }
+);
+
+
+/* --- step two: one row open at a time --- */
+
+function buildSearchRows(entry){
+
+    const rows =
+        SEARCH_ROWS.filter(
+            row => row.kind !== "film" || entry.has_film
+        );
+
+
+    $("search-rows").innerHTML =
+        rows
+            .map(row =>
+                '<div class="search-row" data-kind="' + row.kind + '">'
+
+                + '<button type="button" class="search-row-head">'
+                + '<span class="search-row-main">'
+                + '<b>' + escapeHTML(
+                      row.kind === "film"
+                          ? "By " + (entry.film_label || "film").toLowerCase()
+                          : row.label
+                  ) + '</b>'
+                + '<span>' + escapeHTML(row.blurb) + '</span>'
+                + '</span>'
+                + '<span class="picker-caret">▾</span>'
+                + '</button>'
+
+                + '<div class="search-row-body" hidden>'
+                + '<div class="search-row-fields"></div>'
+                + '<button type="button" class="primary find-go">'
+                + 'Look it up →'
+                + '</button>'
+                + '</div>'
+
+                + '</div>'
+            )
+            .join("");
+
+
+    /* the field sets are real elements, moved into whichever row is open */
+
+    [...$("search-rows").querySelectorAll(".search-row")].forEach(
+        node => {
+
+            const kind =
+                node.dataset.kind;
+
+
+            const definition =
+                SEARCH_ROWS.filter(r => r.kind === kind)[0];
+
+
+            node.querySelector(".search-row-fields")
+                .appendChild($(definition.fields));
+
+
+            $(definition.fields).hidden = false;
+
+
+            node.querySelector(".search-row-head")
+                .addEventListener(
+                    "click",
+                    () => openRow(kind)
+                );
+
+
+            node.querySelector(".find-go")
+                .addEventListener(
+                    "click",
+                    () => runLookup()
+                );
 
         }
     );
 
 
-    if(!entry.has_film && findKind === "film")
-        setKind("song");
+    openRow(rows[0].kind);
 
 }
 
 
-/* --- by song, by film, by person --- */
-
-const findKinds = [
-    ...document.querySelectorAll(".find-kind")
-];
-
-
-findKinds.forEach(
-    button =>
-        button.addEventListener(
-            "click",
-            () => setKind(button.dataset.kind)
-        )
-);
-
-
-function setKind(kind){
+function openRow(kind){
 
     findKind = kind;
 
 
-    findKinds.forEach(
-        button => {
+    [...$("search-rows").querySelectorAll(".search-row")].forEach(
+        node => {
 
             const on =
-                button.dataset.kind === kind;
+                node.dataset.kind === kind;
 
-            button.classList.toggle("on", on);
 
-            button.setAttribute("aria-selected", String(on));
+            node.classList.toggle("open", on);
+
+            node.querySelector(".search-row-body").hidden = !on;
 
         }
     );
 
 
-    $("kind-song").hidden = kind !== "song";
-
-    $("kind-film").hidden = kind !== "film";
-
-    $("kind-person").hidden = kind !== "person";
+    $("find-result").innerHTML = "";
 
 }
 
 
-/* --- the lookup itself --- */
-
-$("find-go").addEventListener("click", () => runLookup());
-
+/* --- the lookup --- */
 
 ["find-title", "find-film-only", "find-person"].forEach(
     id =>
@@ -4283,23 +4521,22 @@ function lookupBody(){
 }
 
 
+function findButtons(){
+
+    return [...document.querySelectorAll(".find-go")];
+
+}
+
+
 async function runLookup(body, status){
 
     const payload =
-        body || lookupBody();
+        (body && typeof body === "object" && body.mode)
+            ? body
+            : lookupBody();
 
 
     $("err").innerHTML = "";
-        /* a lookup started from a song row happens far down the page, so the
-       result is brought to where the person is looking */
-
-    document.querySelector(".find-mode").scrollIntoView({
-
-        behavior:"smooth",
-
-        block:"start"
-
-    });
 
 
     const wanted =
@@ -4315,17 +4552,24 @@ async function runLookup(body, status){
     }
 
 
-    const button = $("find-go");
+    findButtons().forEach(button => {
 
-    button.disabled = true;
+        button.disabled = true;
 
-    button.innerHTML = '<span class="spinner"></span>Looking';
+        button.innerHTML = '<span class="spinner"></span>Looking';
+
+    });
 
 
     $("find-result").innerHTML =
         '<p class="find-status">'
         + escapeHTML(status || "Searching the catalogue, and asking the model what it knows…")
         + '</p>';
+
+
+    /* a lookup started from a song row happens far down the page */
+
+    $("step-search").scrollIntoView({ behavior:"smooth", block:"start" });
 
 
     try{
@@ -4377,9 +4621,13 @@ async function runLookup(body, status){
 
     finally{
 
-        button.disabled = false;
+        findButtons().forEach(button => {
 
-        button.innerHTML = "Look it up →";
+            button.disabled = false;
+
+            button.innerHTML = "Look it up →";
+
+        });
 
     }
 
@@ -4462,9 +4710,6 @@ function renderList(data){
                     if(!song)
                         return;
 
-
-                    /* Choosing a title runs the ordinary song lookup for it,
-                       so the lyrics still come from the catalogue. */
 
                     runLookup(
                         {
@@ -4690,12 +4935,9 @@ function useCandidate(index){
     updateContextLabel();
 
 
-        document.querySelector(".workspace").scrollIntoView({
-
+    document.querySelector(".workspace").scrollIntoView({
         behavior:"smooth",
-
         block:"start"
-
     });
 
 }
@@ -4723,6 +4965,13 @@ function clearFind(){
     foundCandidates = [];
 
     foundContext = null;
+
+
+    /* back to the first question */
+
+    $("step-search").hidden = true;
+
+    $("step-repertoire").hidden = false;
 
 }
 

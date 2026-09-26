@@ -1742,6 +1742,629 @@ textarea{
 }
 
 /* =========================
+   TWO WAYS IN
+========================= */
+
+.mode-bars{
+
+    display:flex;
+
+    gap:6px;
+
+    margin-bottom:22px;
+
+    padding:5px;
+
+    border:1px solid var(--line);
+
+    border-radius:13px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.2));
+
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.35);
+}
+
+.mode-bar{
+
+    flex:1;
+
+    padding:11px 14px;
+
+    border:1px solid transparent;
+
+    border-radius:9px;
+
+    background:transparent;
+
+    color:var(--muted);
+
+    font-size:10px;
+
+    font-weight:600;
+
+    letter-spacing:.11em;
+
+    text-transform:uppercase;
+
+    transition:.22s;
+}
+
+.mode-bar:hover{
+    color:var(--text);
+}
+
+.mode-bar.on{
+
+    color:var(--green);
+
+    border-color:rgba(62,242,163,.35);
+
+    background:
+        linear-gradient(180deg,rgba(62,242,163,.09),rgba(62,242,163,.02));
+
+    box-shadow:0 0 20px rgba(62,242,163,.08);
+}
+
+.mode-bar:focus-visible{
+
+    outline:1px solid var(--green);
+
+    outline-offset:2px;
+}
+
+#find-mode[hidden],
+#paste-mode[hidden]{
+    display:none;
+}
+
+.find-mode{
+
+    animation:rise .4s cubic-bezier(.16,.84,.3,1) both;
+}
+
+.rep-bar{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:6px;
+
+    margin-bottom:18px;
+}
+
+.rep-tab{
+
+    flex:1;
+
+    padding:10px 12px;
+
+    border:1px solid var(--line);
+
+    border-radius:999px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.18));
+
+    color:var(--muted);
+
+    font-size:10px;
+
+    font-weight:600;
+
+    letter-spacing:.1em;
+
+    text-transform:uppercase;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    transition:.2s;
+}
+
+.rep-tab:hover{
+
+    border-color:#2f4a41;
+
+    color:var(--text);
+}
+
+.rep-tab.on{
+
+    color:var(--green);
+
+    border-color:rgba(62,242,163,.45);
+
+    background:rgba(62,242,163,.07);
+
+    box-shadow:0 0 18px rgba(62,242,163,.08);
+}
+
+.rep-tab:focus-visible{
+
+    outline:1px solid var(--green);
+
+    outline-offset:2px;
+}
+
+#find-film-row[hidden]{
+    display:none;
+}
+
+#find-film-row{
+
+    animation:rise .35s cubic-bezier(.16,.84,.3,1) both;
+}
+
+.find-row{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:14px;
+}
+
+.find-go{
+
+    width:100%;
+
+    margin-top:16px;
+}
+
+.find-help{
+
+    color:var(--muted);
+
+    font-size:11.5px;
+
+    line-height:1.6;
+
+    margin:14px 0 0;
+}
+
+.find-result{
+
+    margin-top:18px;
+}
+
+.find-status{
+
+    color:var(--muted);
+
+    font-size:12px;
+
+    margin:0;
+}
+
+.find-notice{
+
+    border-left:2px solid var(--green);
+
+    padding-left:13px;
+
+    color:var(--soft);
+
+    font-size:12px;
+
+    line-height:1.6;
+
+    margin:0 0 18px;
+}
+
+/* --- what the model believes --- */
+
+.find-context{
+
+    padding:15px;
+
+    margin-bottom:16px;
+
+    border:1px solid var(--line);
+
+    border-radius:12px;
+
+    background:var(--surface2);
+}
+
+.find-context-head{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:12px;
+
+    flex-wrap:wrap;
+
+    color:var(--muted);
+
+    font-size:9.5px;
+
+    font-weight:600;
+
+    letter-spacing:.14em;
+
+    text-transform:uppercase;
+
+    margin-bottom:13px;
+}
+
+.find-confidence{
+
+    color:var(--green);
+
+    letter-spacing:.06em;
+
+    font-variant-numeric:tabular-nums;
+}
+
+.find-facts{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:9px;
+}
+
+.find-fact{
+
+    padding:9px 11px;
+
+    background:#0b1014;
+
+    border-radius:9px;
+}
+
+.find-fact span{
+
+    display:block;
+
+    color:var(--muted);
+
+    font-size:9px;
+
+    letter-spacing:.09em;
+
+    text-transform:uppercase;
+}
+
+.find-fact b{
+
+    font-size:12.5px;
+
+    font-weight:500;
+}
+
+.find-note{
+
+    color:var(--muted);
+
+    font-size:11.5px;
+
+    line-height:1.55;
+
+    margin:12px 0 0;
+}
+
+/* --- a lyric candidate --- */
+
+.find-card{
+
+    border:1px solid var(--line);
+
+    border-radius:12px;
+
+    padding:15px;
+
+    margin-bottom:12px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.015),transparent);
+
+    transition:.22s;
+}
+
+.find-card:hover{
+    border-color:rgba(62,242,163,.3);
+}
+
+.find-card-head{
+
+    display:flex;
+
+    align-items:baseline;
+
+    justify-content:space-between;
+
+    gap:12px;
+
+    margin-bottom:11px;
+}
+
+.find-card-head b{
+
+    font-family:Newsreader,Georgia,serif;
+
+    font-size:19px;
+
+    font-weight:400;
+}
+
+.find-card-sub{
+
+    display:block;
+
+    color:var(--muted);
+
+    font-size:11px;
+
+    margin-top:2px;
+}
+
+.find-lines{
+
+    color:var(--green);
+
+    font-size:10px;
+
+    letter-spacing:.1em;
+
+    text-transform:uppercase;
+
+    white-space:nowrap;
+
+    font-variant-numeric:tabular-nums;
+}
+
+.find-lyrics{
+
+    max-height:230px;
+
+    overflow-y:auto;
+
+    margin:0 0 12px;
+
+    padding:12px;
+
+    background:#0b1014;
+
+    border-radius:9px;
+
+    color:var(--soft);
+
+    font-family:"Noto Sans Bengali","DM Sans",sans-serif;
+
+    font-size:12.5px;
+
+    line-height:1.7;
+}
+
+.find-use{
+
+    width:100%;
+}
+
+@media(max-width:650px){
+
+    .find-row,
+    .find-facts{
+        grid-template-columns:1fr;
+    }
+
+    .mode-bars,
+    .rep-bar{
+        flex-direction:column;
+    }
+
+}
+
+/* --- search by song, film or person --- */
+
+.find-kinds{
+
+    display:flex;
+
+    gap:6px;
+
+    margin:0 0 16px;
+}
+
+.find-kind{
+
+    flex:1;
+
+    padding:9px 10px;
+
+    border:1px solid var(--line);
+
+    border-radius:9px;
+
+    background:transparent;
+
+    color:var(--muted);
+
+    font-size:9.5px;
+
+    font-weight:600;
+
+    letter-spacing:.1em;
+
+    text-transform:uppercase;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    transition:.2s;
+}
+
+.find-kind[hidden]{
+    display:none;
+}
+
+.find-kind:hover{
+
+    border-color:#2f4a41;
+
+    color:var(--text);
+}
+
+.find-kind.on{
+
+    color:var(--green);
+
+    border-color:rgba(62,242,163,.4);
+
+    background:rgba(62,242,163,.06);
+}
+
+.find-fields[hidden]{
+    display:none;
+}
+
+.find-fields{
+
+    animation:rise .35s cubic-bezier(.16,.84,.3,1) both;
+}
+
+.find-row.single{
+
+    grid-template-columns:1fr;
+}
+
+.find-row + .find-row{
+
+    margin-top:14px;
+}
+
+/* --- one row in a song list --- */
+
+.song-row{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:14px;
+
+    width:100%;
+
+    padding:13px 15px;
+
+    margin-bottom:7px;
+
+    border:1px solid var(--line);
+
+    border-radius:11px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.015),transparent);
+
+    text-align:left;
+
+    transition:.2s;
+}
+
+.song-row:hover{
+
+    border-color:rgba(62,242,163,.4);
+
+    transform:translateX(2px);
+
+    box-shadow:0 0 22px rgba(62,242,163,.06);
+}
+
+.song-row-main{
+
+    min-width:0;
+}
+
+.song-row b{
+
+    display:block;
+
+    font-family:Newsreader,Georgia,serif;
+
+    font-size:18px;
+
+    font-weight:400;
+
+    color:var(--text);
+}
+
+.song-original{
+
+    display:block;
+
+    color:var(--soft);
+
+    font-size:12px;
+
+    margin-top:2px;
+}
+
+.song-detail{
+
+    display:block;
+
+    color:var(--muted);
+
+    font-size:11px;
+
+    margin-top:3px;
+}
+
+.song-tag{
+
+    flex:none;
+
+    padding:4px 10px;
+
+    border:1px solid var(--line);
+
+    border-radius:999px;
+
+    color:var(--muted);
+
+    font-size:9px;
+
+    letter-spacing:.09em;
+
+    text-transform:uppercase;
+
+    white-space:nowrap;
+}
+
+.song-tag.ready{
+
+    color:var(--green);
+
+    border-color:rgba(62,242,163,.4);
+
+    background:rgba(62,242,163,.06);
+}
+
+@media(max-width:650px){
+
+    .find-kinds{
+        flex-direction:column;
+    }
+
+}
+
+/* =========================
    MECHANISED DETAIL
 ========================= */
 
@@ -2168,6 +2791,157 @@ select:focus{
     </p>
 
 
+    <div class="mode-bars" role="tablist" aria-label="How to bring in a song">
+
+        <button
+            type="button"
+            class="mode-bar on"
+            role="tab"
+            aria-selected="true"
+            data-mode="paste"
+        >
+            Paste the lyrics
+        </button>
+
+        <button
+            type="button"
+            class="mode-bar"
+            role="tab"
+            aria-selected="false"
+            data-mode="find"
+        >
+            Type the name of the song
+        </button>
+
+    </div>
+
+
+    <!-- FIND BY NAME -->
+
+    <div id="find-mode" class="find-mode" hidden>
+
+        <!-- which repertoire -->
+
+        <div class="rep-bar" id="rep-bar" role="tablist" aria-label="Repertoire"></div>
+
+        <p class="find-help" id="rep-hint"></p>
+
+
+        <!-- what to search by -->
+
+        <div class="find-kinds" role="tablist" aria-label="Search by">
+
+            <button type="button" class="find-kind on" role="tab"
+                    aria-selected="true" data-kind="song">
+                By song
+            </button>
+
+            <button type="button" class="find-kind" role="tab"
+                    aria-selected="false" data-kind="film">
+                By film
+            </button>
+
+            <button type="button" class="find-kind" role="tab"
+                    aria-selected="false" data-kind="person">
+                By composer or singer
+            </button>
+
+        </div>
+
+
+        <!-- by song -->
+
+        <div id="kind-song" class="find-fields">
+
+            <div class="find-row">
+
+                <div>
+                    <label for="find-title">
+                        Song <span class="required">· required</span>
+                    </label>
+                    <input id="find-title" type="text"
+                           placeholder="e.g. Balam pichkari">
+                </div>
+
+                <div>
+                    <label for="find-artist">Artist or composer</label>
+                    <input id="find-artist" type="text"
+                           placeholder="Optional, narrows the search">
+                </div>
+
+            </div>
+
+            <div class="find-row single" id="find-film-row">
+
+                <div>
+                    <label for="find-film" id="find-film-label">Film</label>
+                    <input id="find-film" type="text"
+                           placeholder="Optional, narrows it further">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- by film -->
+
+        <div id="kind-film" class="find-fields" hidden>
+
+            <div class="find-row single">
+
+                <div>
+                    <label for="find-film-only" id="find-film-only-label">
+                        Film <span class="required">· required</span>
+                    </label>
+                    <input id="find-film-only" type="text"
+                           placeholder="e.g. Yeh Jawaani Hai Deewani">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- by person -->
+
+        <div id="kind-person" class="find-fields" hidden>
+
+            <div class="find-row single">
+
+                <div>
+                    <label for="find-person">
+                        Composer or singer <span class="required">· required</span>
+                    </label>
+                    <input id="find-person" type="text"
+                           placeholder="e.g. Pritam, Arijit Singh, Hemanta Mukhopadhyay">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <button id="find-go" class="primary find-go" type="button">
+            Look it up →
+        </button>
+
+
+        <p class="find-help">
+            Lyrics come from LRCLIB, a crowdsourced catalogue. Song lists and
+            context come from the model and are marked unverified: a title it
+            suggests may not exist, so check before you read.
+        </p>
+
+
+        <div id="find-result" class="find-result"></div>
+
+    </div>
+
+
+    <div id="paste-mode">
+
+
     <label for="lyrics">
 
         Lyrics
@@ -2206,6 +2980,9 @@ select:focus{
         </label>
 
     </div>
+
+    </div>
+    <!-- end of paste mode -->
 
 
     <!-- CONTEXT -->
@@ -3008,6 +3785,9 @@ $("clear").addEventListener(
             "0 words";
 
 
+        clearFind();
+
+
         updateContextLabel();
 
 
@@ -3198,6 +3978,751 @@ function showTheReading(){
         behavior: still ? "auto" : "smooth"
 
     });
+
+}
+
+
+/* =========================
+   TWO WAYS IN
+
+   Paste the lyrics, or name the song and let the app find them. The find
+   path never analyses anything directly: it fills the paste form, so the
+   words are on screen and editable before the model reads them.
+========================= */
+
+const modeBars = [
+    ...document.querySelectorAll(".mode-bar")
+];
+
+
+modeBars.forEach(
+    bar =>
+        bar.addEventListener(
+            "click",
+            () => {
+
+                const wanted =
+                    bar.dataset.mode;
+
+
+                modeBars.forEach(
+                    other => {
+
+                        const on =
+                            other === bar;
+
+                        other.classList.toggle("on", on);
+
+                        other.setAttribute(
+                            "aria-selected",
+                            String(on)
+                        );
+
+                    }
+                );
+
+
+                $("paste-mode").hidden = wanted !== "paste";
+
+                $("find-mode").hidden = wanted !== "find";
+
+
+                if(wanted === "find")
+                    $("find-title").focus();
+
+                else
+                    $("lyrics").focus();
+
+            }
+        )
+);
+
+
+function showMode(wanted){
+
+    const bar =
+        modeBars.filter(b => b.dataset.mode === wanted)[0];
+
+
+    if(bar)
+        bar.click();
+
+}
+
+
+/* =========================
+   LOOK UP A SONG
+
+   Three ways in: the song itself, a film, or a person. A film or a person
+   returns a list of titles; choosing one looks up that song's lyrics. Nothing
+   is analysed here. The lyrics land in the paste form, where they can be read
+   and edited before the model sees them.
+========================= */
+
+let repertoires = [];
+
+let repertoire = "bollywood";
+
+let findKind = "song";
+
+let foundCandidates = [];
+
+let foundContext = null;
+
+
+/* --- the repertoire bar --- */
+
+(async function loadRepertoires(){
+
+    try{
+
+        const data =
+            await (await fetch("/api/repertoires")).json();
+
+        repertoires = data.repertoires || [];
+
+    }
+
+    catch(error){
+
+        repertoires = [];
+
+    }
+
+
+    if(!repertoires.length)
+        return;
+
+
+    $("rep-bar").innerHTML =
+        repertoires
+            .map(entry =>
+                '<button type="button" class="rep-tab'
+                + (entry.id === repertoire ? " on" : "")
+                + '" role="tab" data-rep="' + entry.id + '">'
+                + escapeHTML(entry.label)
+                + '</button>'
+            )
+            .join("");
+
+
+    [...$("rep-bar").querySelectorAll(".rep-tab")].forEach(
+        button =>
+            button.addEventListener(
+                "click",
+                () => setRepertoire(button.dataset.rep)
+            )
+    );
+
+
+    setRepertoire(repertoire);
+
+})();
+
+
+function setRepertoire(id){
+
+    repertoire = id;
+
+
+    const entry =
+        repertoires.filter(r => r.id === id)[0];
+
+
+    [...$("rep-bar").querySelectorAll(".rep-tab")].forEach(
+        button => {
+
+            const on =
+                button.dataset.rep === id;
+
+            button.classList.toggle("on", on);
+
+            button.setAttribute("aria-selected", String(on));
+
+        }
+    );
+
+
+    if(!entry)
+        return;
+
+
+    $("rep-hint").textContent = entry.hint || "";
+
+
+    /* Rabindrasangeet has no film, so those inputs go away entirely */
+
+    const label =
+        entry.film_label || "Film";
+
+
+    $("find-film-label").textContent = label;
+
+    $("find-film-only-label").innerHTML =
+        escapeHTML(label) + ' <span class="required">· required</span>';
+
+
+    $("find-film-row").hidden = !entry.has_film;
+
+
+    [...document.querySelectorAll('.find-kind[data-kind="film"]')].forEach(
+        button => {
+
+            button.hidden = !entry.has_film;
+
+            button.textContent = "By " + label.toLowerCase();
+
+        }
+    );
+
+
+    if(!entry.has_film && findKind === "film")
+        setKind("song");
+
+}
+
+
+/* --- by song, by film, by person --- */
+
+const findKinds = [
+    ...document.querySelectorAll(".find-kind")
+];
+
+
+findKinds.forEach(
+    button =>
+        button.addEventListener(
+            "click",
+            () => setKind(button.dataset.kind)
+        )
+);
+
+
+function setKind(kind){
+
+    findKind = kind;
+
+
+    findKinds.forEach(
+        button => {
+
+            const on =
+                button.dataset.kind === kind;
+
+            button.classList.toggle("on", on);
+
+            button.setAttribute("aria-selected", String(on));
+
+        }
+    );
+
+
+    $("kind-song").hidden = kind !== "song";
+
+    $("kind-film").hidden = kind !== "film";
+
+    $("kind-person").hidden = kind !== "person";
+
+}
+
+
+/* --- the lookup itself --- */
+
+$("find-go").addEventListener("click", () => runLookup());
+
+
+["find-title", "find-film-only", "find-person"].forEach(
+    id =>
+        $(id).addEventListener(
+            "keydown",
+            event => {
+
+                if(event.key === "Enter")
+                    runLookup();
+
+            }
+        )
+);
+
+
+function lookupBody(){
+
+    if(findKind === "film"){
+
+        return {
+            mode: "film",
+            film: $("find-film-only").value.trim(),
+            repertoire: repertoire,
+            model: window.LYRIQ_MODEL || ""
+        };
+
+    }
+
+
+    if(findKind === "person"){
+
+        return {
+            mode: "person",
+            person: $("find-person").value.trim(),
+            repertoire: repertoire,
+            model: window.LYRIQ_MODEL || ""
+        };
+
+    }
+
+
+    return {
+        mode: "song",
+        title: $("find-title").value.trim(),
+        artist: $("find-artist").value.trim(),
+        film: $("find-film").value.trim(),
+        repertoire: repertoire,
+        model: window.LYRIQ_MODEL || ""
+    };
+
+}
+
+
+async function runLookup(body, status){
+
+    const payload =
+        body || lookupBody();
+
+
+    $("err").innerHTML = "";
+        /* a lookup started from a song row happens far down the page, so the
+       result is brought to where the person is looking */
+
+    document.querySelector(".find-mode").scrollIntoView({
+
+        behavior:"smooth",
+
+        block:"start"
+
+    });
+
+
+    const wanted =
+        payload.title || payload.film || payload.person;
+
+
+    if(!wanted){
+
+        showError("Fill in what you are searching for first.");
+
+        return;
+
+    }
+
+
+    const button = $("find-go");
+
+    button.disabled = true;
+
+    button.innerHTML = '<span class="spinner"></span>Looking';
+
+
+    $("find-result").innerHTML =
+        '<p class="find-status">'
+        + escapeHTML(status || "Searching the catalogue, and asking the model what it knows…")
+        + '</p>';
+
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/lookup",
+                {
+                    method:"POST",
+                    headers:{ "Content-Type":"application/json" },
+                    body: JSON.stringify(payload)
+                }
+            );
+
+
+        const data =
+            await readJSON(response);
+
+
+        if(!response.ok)
+            throw new Error(data.error || "The lookup failed.");
+
+
+        if(data.mode === "song"){
+
+            foundCandidates = data.candidates || [];
+
+            foundContext = data.context || null;
+
+            renderSong(data);
+
+        }
+
+        else{
+
+            renderList(data);
+
+        }
+
+    }
+
+    catch(error){
+
+        $("find-result").innerHTML = "";
+
+        showError(error.message);
+
+    }
+
+    finally{
+
+        button.disabled = false;
+
+        button.innerHTML = "Look it up →";
+
+    }
+
+}
+
+
+/* --- a list of songs, from a film or a person --- */
+
+function renderList(data){
+
+    let html = "";
+
+
+    html +=
+        '<p class="find-notice">'
+        + escapeHTML(data.notice || "")
+        + '</p>';
+
+
+    if(data.note){
+
+        html +=
+            '<p class="find-note">'
+            + escapeHTML(data.note)
+            + '</p>';
+
+    }
+
+
+    (data.songs || []).forEach((song, index) => {
+
+        const detail =
+            [
+                (song.performers || []).join(", "),
+                song.composer,
+                song.album,
+                song.year
+            ]
+            .filter(Boolean)
+            .join(" · ");
+
+
+        html +=
+            '<button type="button" class="song-row" data-index="' + index + '">'
+
+            + '<span class="song-row-main">'
+            + '<b>' + escapeHTML(song.title) + '</b>'
+            + (song.original
+                ? '<span class="song-original">' + escapeHTML(song.original) + '</span>'
+                : "")
+            + (detail
+                ? '<span class="song-detail">' + escapeHTML(detail) + '</span>'
+                : "")
+            + '</span>'
+
+            + '<span class="song-tag' + (song.verified ? " ready" : "") + '">'
+            + (song.verified ? "lyrics ready" : "unverified")
+            + '</span>'
+
+            + '</button>';
+
+    });
+
+
+    $("find-result").innerHTML = html;
+
+
+    const songs = data.songs || [];
+
+
+    [...$("find-result").querySelectorAll(".song-row")].forEach(
+        button =>
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const song =
+                        songs[Number(button.dataset.index)];
+
+                    if(!song)
+                        return;
+
+
+                    /* Choosing a title runs the ordinary song lookup for it,
+                       so the lyrics still come from the catalogue. */
+
+                    runLookup(
+                        {
+                            mode: "song",
+                            title: song.title,
+                            artist: (song.performers || [])[0] || "",
+                            film: data.mode === "film" ? data.subject : (song.album || ""),
+                            repertoire: repertoire,
+                            model: window.LYRIQ_MODEL || ""
+                        },
+                        'Looking up the lyrics of "' + song.title + '"…'
+                    );
+
+                }
+            )
+    );
+
+}
+
+
+/* --- one song: context, then the lyrics themselves --- */
+
+function renderSong(data){
+
+    let html = "";
+
+
+    html +=
+        '<p class="find-notice">'
+        + escapeHTML(data.notice || "")
+        + '</p>';
+
+
+    const context =
+        data.context || {};
+
+
+    if(Object.keys(context).length && !context.error){
+
+        const rows = [
+            ["Film", context.film],
+            ["Composer", context.composer],
+            ["Lyricist", context.lyricist],
+            ["Tradition", context.tradition],
+            ["Language", context.language],
+            ["Parjaay", context.parjaay],
+            ["Raga", context.raga],
+            ["Taal", context.taal],
+            ["Laya", context.laya],
+            ["Year", context.year],
+            ["Performers", (context.performers || []).join(", ")]
+        ].filter(row => row[1]);
+
+
+        html +=
+            '<div class="find-context">'
+            + '<div class="find-context-head">'
+            + 'What the model believes, unverified'
+            + '<span class="find-confidence">confidence '
+            + (context.confidence ?? 0).toFixed(2)
+            + '</span>'
+            + '</div>';
+
+
+        if(rows.length){
+
+            html += '<div class="find-facts">';
+
+            rows.forEach(row => {
+
+                html +=
+                    '<div class="find-fact">'
+                    + '<span>' + escapeHTML(row[0]) + '</span>'
+                    + '<b>' + escapeHTML(String(row[1])) + '</b>'
+                    + '</div>';
+
+            });
+
+            html += '</div>';
+
+        }
+
+        else{
+
+            html +=
+                '<p class="find-status">'
+                + 'The model does not recognise this song, so nothing is filled in.'
+                + '</p>';
+
+        }
+
+
+        if(context.note){
+
+            html +=
+                '<p class="find-note">'
+                + escapeHTML(context.note)
+                + '</p>';
+
+        }
+
+
+        html += '</div>';
+
+    }
+
+
+    foundCandidates.forEach((candidate, index) => {
+
+        html +=
+            '<div class="find-card">'
+
+            + '<div class="find-card-head">'
+            + '<div>'
+            + '<b>' + escapeHTML(candidate.title || "Untitled") + '</b>'
+            + '<span class="find-card-sub">'
+            + escapeHTML(
+                [candidate.artist, candidate.album].filter(Boolean).join(" · ")
+              )
+            + '</span>'
+            + '</div>'
+            + '<span class="find-lines">' + candidate.lines + ' lines</span>'
+            + '</div>'
+
+            + '<pre class="find-lyrics">'
+            + escapeHTML(candidate.lyrics)
+            + '</pre>'
+
+            + '<button type="button" class="secondary find-use" '
+            + 'data-index="' + index + '">'
+            + 'Use these lyrics'
+            + '</button>'
+
+            + '</div>';
+
+    });
+
+
+    $("find-result").innerHTML = html;
+
+
+    [...$("find-result").querySelectorAll(".find-use")].forEach(
+        button =>
+            button.addEventListener(
+                "click",
+                () => useCandidate(Number(button.dataset.index))
+            )
+    );
+
+}
+
+
+/* Fills the paste form and switches to it, so the reviewer sees exactly what
+   will be read and can edit it first. Nothing is analysed here. */
+
+function useCandidate(index){
+
+    const candidate =
+        foundCandidates[index];
+
+
+    if(!candidate)
+        return;
+
+
+    $("lyrics").value = candidate.lyrics;
+
+    $("lyrics").dispatchEvent(new Event("input"));
+
+
+    const context =
+        foundContext || {};
+
+
+    const fill = (field, value) => {
+
+        const element = $(field);
+
+        if(element && value && !element.value.trim())
+            element.value = String(value);
+
+    };
+
+
+    fill("title", candidate.title || context.title);
+
+    fill("composer", context.composer || context.lyricist);
+
+    fill("tradition", context.tradition);
+
+    fill("language", context.language);
+
+    fill("raga", context.raga);
+
+    fill("taal", context.taal);
+
+    fill("laya", context.laya);
+
+
+    if(context.parjaay){
+
+        const parjaay = $("parjaay");
+
+        const options = [...parjaay.options].map(o => o.value);
+
+        if(options.includes(context.parjaay))
+            parjaay.value = context.parjaay;
+
+    }
+
+
+    fill("notes",
+        [
+            context.film ? "From the film " + context.film + "." : "",
+            "Lyrics from " + (candidate.source || "a lyrics catalogue") + ".",
+            "Context unverified."
+        ].filter(Boolean).join(" ")
+    );
+
+
+    showMode("paste");
+
+    updateContextLabel();
+
+
+        document.querySelector(".workspace").scrollIntoView({
+
+        behavior:"smooth",
+
+        block:"start"
+
+    });
+
+}
+
+
+/* --- Clear empties this side too --- */
+
+function clearFind(){
+
+    ["find-title", "find-artist", "find-film",
+     "find-film-only", "find-person"].forEach(
+        id => {
+
+            const element = $(id);
+
+            if(element)
+                element.value = "";
+
+        }
+    );
+
+
+    $("find-result").innerHTML = "";
+
+    foundCandidates = [];
+
+    foundContext = null;
 
 }
 
