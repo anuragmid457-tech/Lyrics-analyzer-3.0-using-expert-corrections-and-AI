@@ -153,10 +153,13 @@ music, Rabindrasangeet, and English language popular and film song.
 
 """ + NEVER_LYRICS + """
 
+Treat the name as case insensitive and possibly mis-spelled: the researcher may type it in capitals, in lower case, or with a word missing. Recognise the film or person they mean.
+
 List only songs you are genuinely confident belong there. A short accurate list \
 is worth far more than a long one padded with plausible titles: every invented \
-title is a lookup the researcher wastes. If you do not recognise what you are \
-given, return an empty list and say so in the note.
+title is a lookup the researcher wastes. If you do not recognise what you \
+are given, return an empty list and say so in the note. If it may be newer than \
+what you were trained on, say that in the note rather than guessing at titles.
 
 For each song give:
   title       as usually written, in roman transliteration
@@ -237,7 +240,9 @@ def search_tracks(track=None, artist=None, album=None, query=None):
 
 def find_lyrics(title, artist="", film="", limit=MAX_CANDIDATES):
     """Lyric candidates for one song, widening the search until something sticks."""
-    title = (title or "").strip()
+    title = normalise(title)
+    artist = normalise(artist)
+    film = normalise(film)
     if not title:
         return []
 
@@ -287,6 +292,43 @@ def _loads(raw):
     return json.loads(cleaned.strip("` \n"))
 
 
+# Words that stay lowercase inside a title, and ones that are always capitals.
+SMALL_WORDS = {"a", "an", "and", "as", "at", "by", "for", "from", "in", "is",
+               "ka", "ke", "ki", "mein", "na", "ne", "o", "of", "on", "or",
+               "par", "se", "the", "to", "aur", "hai", "ho", "je", "ar"}
+
+KEEP_UPPER = {"dc", "mtv", "rrr", "kgf", "ddlj", "kkhh", "ii", "iii", "iv",
+              "vi", "vii", "viii", "ix", "xi", "ok", "dj", "abcd"}
+
+
+def normalise(text):
+    """What the person typed, in one predictable shape.
+
+    A model answers "COCKTAIL 2", "cocktail 2" and "Cocktail 2" differently,
+    because case is part of the prompt. The catalogue does not care, but the
+    model does, so every search is tidied to the same shape first and the same
+    question comes back with the same songs however it was typed.
+    """
+    words = " ".join(str(text or "").split())
+    if not words:
+        return ""
+
+    out = []
+    for index, word in enumerate(words.lower().split(" ")):
+        bare = word.strip(".,:;!?()[]'\"")
+
+        # K3G, RRR, 3 Idiots: a short token carrying a digit, or a known
+        # abbreviation, is a name rather than a word.
+        if bare in KEEP_UPPER or (any(c.isdigit() for c in bare) and len(bare) <= 4):
+            out.append(word.upper())
+        elif index > 0 and bare in SMALL_WORDS:
+            out.append(word)
+        else:
+            out.append(word[:1].upper() + word[1:])
+
+    return " ".join(out)
+
+
 def _clean_text(value, limit=120):
     if value is None:
         return None
@@ -333,7 +375,9 @@ def describe_song(title, artist="", film="", repertoire=None, chat=None):
     """Context about one song. Never lyrics."""
     from langchain_core.messages import HumanMessage, SystemMessage
 
-    title = (title or "").strip()
+    title = normalise(title)
+    artist = normalise(artist)
+    film = normalise(film)
     if not title:
         return {}
 
@@ -390,6 +434,7 @@ def _titles_from_model(subject, kind, repertoire=None, chat=None):
     """Songs of a film, or by a person, as titles only."""
     from langchain_core.messages import HumanMessage, SystemMessage
 
+    subject = normalise(subject)
     entry = repertoire_of(repertoire)
 
     asked = ("Film: " if kind == "film" else "Composer or singer: ") + subject
@@ -478,6 +523,10 @@ def _merge_titles(catalogue, suggested):
 
 def lookup(title, artist="", film="", repertoire=None, chat=None):
     """One song: real lyrics, plus unverified context."""
+    title = normalise(title)
+    artist = normalise(artist)
+    film = normalise(film)
+
     candidates = find_lyrics(title, artist, film)
 
     try:
@@ -511,9 +560,47 @@ def lookup(title, artist="", film="", repertoire=None, chat=None):
     }
 
 
+def _catalogue_for(subject, kind):
+    """Several searches, because one exact match finds very little.
+
+    An album search only matches when the soundtrack is filed under exactly
+    that name, which for film music it often is not: it may be filed under
+    the film plus a year, plus "Original Motion Picture Soundtrack", or the
+    songs may be filed under the singer with no album at all. So the free
+    text search runs too, and anything whose album or title mentions the
+    subject is kept.
+    """
+    wanted = subject.strip().lower()
+
+    rows = []
+    if kind == "film":
+        rows += search_tracks(album=subject)
+        rows += search_tracks(query=subject)
+        rows += search_tracks(query=subject + " soundtrack")
+    else:
+        rows += search_tracks(artist=subject)
+        rows += search_tracks(query=subject)
+
+    keep, seen = [], set()
+    for row in rows:
+        key = row["id"] or (row["title"].lower(), row["artist"].lower())
+        if key in seen:
+            continue
+
+        haystack = " ".join([row["album"], row["artist"], row["title"]]).lower()
+        if wanted not in haystack:
+            # A free text search returns near misses; without this a search
+            # for one film fills up with songs from another.
+            continue
+
+        seen.add(key)
+        keep.append(row)
+
+    return keep
+
+
 def _listing(subject, kind, repertoire, chat, empty_notice):
-    catalogue = (search_tracks(album=subject) if kind == "film"
-                 else search_tracks(artist=subject))
+    catalogue = _catalogue_for(subject, kind)
 
     try:
         suggested = _titles_from_model(subject, kind, repertoire, chat=chat)
@@ -538,25 +625,28 @@ def _listing(subject, kind, repertoire, chat, empty_notice):
             "searches for its lyrics."
             if songs else empty_notice
         ),
+        "maybe_too_recent": not songs,
     }
 
 
 def by_film(film, repertoire=None, chat=None):
     """Everything in a film, to choose from."""
-    film = (film or "").strip()
+    film = normalise(film)
     if not film:
         return {"mode": "film", "songs": [], "notice": "Name a film first."}
 
     return _listing(
         film, "film", repertoire, chat,
-        "Nothing found for that film. Check the spelling, or search by song "
-        "name instead.",
+        "Nothing found for that film. Either the soundtrack is not in the "
+        "catalogue, or the film is newer than the model's training data, "
+        "which is common for anything released in the last year or two. "
+        "Search by song name instead, or paste the lyrics.",
     )
 
 
 def by_person(person, repertoire=None, chat=None):
     """Everything by a composer or singer, to choose from."""
-    person = (person or "").strip()
+    person = normalise(person)
     if not person:
         return {"mode": "person", "songs": [],
                 "notice": "Name a composer or singer first."}
@@ -564,5 +654,6 @@ def by_person(person, repertoire=None, chat=None):
     return _listing(
         person, "person", repertoire, chat,
         "Nothing found for that name. A singer usually finds more than a "
-        "composer, because the catalogue is built from recordings.",
+        "composer, because the catalogue is built from recordings. Recent "
+        "work may also be newer than the model's training data.",
     )
