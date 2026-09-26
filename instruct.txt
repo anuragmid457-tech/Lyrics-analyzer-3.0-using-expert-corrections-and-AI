@@ -48,7 +48,7 @@ DATABASE_URL="postgresql://postgres.txopirfjznzzgkufpskj:[YOUR-PASSWORD]@aws-0-a
 DIRECT_URL="postgresql://postgres.txopirfjznzzgkufpskj:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
 
 git add .
-git commit -m "Change the system a bit. "
+git commit -m "Made some robust changes. . "
 git push
 
 

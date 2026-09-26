@@ -1823,16 +1823,18 @@ textarea{
     animation:rise .4s cubic-bezier(.16,.84,.3,1) both;
 }
 
-.repertoire-bars{
+.rep-bar{
 
     display:flex;
+
+    flex-wrap:wrap;
 
     gap:6px;
 
     margin-bottom:18px;
 }
 
-.repertoire-bar{
+.rep-tab{
 
     flex:1;
 
@@ -1864,14 +1866,14 @@ textarea{
     transition:.2s;
 }
 
-.repertoire-bar:hover{
+.rep-tab:hover{
 
     border-color:#2f4a41;
 
     color:var(--text);
 }
 
-.repertoire-bar.on{
+.rep-tab.on{
 
     color:var(--green);
 
@@ -1882,7 +1884,7 @@ textarea{
     box-shadow:0 0 18px rgba(62,242,163,.08);
 }
 
-.repertoire-bar:focus-visible{
+.rep-tab:focus-visible{
 
     outline:1px solid var(--green);
 
@@ -2158,7 +2160,205 @@ textarea{
     }
 
     .mode-bars,
-    .repertoire-bars{
+    .rep-bar{
+        flex-direction:column;
+    }
+
+}
+
+/* --- search by song, film or person --- */
+
+.find-kinds{
+
+    display:flex;
+
+    gap:6px;
+
+    margin:0 0 16px;
+}
+
+.find-kind{
+
+    flex:1;
+
+    padding:9px 10px;
+
+    border:1px solid var(--line);
+
+    border-radius:9px;
+
+    background:transparent;
+
+    color:var(--muted);
+
+    font-size:9.5px;
+
+    font-weight:600;
+
+    letter-spacing:.1em;
+
+    text-transform:uppercase;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    transition:.2s;
+}
+
+.find-kind[hidden]{
+    display:none;
+}
+
+.find-kind:hover{
+
+    border-color:#2f4a41;
+
+    color:var(--text);
+}
+
+.find-kind.on{
+
+    color:var(--green);
+
+    border-color:rgba(62,242,163,.4);
+
+    background:rgba(62,242,163,.06);
+}
+
+.find-fields[hidden]{
+    display:none;
+}
+
+.find-fields{
+
+    animation:rise .35s cubic-bezier(.16,.84,.3,1) both;
+}
+
+.find-row.single{
+
+    grid-template-columns:1fr;
+}
+
+.find-row + .find-row{
+
+    margin-top:14px;
+}
+
+/* --- one row in a song list --- */
+
+.song-row{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:14px;
+
+    width:100%;
+
+    padding:13px 15px;
+
+    margin-bottom:7px;
+
+    border:1px solid var(--line);
+
+    border-radius:11px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.015),transparent);
+
+    text-align:left;
+
+    transition:.2s;
+}
+
+.song-row:hover{
+
+    border-color:rgba(62,242,163,.4);
+
+    transform:translateX(2px);
+
+    box-shadow:0 0 22px rgba(62,242,163,.06);
+}
+
+.song-row-main{
+
+    min-width:0;
+}
+
+.song-row b{
+
+    display:block;
+
+    font-family:Newsreader,Georgia,serif;
+
+    font-size:18px;
+
+    font-weight:400;
+
+    color:var(--text);
+}
+
+.song-original{
+
+    display:block;
+
+    color:var(--soft);
+
+    font-size:12px;
+
+    margin-top:2px;
+}
+
+.song-detail{
+
+    display:block;
+
+    color:var(--muted);
+
+    font-size:11px;
+
+    margin-top:3px;
+}
+
+.song-tag{
+
+    flex:none;
+
+    padding:4px 10px;
+
+    border:1px solid var(--line);
+
+    border-radius:999px;
+
+    color:var(--muted);
+
+    font-size:9px;
+
+    letter-spacing:.09em;
+
+    text-transform:uppercase;
+
+    white-space:nowrap;
+}
+
+.song-tag.ready{
+
+    color:var(--green);
+
+    border-color:rgba(62,242,163,.4);
+
+    background:rgba(62,242,163,.06);
+}
+
+@media(max-width:650px){
+
+    .find-kinds{
         flex-direction:column;
     }
 
@@ -2620,110 +2820,117 @@ select:focus{
 
     <div id="find-mode" class="find-mode" hidden>
 
-        <div
-            class="repertoire-bars"
-            role="tablist"
-            aria-label="Which repertoire"
-        >
+        <!-- which repertoire -->
 
-            <button
-                type="button"
-                class="repertoire-bar on"
-                role="tab"
-                aria-selected="true"
-                data-repertoire="bollywood"
-            >
-                Bollywood
+        <div class="rep-bar" id="rep-bar" role="tablist" aria-label="Repertoire"></div>
+
+        <p class="find-help" id="rep-hint"></p>
+
+
+        <!-- what to search by -->
+
+        <div class="find-kinds" role="tablist" aria-label="Search by">
+
+            <button type="button" class="find-kind on" role="tab"
+                    aria-selected="true" data-kind="song">
+                By song
             </button>
 
-            <button
-                type="button"
-                class="repertoire-bar"
-                role="tab"
-                aria-selected="false"
-                data-repertoire="rabindrasangeet"
-            >
-                Rabindrasangeet
+            <button type="button" class="find-kind" role="tab"
+                    aria-selected="false" data-kind="film">
+                By film
             </button>
 
-            <button
-                type="button"
-                class="repertoire-bar"
-                role="tab"
-                aria-selected="false"
-                data-repertoire="hollywood"
-            >
-                Hollywood
+            <button type="button" class="find-kind" role="tab"
+                    aria-selected="false" data-kind="person">
+                By composer or singer
             </button>
 
         </div>
 
 
-        <div id="find-film-row" class="field">
+        <!-- by song -->
 
-            <label for="find-film">
-                Film
-            </label>
+        <div id="kind-song" class="find-fields">
 
-            <input
-                id="find-film"
-                type="text"
-                placeholder="The film the song belongs to"
-            >
+            <div class="find-row">
 
-        </div>
+                <div>
+                    <label for="find-title">
+                        Song <span class="required">· required</span>
+                    </label>
+                    <input id="find-title" type="text"
+                           placeholder="e.g. Balam pichkari">
+                </div>
 
-
-        <div class="find-row">
-
-            <div>
-
-                <label for="find-title">
-                    Song
-                    <span class="required">· required</span>
-                </label>
-
-                <input
-                    id="find-title"
-                    type="text"
-                    placeholder="e.g. Khacar bhitor ochin pakhi"
-                >
+                <div>
+                    <label for="find-artist">Artist or composer</label>
+                    <input id="find-artist" type="text"
+                           placeholder="Optional, narrows the search">
+                </div>
 
             </div>
 
-            <div>
+            <div class="find-row single" id="find-film-row">
 
-                <label for="find-artist">
-                    <span id="find-artist-label">
-                        Singer or music director
-                    </span>
-                </label>
-
-                <input
-                    id="find-artist"
-                    type="text"
-                    placeholder="Optional, but it narrows the search"
-                >
+                <div>
+                    <label for="find-film" id="find-film-label">Film</label>
+                    <input id="find-film" type="text"
+                           placeholder="Optional, narrows it further">
+                </div>
 
             </div>
 
         </div>
 
 
-        <button
-            id="find-go"
-            class="primary find-go"
-            type="button"
-        >
+        <!-- by film -->
+
+        <div id="kind-film" class="find-fields" hidden>
+
+            <div class="find-row single">
+
+                <div>
+                    <label for="find-film-only" id="find-film-only-label">
+                        Film <span class="required">· required</span>
+                    </label>
+                    <input id="find-film-only" type="text"
+                           placeholder="e.g. Yeh Jawaani Hai Deewani">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- by person -->
+
+        <div id="kind-person" class="find-fields" hidden>
+
+            <div class="find-row single">
+
+                <div>
+                    <label for="find-person">
+                        Composer or singer <span class="required">· required</span>
+                    </label>
+                    <input id="find-person" type="text"
+                           placeholder="e.g. Pritam, Arijit Singh, Hemanta Mukhopadhyay">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <button id="find-go" class="primary find-go" type="button">
             Look it up →
         </button>
 
 
         <p class="find-help">
-            Lyrics are fetched from LRCLIB, a crowdsourced catalogue. It carries
-            little Bengali or South Asian repertoire, so Rabindrasangeet, Baul
-            and Lalan often will not be there. The context below the lyrics comes
-            from the model and is unverified: check it before reading.
+            Lyrics come from LRCLIB, a crowdsourced catalogue. Song lists and
+            context come from the model and are marked unverified: a title it
+            suggests may not exist, so check before you read.
         </p>
 
 
@@ -3578,6 +3785,9 @@ $("clear").addEventListener(
             "0 words";
 
 
+        clearFind();
+
+
         updateContextLabel();
 
 
@@ -3841,135 +4051,254 @@ function showMode(wanted){
 
 
 /* =========================
-   WHICH REPERTOIRE
+   LOOK UP A SONG
 
-   A Bollywood song is found by its film, a Tagore song by its parjaay, a
-   Hollywood song by neither. The choice changes what is asked for here and
-   what the model is asked about on the server.
+   Three ways in: the song itself, a film, or a person. A film or a person
+   returns a list of titles; choosing one looks up that song's lyrics. Nothing
+   is analysed here. The lyrics land in the paste form, where they can be read
+   and edited before the model sees them.
 ========================= */
+
+let repertoires = [];
 
 let repertoire = "bollywood";
 
-
-const REPERTOIRE_FORM = {
-
-    bollywood: {
-        film: true,
-        artist: "Singer or music director",
-        song: "e.g. Balam pichkari"
-    },
-
-    rabindrasangeet: {
-        film: false,
-        artist: "Performer",
-        song: "e.g. Khacar bhitor ochin pakhi"
-    },
-
-    hollywood: {
-        film: false,
-        artist: "Artist or band",
-        song: "e.g. Bohemian Rhapsody"
-    }
-
-};
-
-
-const repertoireBars = [
-    ...document.querySelectorAll(".repertoire-bar")
-];
-
-
-repertoireBars.forEach(
-    bar =>
-        bar.addEventListener(
-            "click",
-            () => {
-
-                repertoire =
-                    bar.dataset.repertoire;
-
-
-                repertoireBars.forEach(
-                    other => {
-
-                        const on =
-                            other === bar;
-
-                        other.classList.toggle("on", on);
-
-                        other.setAttribute(
-                            "aria-selected",
-                            String(on)
-                        );
-
-                    }
-                );
-
-
-                const shape =
-                    REPERTOIRE_FORM[repertoire]
-                    ||
-                    REPERTOIRE_FORM.bollywood;
-
-
-                $("find-film-row").hidden = !shape.film;
-
-                $("find-artist-label").textContent = shape.artist;
-
-                $("find-title").placeholder = shape.song;
-
-
-                /* a film name left behind from another repertoire would
-                   silently narrow the next search to nothing */
-
-                if(!shape.film)
-                    $("find-film").value = "";
-
-            }
-        )
-);
-
-
-/* =========================
-   LOOK UP A SONG BY NAME
-========================= */
-
-$("find-go").addEventListener(
-    "click",
-    findSong
-);
-
-
-$("find-title").addEventListener(
-    "keydown",
-    event => {
-
-        if(event.key === "Enter")
-            findSong();
-
-    }
-);
-
+let findKind = "song";
 
 let foundCandidates = [];
 
 let foundContext = null;
 
 
-async function findSong(){
+/* --- the repertoire bar --- */
 
-    const title =
-        $("find-title").value.trim();
+(async function loadRepertoires(){
+
+    try{
+
+        const data =
+            await (await fetch("/api/repertoires")).json();
+
+        repertoires = data.repertoires || [];
+
+    }
+
+    catch(error){
+
+        repertoires = [];
+
+    }
+
+
+    if(!repertoires.length)
+        return;
+
+
+    $("rep-bar").innerHTML =
+        repertoires
+            .map(entry =>
+                '<button type="button" class="rep-tab'
+                + (entry.id === repertoire ? " on" : "")
+                + '" role="tab" data-rep="' + entry.id + '">'
+                + escapeHTML(entry.label)
+                + '</button>'
+            )
+            .join("");
+
+
+    [...$("rep-bar").querySelectorAll(".rep-tab")].forEach(
+        button =>
+            button.addEventListener(
+                "click",
+                () => setRepertoire(button.dataset.rep)
+            )
+    );
+
+
+    setRepertoire(repertoire);
+
+})();
+
+
+function setRepertoire(id){
+
+    repertoire = id;
+
+
+    const entry =
+        repertoires.filter(r => r.id === id)[0];
+
+
+    [...$("rep-bar").querySelectorAll(".rep-tab")].forEach(
+        button => {
+
+            const on =
+                button.dataset.rep === id;
+
+            button.classList.toggle("on", on);
+
+            button.setAttribute("aria-selected", String(on));
+
+        }
+    );
+
+
+    if(!entry)
+        return;
+
+
+    $("rep-hint").textContent = entry.hint || "";
+
+
+    /* Rabindrasangeet has no film, so those inputs go away entirely */
+
+    const label =
+        entry.film_label || "Film";
+
+
+    $("find-film-label").textContent = label;
+
+    $("find-film-only-label").innerHTML =
+        escapeHTML(label) + ' <span class="required">· required</span>';
+
+
+    $("find-film-row").hidden = !entry.has_film;
+
+
+    [...document.querySelectorAll('.find-kind[data-kind="film"]')].forEach(
+        button => {
+
+            button.hidden = !entry.has_film;
+
+            button.textContent = "By " + label.toLowerCase();
+
+        }
+    );
+
+
+    if(!entry.has_film && findKind === "film")
+        setKind("song");
+
+}
+
+
+/* --- by song, by film, by person --- */
+
+const findKinds = [
+    ...document.querySelectorAll(".find-kind")
+];
+
+
+findKinds.forEach(
+    button =>
+        button.addEventListener(
+            "click",
+            () => setKind(button.dataset.kind)
+        )
+);
+
+
+function setKind(kind){
+
+    findKind = kind;
+
+
+    findKinds.forEach(
+        button => {
+
+            const on =
+                button.dataset.kind === kind;
+
+            button.classList.toggle("on", on);
+
+            button.setAttribute("aria-selected", String(on));
+
+        }
+    );
+
+
+    $("kind-song").hidden = kind !== "song";
+
+    $("kind-film").hidden = kind !== "film";
+
+    $("kind-person").hidden = kind !== "person";
+
+}
+
+
+/* --- the lookup itself --- */
+
+$("find-go").addEventListener("click", runLookup);
+
+
+["find-title", "find-film-only", "find-person"].forEach(
+    id =>
+        $(id).addEventListener(
+            "keydown",
+            event => {
+
+                if(event.key === "Enter")
+                    runLookup();
+
+            }
+        )
+);
+
+
+function lookupBody(){
+
+    if(findKind === "film"){
+
+        return {
+            mode: "film",
+            film: $("find-film-only").value.trim(),
+            repertoire: repertoire,
+            model: window.LYRIQ_MODEL || ""
+        };
+
+    }
+
+
+    if(findKind === "person"){
+
+        return {
+            mode: "person",
+            person: $("find-person").value.trim(),
+            repertoire: repertoire,
+            model: window.LYRIQ_MODEL || ""
+        };
+
+    }
+
+
+    return {
+        mode: "song",
+        title: $("find-title").value.trim(),
+        artist: $("find-artist").value.trim(),
+        film: $("find-film").value.trim(),
+        repertoire: repertoire,
+        model: window.LYRIQ_MODEL || ""
+    };
+
+}
+
+
+async function runLookup(body, status){
+
+    const payload =
+        body || lookupBody();
 
 
     $("err").innerHTML = "";
 
 
-    if(!title){
+    const wanted =
+        payload.title || payload.film || payload.person;
 
-        showError("Type the name of a song first.");
 
-        $("find-title").focus();
+    if(!wanted){
+
+        showError("Fill in what you are searching for first.");
 
         return;
 
@@ -3980,12 +4309,13 @@ async function findSong(){
 
     button.disabled = true;
 
-    button.innerHTML =
-        '<span class="spinner"></span>Looking';
+    button.innerHTML = '<span class="spinner"></span>Looking';
 
 
     $("find-result").innerHTML =
-        '<p class="find-status">Searching LRCLIB, and asking the model what it knows…</p>';
+        '<p class="find-status">'
+        + escapeHTML(status || "Searching the catalogue, and asking the model what it knows…")
+        + '</p>';
 
 
     try{
@@ -3994,28 +4324,9 @@ async function findSong(){
             await fetch(
                 "/api/lookup",
                 {
-
                     method:"POST",
-
-                    headers:{
-                        "Content-Type":"application/json"
-                    },
-
-                    body:
-                        JSON.stringify({
-
-                            title: title,
-
-                            artist: $("find-artist").value.trim(),
-
-                            film: $("find-film").value.trim(),
-
-                            repertoire: repertoire,
-
-                            model: window.LYRIQ_MODEL || ""
-
-                        })
-
+                    headers:{ "Content-Type":"application/json" },
+                    body: JSON.stringify(payload)
                 }
             );
 
@@ -4028,12 +4339,21 @@ async function findSong(){
             throw new Error(data.error || "The lookup failed.");
 
 
-        foundCandidates = data.candidates || [];
+        if(data.mode === "song"){
 
-        foundContext = data.context || null;
+            foundCandidates = data.candidates || [];
 
+            foundContext = data.context || null;
 
-        renderLookup(data);
+            renderSong(data);
+
+        }
+
+        else{
+
+            renderList(data);
+
+        }
 
     }
 
@@ -4056,7 +4376,9 @@ async function findSong(){
 }
 
 
-function renderLookup(data){
+/* --- a list of songs, from a film or a person --- */
+
+function renderList(data){
 
     let html = "";
 
@@ -4067,16 +4389,113 @@ function renderLookup(data){
         + '</p>';
 
 
-    /* what the model thinks it knows, marked as unchecked */
+    if(data.note){
 
-    const context = data.context || {};
+        html +=
+            '<p class="find-note">'
+            + escapeHTML(data.note)
+            + '</p>';
+
+    }
+
+
+    (data.songs || []).forEach((song, index) => {
+
+        const detail =
+            [
+                (song.performers || []).join(", "),
+                song.composer,
+                song.album,
+                song.year
+            ]
+            .filter(Boolean)
+            .join(" · ");
+
+
+        html +=
+            '<button type="button" class="song-row" data-index="' + index + '">'
+
+            + '<span class="song-row-main">'
+            + '<b>' + escapeHTML(song.title) + '</b>'
+            + (song.original
+                ? '<span class="song-original">' + escapeHTML(song.original) + '</span>'
+                : "")
+            + (detail
+                ? '<span class="song-detail">' + escapeHTML(detail) + '</span>'
+                : "")
+            + '</span>'
+
+            + '<span class="song-tag' + (song.verified ? " ready" : "") + '">'
+            + (song.verified ? "lyrics ready" : "unverified")
+            + '</span>'
+
+            + '</button>';
+
+    });
+
+
+    $("find-result").innerHTML = html;
+
+
+    const songs = data.songs || [];
+
+
+    [...$("find-result").querySelectorAll(".song-row")].forEach(
+        button =>
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const song =
+                        songs[Number(button.dataset.index)];
+
+                    if(!song)
+                        return;
+
+
+                    /* Choosing a title runs the ordinary song lookup for it,
+                       so the lyrics still come from the catalogue. */
+
+                    runLookup(
+                        {
+                            mode: "song",
+                            title: song.title,
+                            artist: (song.performers || [])[0] || "",
+                            film: data.mode === "film" ? data.subject : (song.album || ""),
+                            repertoire: repertoire,
+                            model: window.LYRIQ_MODEL || ""
+                        },
+                        'Looking up the lyrics of "' + song.title + '"…'
+                    );
+
+                }
+            )
+    );
+
+}
+
+
+/* --- one song: context, then the lyrics themselves --- */
+
+function renderSong(data){
+
+    let html = "";
+
+
+    html +=
+        '<p class="find-notice">'
+        + escapeHTML(data.notice || "")
+        + '</p>';
+
+
+    const context =
+        data.context || {};
 
 
     if(Object.keys(context).length && !context.error){
 
         const rows = [
             ["Film", context.film],
-            ["Album", context.album],
             ["Composer", context.composer],
             ["Lyricist", context.lyricist],
             ["Tradition", context.tradition],
@@ -4143,44 +4562,35 @@ function renderLookup(data){
     }
 
 
-    /* the lyrics themselves, in full, before anything is read */
+    foundCandidates.forEach((candidate, index) => {
 
-    if(foundCandidates.length){
+        html +=
+            '<div class="find-card">'
 
-        foundCandidates.forEach((candidate, index) => {
+            + '<div class="find-card-head">'
+            + '<div>'
+            + '<b>' + escapeHTML(candidate.title || "Untitled") + '</b>'
+            + '<span class="find-card-sub">'
+            + escapeHTML(
+                [candidate.artist, candidate.album].filter(Boolean).join(" · ")
+              )
+            + '</span>'
+            + '</div>'
+            + '<span class="find-lines">' + candidate.lines + ' lines</span>'
+            + '</div>'
 
-            html +=
-                '<div class="find-card">'
+            + '<pre class="find-lyrics">'
+            + escapeHTML(candidate.lyrics)
+            + '</pre>'
 
-                + '<div class="find-card-head">'
-                + '<div>'
-                + '<b>' + escapeHTML(candidate.title || "Untitled") + '</b>'
-                + '<span class="find-card-sub">'
-                + escapeHTML(
-                    [candidate.artist, candidate.album]
-                        .filter(Boolean).join(" · ")
-                  )
-                + '</span>'
-                + '</div>'
-                + '<span class="find-lines">'
-                + candidate.lines + ' lines'
-                + '</span>'
-                + '</div>'
+            + '<button type="button" class="secondary find-use" '
+            + 'data-index="' + index + '">'
+            + 'Use these lyrics'
+            + '</button>'
 
-                + '<pre class="find-lyrics">'
-                + escapeHTML(candidate.lyrics)
-                + '</pre>'
+            + '</div>';
 
-                + '<button type="button" class="secondary find-use" '
-                + 'data-index="' + index + '">'
-                + 'Use these lyrics'
-                + '</button>'
-
-                + '</div>';
-
-        });
-
-    }
+    });
 
 
     $("find-result").innerHTML = html;
@@ -4212,10 +4622,7 @@ function useCandidate(index){
 
     $("lyrics").value = candidate.lyrics;
 
-
-    $("lyrics").dispatchEvent(
-        new Event("input")
-    );
+    $("lyrics").dispatchEvent(new Event("input"));
 
 
     const context =
@@ -4262,23 +4669,44 @@ function useCandidate(index){
     fill("notes",
         [
             context.film ? "From the film " + context.film + "." : "",
-            context.repertoire ? context.repertoire + "." : "",
-            "Lyrics from " + (candidate.source || "a lyrics catalogue")
-                + ", context unverified."
+            "Lyrics from " + (candidate.source || "a lyrics catalogue") + ".",
+            "Context unverified."
         ].filter(Boolean).join(" ")
     );
 
 
     showMode("paste");
 
-
     updateContextLabel();
 
 
-    $("lyrics").scrollIntoView({
-        behavior:"smooth",
-        block:"center"
-    });
+    $("lyrics").scrollIntoView({ behavior:"smooth", block:"center" });
+
+}
+
+
+/* --- Clear empties this side too --- */
+
+function clearFind(){
+
+    ["find-title", "find-artist", "find-film",
+     "find-film-only", "find-person"].forEach(
+        id => {
+
+            const element = $(id);
+
+            if(element)
+                element.value = "";
+
+        }
+    );
+
+
+    $("find-result").innerHTML = "";
+
+    foundCandidates = [];
+
+    foundContext = null;
 
 }
 

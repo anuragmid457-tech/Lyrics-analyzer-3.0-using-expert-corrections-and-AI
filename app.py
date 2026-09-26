@@ -136,34 +136,57 @@ def api_models():
     })
 
 
+@app.get("/api/repertoires")
+def api_repertoires():
+    """The four kinds of song the lookup knows how to search for."""
+    return jsonify({"repertoires": lookup.repertoires()})
+
+
 @app.post("/api/lookup")
 def api_lookup():
-    """Find a song by name: real lyrics from LRCLIB, context from the model.
+    """Find a song by name, a film's songs, or a person's songs.
 
-    The two are kept apart on purpose. Lyrics come from a source that can be
-    checked; context comes from the model and is returned marked unverified,
-    for the reviewer to confirm. The model is never asked for lyrics.
+    Lyrics always come from the catalogue, never from the model. Titles and
+    context do come from the model, and are returned marked unverified for
+    the reviewer to check.
     """
     payload = request.get_json(silent=True) or {}
 
-    title = (payload.get("title") or "").strip()
-    if not title:
-        return jsonify({"error": "Type the name of a song to look it up."}), 400
-
-    artist = (payload.get("artist") or "").strip()
-    film = (payload.get("film") or "").strip()
-    repertoire = (payload.get("repertoire") or "").strip()
+    mode = str(payload.get("mode") or "song").strip().lower()
+    repertoire = payload.get("repertoire")
     model_id = chosen_model(payload)
 
     try:
         chat = models.get_model(model_id) if model_id else None
+
+        if mode == "film":
+            film = (payload.get("film") or "").strip()
+            if not film:
+                return jsonify({"error": "Name a film to list its songs."}), 400
+            return jsonify(lookup.by_film(film, repertoire, chat=chat))
+
+        if mode == "person":
+            person = (payload.get("person") or "").strip()
+            if not person:
+                return jsonify({
+                    "error": "Name a composer or singer to list their songs."
+                }), 400
+            return jsonify(lookup.by_person(person, repertoire, chat=chat))
+
+        title = (payload.get("title") or "").strip()
+        if not title:
+            return jsonify({"error": "Type the name of a song to look it up."}), 400
+
         return jsonify(lookup.lookup(
-            title, artist, chat=chat, repertoire=repertoire, film=film
+            title,
+            (payload.get("artist") or "").strip(),
+            (payload.get("film") or "").strip(),
+            repertoire,
+            chat=chat,
         ))
+
     except Exception as exc:  # noqa: BLE001
-        return jsonify({
-            "error": f"{type(exc).__name__}: {exc}"
-        }), 500
+        return jsonify({"error": f"{type(exc).__name__}: {exc}"}), 500
 
 
 @app.post("/api/analyze")
