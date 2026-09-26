@@ -4290,6 +4290,16 @@ async function runLookup(body, status){
 
 
     $("err").innerHTML = "";
+        /* a lookup started from a song row happens far down the page, so the
+       result is brought to where the person is looking */
+
+    document.querySelector(".find-mode").scrollIntoView({
+
+        behavior:"smooth",
+
+        block:"start"
+
+    });
 
 
     const wanted =
@@ -4680,7 +4690,13 @@ function useCandidate(index){
     updateContextLabel();
 
 
-    $("lyrics").scrollIntoView({ behavior:"smooth", block:"center" });
+        document.querySelector(".workspace").scrollIntoView({
+
+        behavior:"smooth",
+
+        block:"start"
+
+    });
 
 }
 
