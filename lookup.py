@@ -238,6 +238,47 @@ def search_tracks(track=None, artist=None, album=None, query=None):
     return out
 
 
+# Words too common to tell one film from another.
+STOP_TOKENS = {"the", "a", "an", "of", "and", "aur", "ki", "ka", "ke", "hai",
+               "ho", "mein", "se", "original", "soundtrack", "motion", "picture",
+               "ost", "songs", "music", "from", "film", "movie", "vol"}
+
+
+def _tokens(text):
+    bare = "".join(
+        character if character.isalnum() else " "
+        for character in str(text or "").lower()
+    )
+    return [word for word in bare.split() if word and word not in STOP_TOKENS]
+
+
+def _close_enough(wanted, haystack):
+    """Does this catalogue row plausibly belong to what was asked for?
+
+    Whole string matching fails the moment a name is partial or spelled a
+    little differently: "Rani Ki Prem Kahanis" appears nowhere, though the
+    film does. So the test is how many of the asked-for words turn up, with
+    a short query needing all of them and a long one needing most.
+    """
+    asked = _tokens(wanted)
+    if not asked:
+        return False
+
+    found = set(_tokens(haystack))
+    hits = sum(1 for word in asked if word in found)
+
+    if len(asked) == 1:
+        return hits == 1
+
+    # Two words must both land; beyond that, three fifths is enough, which
+    # lets a missing or mis-typed word through without letting in a film
+    # that merely shares one common word.
+    if len(asked) == 2:
+        return hits == 2
+
+    return hits / len(asked) >= 0.6
+
+
 def find_lyrics(title, artist="", film="", limit=MAX_CANDIDATES):
     """Lyric candidates for one song, widening the search until something sticks."""
     title = normalise(title)
@@ -252,11 +293,21 @@ def find_lyrics(title, artist="", film="", limit=MAX_CANDIDATES):
         {"track": title, "album": film},
         {"track": title},
         {"query": " ".join(part for part in [title, artist, film] if part)},
+        {"query": title},
     ]
 
     seen, out = set(), []
     for attempt in attempts:
-        for row in search_tracks(**attempt):
+        rows = search_tracks(**attempt)
+
+        # The free text passes return anything vaguely similar, so the title
+        # has to actually be recognisable in what comes back.
+        if "query" in attempt:
+            rows = [row for row in rows
+                    if _close_enough(title, row["title"])
+                    or _close_enough(title, " ".join([row["title"], row["album"]]))]
+
+        for row in rows:
             key = row["id"] or (row["title"], row["artist"])
             if key in seen:
                 continue
@@ -264,6 +315,7 @@ def find_lyrics(title, artist="", film="", limit=MAX_CANDIDATES):
             out.append(row)
             if len(out) >= limit:
                 return out
+
         if out:
             return out
 
@@ -564,14 +616,10 @@ def _catalogue_for(subject, kind):
     """Several searches, because one exact match finds very little.
 
     An album search only matches when the soundtrack is filed under exactly
-    that name, which for film music it often is not: it may be filed under
-    the film plus a year, plus "Original Motion Picture Soundtrack", or the
-    songs may be filed under the singer with no album at all. So the free
-    text search runs too, and anything whose album or title mentions the
-    subject is kept.
+    that name, which for film music it often is not: it may carry a year, or
+    "Original Motion Picture Soundtrack", or the songs may be filed under the
+    singer with no album at all.
     """
-    wanted = subject.strip().lower()
-
     rows = []
     if kind == "film":
         rows += search_tracks(album=subject)
@@ -587,10 +635,8 @@ def _catalogue_for(subject, kind):
         if key in seen:
             continue
 
-        haystack = " ".join([row["album"], row["artist"], row["title"]]).lower()
-        if wanted not in haystack:
-            # A free text search returns near misses; without this a search
-            # for one film fills up with songs from another.
+        haystack = " ".join([row["album"], row["artist"], row["title"]])
+        if not _close_enough(subject, haystack):
             continue
 
         seen.add(key)
@@ -608,13 +654,27 @@ def _listing(subject, kind, repertoire, chat, empty_notice):
         suggested = {"songs": [], "confidence": 0.0,
                      "note": f"{type(exc).__name__}: {exc}"}
 
+    # The model usually knows the full title behind a partial or mis-spelled
+    # one: "Rani Ki Prem Kahanis" comes back as "Rocky Aur Rani Kii Prem
+    # Kahaani". The catalogue is worth asking again under that name, since
+    # that is how the soundtrack will be filed.
+    corrected = normalise(suggested.get("subject") or "")
+    if corrected and _tokens(corrected) != _tokens(subject):
+        extra = _catalogue_for(corrected, kind)
+        known = {row["id"] or (row["title"].lower(), row["artist"].lower())
+                 for row in catalogue}
+        catalogue += [
+            row for row in extra
+            if (row["id"] or (row["title"].lower(), row["artist"].lower())) not in known
+        ]
+
     songs = _merge_titles(catalogue, suggested.get("songs") or [])
     ready = len([song for song in songs if song["source"] == "LRCLIB"])
 
     return {
         "mode": kind,
         "query": {"subject": subject, "repertoire": repertoire},
-        "subject": suggested.get("subject") or subject,
+        "subject": corrected or suggested.get("subject") or subject,
         "songs": songs,
         "confidence": suggested.get("confidence", 0.0),
         "note": suggested.get("note", ""),
